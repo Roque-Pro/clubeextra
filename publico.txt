@@ -1,0 +1,124 @@
+================================================================================
+                     OFERTA DO SISTEMA - CLUBE DO VIDRO
+================================================================================
+
+O QUE O SISTEMA OFERECE:
+================================================================================
+
+1. GESTÃO DE VENDAS E COMISSÕES
+   - Registro de vendas com múltiplos vendedores (cada produto pode ter um vendedor diferente)
+   - Cálculo automático de comissões (1% sobre valor de venda)
+   - Rastreamento de comissões por vendedor
+   - Histórico completo de transações
+
+2. GESTÃO POR MÚLTIPLAS LOJAS
+   - Suporte para 3+ lojas independentes
+   - Caixa separado por loja
+   - Filtros de período (dia, 15 dias, mês, trimestre, semestre, ano)
+   - Relatórios em PDF por loja
+
+3. CONTROLE DE ESTOQUE
+   - Movimentação automática de produtos
+   - Rastreamento de entrada/saída
+   - Histórico de movimentações
+
+4. PAINEL DE ATENDIMENTO PARA CLIENTES (B2C)
+   - Agendamentos de serviços/trocas
+   - Plano de assinatura (R$ 239/ano = 3 trocas gratuitas anuais)
+   - Visualização de histórico de serviços
+   - Badge de status (com/sem plano)
+
+5. GESTÃO DE EQUIPE
+   - Cadastro de funcionários com papéis (Admin, Atendente, Vendedor)
+   - Autenticação segura
+   - Controle de acesso por perfil
+
+6. DASHBOARD ADMINISTRATIVO
+   - Vendas por loja
+   - Comissões de vendedores
+   - Histórico de operações (audit log)
+   - Relatórios financeiros
+   - Análise de dados
+
+
+POR QUE É BOM PARA ESTES EMPRESÁRIOS:
+================================================================================
+
+✅ Pequenas/Médias Empresas com Múltiplas Unidades
+   - Visualiza cada loja independentemente
+   - Não precisa de sistemas separados
+   - Relatórios centralizados
+
+✅ Comércios com Equipe de Vendedores
+   - Comissões automáticas e precisas
+   - Incentivo transparente
+   - Histórico completo para disputas zero
+
+✅ Negócios com Modelo de Assinatura
+   - Plano permite criar receita recorrente
+   - Integrado com serviços
+   - Controle de benefícios do cliente
+
+✅ Empresas que Precisam de Auditoria
+   - Log completo de todas as operações
+   - Rastreabilidade de movimentações
+   - Pronto para compliance
+
+
+PÚBLICO-ALVO RECOMENDADO:
+================================================================================
+
+TIPOS DE NEGÓCIOS:
+
+1. 🚗 Oficinas e Autoshops (foco atual)
+   - Vidraçarias automotivas
+   - Lojas de som e acessórios para carro
+   - Serviços de manutenção automotiva
+
+2. 🏪 Comércios Varejistas com Múltiplas Lojas
+   - Lojas de pneus
+   - Lojas de autopeças em geral
+   - Franquias (cada unidade é uma loja)
+
+3. 💼 Negócios com Vendedor Comissionado
+   - Lojas que pagam comissão
+   - Equipes de vendas
+   - Consultores
+
+4. 🔧 Serviços com Plano/Assinatura
+   - Manutenção programada
+   - Serviços recorrentes
+   - Modelos de clube/fidelização
+
+
+SEGMENTO DE CLIENTES PARA NEGOCIAR:
+================================================================================
+
+SEGMENTO PRIMÁRIO (Melhor fit):
+   ✅ Vidraçarias automotivas (3-5 lojas)
+   ✅ Autoshops com serviço de vidro
+   ✅ Franquias de vidro automotivo
+   ✅ Lojas de som/acessórios automotivos com serviço
+
+SEGMENTO SECUNDÁRIO (Bom fit com adaptações):
+   ✅ Distribuidoras de autopeças (múltiplas lojas)
+   ✅ Lojas de pneus
+   ✅ Oficinas mecânicas gerais
+   ✅ Redes pequenas/médias (5-10 lojas)
+
+CARACTERÍSTICAS DO CLIENTE IDEAL:
+   📊 Faturamento: R$ 50k-500k/mês
+   👥 Equipe: 5-20 funcionários
+   🏢 Lojas: 2-5 unidades
+   💳 Urgência: Controle de caixa e comissões automáticas
+   📱 Perfil: Quer solução modern, integrada, mobile-friendly
+
+
+ARGUMENTAÇÃO COMERCIAL:
+================================================================================
+
+"Sistema completo para múltiplas lojas. Vendas, comissões automáticas, 
+controle de caixa por loja, relatórios em PDF e painel de clientes. 
+Feito para franquias e redes de vidraçarias/autoshops. Pronto para usar."
+
+================================================================================

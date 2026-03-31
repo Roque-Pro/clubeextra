@@ -46,6 +46,8 @@ interface Appointment {
      vehicle_id?: string;
      vehicle?: string;
      plate?: string;
+     vehicle_photo_url?: string;
+     appointment_video_url?: string;
      original_scheduled_date?: string;
      original_scheduled_time?: string;
      time_changed_at?: string;
@@ -75,6 +77,10 @@ const Servicos = () => {
         scheduled_time: "",
         reason: "",
     });
+    const [videoModalOpen, setVideoModalOpen] = useState(false);
+    const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>("");
+    const [photoModalOpen, setPhotoModalOpen] = useState(false);
+    const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string>("");
     const { toast } = useToast();
 
     const [serviceForm, setServiceForm] = useState({
@@ -113,7 +119,8 @@ const Servicos = () => {
                      status,
                      notes,
                      vehicle_id,
-                     client_vehicles(vehicle, plate),
+                     appointment_video_url,
+                     client_vehicles(vehicle, plate, vehicle_photo_url),
                      clients(plan_status)
                  `)
                  .order("scheduled_date", { ascending: true });
@@ -141,6 +148,7 @@ const Servicos = () => {
                 ...apt,
                 vehicle: apt.client_vehicles?.vehicle,
                 plate: apt.client_vehicles?.plate,
+                vehicle_photo_url: apt.client_vehicles?.vehicle_photo_url,
                 client_plan_status: apt.clients?.plan_status || "free",
             }));
 
@@ -606,8 +614,38 @@ const Servicos = () => {
                                                                   />
                                                               </div>
                                                              <p className="text-xs text-muted-foreground">📋 {apt.service_type}</p>
-                                                             {apt.vehicle && <p className="text-xs text-muted-foreground">🚗 {apt.vehicle} ({apt.plate})</p>}
+                                                             {apt.vehicle && (
+                                                                 <div className="flex items-center gap-2 mt-1">
+                                                                     {apt.vehicle_photo_url && (
+                                                                         <button
+                                                                             onClick={() => {
+                                                                                 setSelectedPhotoUrl(apt.vehicle_photo_url || "");
+                                                                                 setPhotoModalOpen(true);
+                                                                             }}
+                                                                             className="cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                                                                         >
+                                                                             <img
+                                                                                 src={apt.vehicle_photo_url}
+                                                                                 alt={apt.vehicle}
+                                                                                 className="w-7 h-7 object-cover rounded"
+                                                                             />
+                                                                         </button>
+                                                                     )}
+                                                                     <p className="text-xs text-muted-foreground">🚗 {apt.vehicle} ({apt.plate})</p>
+                                                                 </div>
+                                                             )}
                                                              {apt.notes && <p className="text-xs text-muted-foreground mt-1">💬 {apt.notes}</p>}
+                                                             {apt.appointment_video_url && (
+                                                                 <button
+                                                                     onClick={() => {
+                                                                         setSelectedVideoUrl(apt.appointment_video_url || "");
+                                                                         setVideoModalOpen(true);
+                                                                     }}
+                                                                     className="text-xs text-blue-600 hover:text-blue-700 mt-1 inline-flex items-center gap-1 hover:underline"
+                                                                 >
+                                                                     🎥 Ver Vídeo do Problema
+                                                                 </button>
+                                                             )}
                                                              <p className="text-xs text-muted-foreground mt-1">
                                                                  📅 {new Date(apt.scheduled_date).toLocaleDateString("pt-BR")} ⏰ {apt.scheduled_time}
                                                              </p>
@@ -677,17 +715,47 @@ const Servicos = () => {
                                                               />
                                                           </div>
                                                          <p className="text-xs text-muted-foreground">📋 {apt.service_type}</p>
-                                                         {apt.vehicle && <p className="text-xs text-muted-foreground">🚗 {apt.vehicle} ({apt.plate})</p>}
+                                                         {apt.vehicle && (
+                                                             <div className="flex items-center gap-2 mt-1">
+                                                                 {apt.vehicle_photo_url && (
+                                                                     <button
+                                                                         onClick={() => {
+                                                                             setSelectedPhotoUrl(apt.vehicle_photo_url || "");
+                                                                             setPhotoModalOpen(true);
+                                                                         }}
+                                                                         className="cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                                                                     >
+                                                                         <img
+                                                                             src={apt.vehicle_photo_url}
+                                                                             alt={apt.vehicle}
+                                                                             className="w-7 h-7 object-cover rounded"
+                                                                         />
+                                                                     </button>
+                                                                 )}
+                                                                 <p className="text-xs text-muted-foreground">🚗 {apt.vehicle} ({apt.plate})</p>
+                                                             </div>
+                                                         )}
                                                          {apt.notes && <p className="text-xs text-muted-foreground mt-1">💬 {apt.notes}</p>}
+                                                         {apt.appointment_video_url && (
+                                                             <button
+                                                                 onClick={() => {
+                                                                     setSelectedVideoUrl(apt.appointment_video_url || "");
+                                                                     setVideoModalOpen(true);
+                                                                 }}
+                                                                 className="text-xs text-blue-600 hover:text-blue-700 mt-1 inline-flex items-center gap-1 hover:underline"
+                                                             >
+                                                                 🎥 Ver Vídeo do Problema
+                                                             </button>
+                                                         )}
                                                          <p className="text-xs text-muted-foreground mt-1">
                                                              📅 {new Date(apt.scheduled_date).toLocaleDateString("pt-BR")} ⏰ {apt.scheduled_time}
                                                          </p>
-                                                     </div>
-                                                     <div className="flex flex-col gap-1 flex-shrink-0">
+                                                         </div>
+                                                         <div className="flex flex-col gap-1 flex-shrink-0">
                                                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap bg-green-100 text-green-700">
                                                              ✓ Concluído
                                                          </span>
-                                                     </div>
+                                                         </div>
                                                 </div>
                                             </div>
                                         ))
@@ -996,6 +1064,62 @@ const Servicos = () => {
 
                 </div>
             </div>
+
+            {/* Modal para Visualizar Vídeo do Agendamento */}
+            <Dialog open={videoModalOpen} onOpenChange={setVideoModalOpen}>
+                <DialogContent className="bg-card border-border max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="font-display">Vídeo do Problema</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="flex justify-center items-center bg-black rounded-lg overflow-hidden">
+                            <video
+                                src={selectedVideoUrl}
+                                controls
+                                className="max-w-full max-h-96"
+                            />
+                        </div>
+                        <div className="p-4 bg-muted/50 rounded-lg border border-border space-y-3">
+                            <div>
+                                <h4 className="font-semibold text-foreground mb-2">Por que o vídeo é importante?</h4>
+                                <p className="text-sm text-muted-foreground">
+                                    O cliente documenta o problema do veículo antes do atendimento, permitindo que nossa equipe entenda melhor a situação e se prepare adequadamente com os materiais e ferramentas corretos.
+                                </p>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-foreground mb-2">Fluxo</h4>
+                                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                                    <li>Cliente grava vídeo mostrando o problema</li>
+                                    <li>Anexa na criação do agendamento</li>
+                                    <li>Você analisa antes do atendimento aqui</li>
+                                    <li>Prepara-se com materiais e ferramentas adequados</li>
+                                </ul>
+                            </div>
+                            <div className="pt-2 border-t border-border">
+                                <p className="text-xs text-muted-foreground italic">
+                                    💡 Qualidade: Verifique se a iluminação é boa, se o problema é visível por diferentes ângulos e se há som.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal para Visualizar Foto do Veículo */}
+            <Dialog open={photoModalOpen} onOpenChange={setPhotoModalOpen}>
+                <DialogContent className="bg-card border-border max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="font-display">Foto do Veículo</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex justify-center items-center">
+                        <img
+                            src={selectedPhotoUrl}
+                            alt="Veículo"
+                            className="max-w-full max-h-96 rounded-lg object-contain"
+                        />
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

@@ -41,13 +41,16 @@ const Clients = () => {
      const [editDialogOpen, setEditDialogOpen] = useState(false);
      const [editingClient, setEditingClient] = useState<Client | null>(null);
      const [bulkUploadToggling, setBulkUploadToggling] = useState(false);
+     const [photoModalOpen, setPhotoModalOpen] = useState(false);
+     const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string>("");
+     const [clientVehicles, setClientVehicles] = useState<any[]>([]);
      const { toast } = useToast();
 
     // Fetch clients, employees and replacements from Supabase
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [clientsRes, employeesRes] = await Promise.all([
+                const [clientsRes, employeesRes, vehiclesRes] = await Promise.all([
                     supabase
                         .from("clients")
                         .select("*")
@@ -57,27 +60,62 @@ const Clients = () => {
                         .select("*")
                         .eq("active", true)
                         .order("name", { ascending: true }),
+                    supabase
+                        .from("client_vehicles")
+                        .select("*")
+                        .order("is_primary", { ascending: false }),
                 ]);
 
                 if (clientsRes.error) throw clientsRes.error;
                 if (employeesRes.error) throw employeesRes.error;
+                if (vehiclesRes.error) throw vehiclesRes.error;
+
+                // Criar map de veículos por client_id para acesso rápido
+                const vehiclesMap = new Map();
+                const vehiclesCountMap = new Map();
+                if (vehiclesRes.data) {
+                    vehiclesRes.data.forEach((vehicle: any) => {
+                        if (!vehiclesMap.has(vehicle.client_id)) {
+                            vehiclesMap.set(vehicle.client_id, vehicle);
+                        }
+                        // Contar veículos por cliente
+                        vehiclesCountMap.set(
+                            vehicle.client_id,
+                            (vehiclesCountMap.get(vehicle.client_id) || 0) + 1
+                        );
+                    });
+                    setClientVehicles(vehiclesRes.data);
+                }
 
                 if (clientsRes.data) {
-                    const mappedClients: Client[] = clientsRes.data.map((client: any) => ({
-                        id: client.id,
-                        name: client.name,
-                        phone: client.phone,
-                        email: client.email,
-                        cpf: client.cpf,
-                        vehicle: client.vehicle,
-                        plate: client.plate,
-                        planStart: client.plan_start,
-                        planEnd: client.plan_end,
-                        replacementsUsed: client.replacements_used || 0,
-                        maxReplacements: client.max_replacements || 3,
-                        active: client.active || true,
-                        planActive: client.plan_active !== false, // Padrão true se não existir
-                    }));
+                    const mappedClients: Client[] = clientsRes.data.map((client: any) => {
+                        const primaryVehicle = vehiclesMap.get(client.id);
+                        let vehiclesCount = vehiclesCountMap.get(client.id) || 0;
+                        
+                        // Adicionar 1 se o cliente tem um veículo legado (na tabela clients) que não foi migrado
+                        // Verificar se tem veículo e placa e se não está duplicado em client_vehicles
+                        if (client.vehicle && client.plate && vehiclesCount === 0) {
+                            vehiclesCount = 1;
+                        }
+                        
+                        return {
+                            id: client.id,
+                            name: client.name,
+                            phone: client.phone,
+                            email: client.email,
+                            cpf: client.cpf,
+                            vehicle: client.vehicle,
+                            plate: client.plate,
+                            vehicle_photo_url: primaryVehicle?.vehicle_photo_url,
+                            planStart: client.plan_start,
+                            planEnd: client.plan_end,
+                            replacementsUsed: client.replacements_used || 0,
+                            maxReplacements: client.max_replacements || 3,
+                            active: client.active || true,
+                            planActive: client.plan_active !== false,
+                            vehiclesCount: vehiclesCount,
+                        } as any;
+                    });
                     setClients(mappedClients);
                 }
 
@@ -100,7 +138,7 @@ const Clients = () => {
         fetchReplacements();
     }, []);
 
-    const [form, setForm] = useState({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "" });
+    const [form, setForm] = useState({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "", maxReplacements: 3 });
     const [replForm, setReplForm] = useState({ item: "", employeeId: "", notes: "", value: "" });
     const [submitting, setSubmitting] = useState(false);
 
@@ -385,25 +423,26 @@ const Clients = () => {
     };
 
     const handleEditClient = async () => {
-        if (!editingClient || !form.name || !form.phone || !form.vehicle) {
-            toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
-            return;
-        }
-        setSubmitting(true);
-        try {
-            const { error } = await supabase
-                .from("clients")
-                .update({
-                    name: form.name,
-                    phone: form.phone,
-                    email: form.email,
-                    cpf: form.cpf,
-                    vehicle: form.vehicle,
-                    plate: form.plate,
-                })
-                .eq("id", editingClient.id);
+         if (!editingClient || !form.name || !form.phone || !form.vehicle) {
+             toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
+             return;
+         }
+         setSubmitting(true);
+         try {
+             const { error } = await supabase
+                 .from("clients")
+                 .update({
+                     name: form.name,
+                     phone: form.phone,
+                     email: form.email,
+                     cpf: form.cpf,
+                     vehicle: form.vehicle,
+                     plate: form.plate,
+                     max_replacements: form.maxReplacements,
+                 })
+                 .eq("id", editingClient.id);
 
-            if (error) throw error;
+             if (error) throw error;
 
             // Se preencheu senha, atualizar no auth através da Edge Function
             if (form.password && form.password.length >= 6) {
@@ -462,11 +501,12 @@ const Clients = () => {
                         cpf: form.cpf,
                         vehicle: form.vehicle,
                         plate: form.plate,
+                        maxReplacements: form.maxReplacements,
                     }
                     : c
             );
             setClients(updatedClients);
-            setForm({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "" });
+            setForm({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "", maxReplacements: 3 });
             setEditingClient(null);
             setEditDialogOpen(false);
 
@@ -495,6 +535,7 @@ const Clients = () => {
             vehicle: client.vehicle,
             plate: client.plate || "",
             password: "",
+            maxReplacements: client.maxReplacements,
         });
         setEditDialogOpen(true);
     };
@@ -700,19 +741,40 @@ const Clients = () => {
                             >
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${client.active && !isExpired ? "bg-success/15" : "bg-destructive/15"}`}>
-                                            {client.active && !isExpired ? <UserCheck className="w-5 h-5 text-success" /> : <UserX className="w-5 h-5 text-destructive" />}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-semibold text-foreground truncate">{client.name}</p>
-                                                <ClientStatusBadge
-                                                    planStatus={getPlanStatus(client.planActive, client.planEnd)}
-                                                    size="sm"
+                                        {client.vehicle_photo_url ? (
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedPhotoUrl(client.vehicle_photo_url || "");
+                                                    setPhotoModalOpen(true);
+                                                }}
+                                                className="cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                                            >
+                                                <img
+                                                    src={client.vehicle_photo_url}
+                                                    alt={client.vehicle}
+                                                    className="w-10 h-10 object-cover rounded-full"
                                                 />
+                                            </button>
+                                        ) : (
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${client.active && !isExpired ? "bg-success/15" : "bg-destructive/15"}`}>
+                                                {client.active && !isExpired ? <UserCheck className="w-5 h-5 text-success" /> : <UserX className="w-5 h-5 text-destructive" />}
                                             </div>
-                                            <p className="text-sm text-muted-foreground">{client.vehicle} • {client.plate}</p>
-                                        </div>
+                                        )}
+                                        <div className="min-w-0 flex-1">
+                                             <div className="flex items-center gap-2">
+                                                 <p className="font-semibold text-foreground truncate">{client.name}</p>
+                                                 <ClientStatusBadge
+                                                     planStatus={getPlanStatus(client.planActive, client.planEnd)}
+                                                     size="sm"
+                                                 />
+                                             </div>
+                                             <p className="text-sm text-muted-foreground">{client.vehicle} • {client.plate}</p>
+                                             <div className="flex items-center gap-2 mt-1">
+                                                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">
+                                                     🚗 {(client as any).vehiclesCount || 0} carro{(client as any).vehiclesCount !== 1 ? 's' : ''}
+                                                 </span>
+                                             </div>
+                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-3 md:grid-cols-4 gap-3 md:gap-6">
@@ -727,20 +789,19 @@ const Clients = () => {
                                             </p>
                                         </div>
                                         <div className="text-center">
-                                            <p className="text-xs text-muted-foreground">Trocas</p>
-                                            <div className="flex gap-1 mt-1 justify-center">
-                                                {Array.from({ length: client.maxReplacements }).map((_, i) => {
-                                                    let bgColor = "bg-slate-400";
-                                                    if (client.planActive) {
-                                                        if (i < client.replacementsUsed) {
-                                                            bgColor = client.replacementsUsed === client.maxReplacements ? "bg-destructive" : "bg-red-500";
-                                                        } else {
-                                                            bgColor = "bg-primary";
-                                                        }
-                                                    }
-                                                    return <div key={i} className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${bgColor}`} />;
-                                                })}
-                                            </div>
+                                            <p className="text-xs text-muted-foreground">Agendamentos (máx)</p>
+                                            <p className="text-xs md:text-sm font-semibold text-foreground">{client.maxReplacements}/ano</p>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="text-xs mt-1 h-6 w-full"
+                                                onClick={() => {
+                                                    setEditingClient(client);
+                                                    setEditDialogOpen(true);
+                                                }}
+                                            >
+                                                ✏️ Editar
+                                            </Button>
                                         </div>
                                         <div className="text-center hidden md:block">
                                             <p className="text-xs text-muted-foreground">Status</p>
@@ -874,6 +935,17 @@ const Clients = () => {
                             <div><Label>Placa</Label><Input value={form.plate} onChange={(e) => setForm({ ...form, plate: e.target.value })} placeholder="ABC-1D23" /></div>
                         </div>
                         <div>
+                            <Label>Agendamentos por ano</Label>
+                            <Input
+                                type="number"
+                                min="1"
+                                value={form.maxReplacements}
+                                onChange={(e) => setForm({ ...form, maxReplacements: parseInt(e.target.value) || 3 })}
+                                placeholder="3"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">Para seguradoras ou clientes especiais, defina um limite maior</p>
+                        </div>
+                        <div>
                             <Label>Nova Senha (deixe em branco para não alterar)</Label>
                             <Input
                                 type="password"
@@ -920,6 +992,22 @@ const Clients = () => {
                             <Input value={replForm.notes} onChange={(e) => setReplForm({ ...replForm, notes: e.target.value })} placeholder="Opcional..." />
                         </div>
                         <Button onClick={handleAddReplacement} disabled={submitting} className="w-full gradient-primary text-primary-foreground font-semibold">{submitting ? "Registrando..." : "Registrar Troca"}</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal para Visualizar Foto do Veículo */}
+            <Dialog open={photoModalOpen} onOpenChange={setPhotoModalOpen}>
+                <DialogContent className="bg-card border-border max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="font-display">Foto do Veículo</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex justify-center items-center">
+                        <img
+                            src={selectedPhotoUrl}
+                            alt="Veículo"
+                            className="max-w-full max-h-96 rounded-lg object-contain"
+                        />
                     </div>
                 </DialogContent>
             </Dialog>

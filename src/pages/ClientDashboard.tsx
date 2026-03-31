@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Shield, Edit, Save, X, Mail, Phone, User, Car, DollarSign, LogOut, Calendar, Plus, Trash2, Check, AlertCircle } from "lucide-react";
+import { Shield, Edit, Save, X, Mail, Phone, User, Car, DollarSign, LogOut, Calendar, Plus, Trash2, Check, AlertCircle, Upload, Image } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -48,11 +48,12 @@ interface ClientProfile {
 }
 
 interface ClientVehicle {
-    id: string;
-    vehicle: string;
-    plate: string;
-    is_national: boolean;
-    is_primary: boolean;
+     id: string;
+     vehicle: string;
+     plate: string;
+     is_national: boolean;
+     is_primary: boolean;
+     vehicle_photo_url?: string;
 }
 
 interface Appointment {
@@ -97,10 +98,17 @@ const ClientDashboard = () => {
         scheduled_time: "",
         notes: "",
         vehicle_id: "",
+        videoFile: null as File | null,
     });
+    const [appointmentVideoPreview, setAppointmentVideoPreview] = useState<string>("");
+    const [uploadingAppointmentVideo, setUploadingAppointmentVideo] = useState(false);
+    const [videoModalOpen, setVideoModalOpen] = useState(false);
+    const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>("");
     const [clientVehicles, setClientVehicles] = useState<ClientVehicle[]>([]);
     const [addVehicleDialogOpen, setAddVehicleDialogOpen] = useState(false);
-    const [newVehicleForm, setNewVehicleForm] = useState({ vehicle: "", plate: "" });
+    const [newVehicleForm, setNewVehicleForm] = useState({ vehicle: "", plate: "", photoFile: null as File | null });
+    const [vehiclePhotoPreview, setVehiclePhotoPreview] = useState<string>("");
+    const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
     const [validatingNewVehicle, setValidatingNewVehicle] = useState(false);
     const [validationResult, setValidationResult] = useState<any>(null);
     const [editAppointmentDialogOpen, setEditAppointmentDialogOpen] = useState(false);
@@ -113,6 +121,8 @@ const ClientDashboard = () => {
     const [confirmingChangedAppointmentId, setConfirmingChangedAppointmentId] = useState<string | null>(null);
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [bulkUploadEnabled, setBulkUploadEnabled] = useState(false);
+    const [photoModalOpen, setPhotoModalOpen] = useState(false);
+    const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string>("");
 
     const replacementItems = ["Para-brisa", "Retrovisor", "Vigia", "Farol", "Janela", "Porta", "Óculos", "Insumo", "Ferramenta", "Outro"];
 
@@ -166,11 +176,9 @@ const ClientDashboard = () => {
             try {
                 const userId = session.user?.id;
                 const userEmail = session.user?.email;
-                console.log("🔍 Buscando cliente por User ID:", userId);
-                console.log("📧 Email:", userEmail);
+
 
                 if (!userId) {
-                    console.warn("⚠️ User ID não disponível");
                     setDataLoading(false);
                     return;
                 }
@@ -182,13 +190,9 @@ const ClientDashboard = () => {
                     .eq("user_id", userId)
                     .maybeSingle();
 
-                console.log("📋 Resposta da query por user_id:", { data, error });
-
                 if (error && error.code !== "PGRST116") {
-                    console.error("❌ Erro ao buscar cliente:", error);
                     setClientData(null);
                 } else if (data) {
-                    console.log("✅ Cliente encontrado por user_id:", data);
                     setClientData(data);
                     setFormData(data);
                     setBulkUploadEnabled(data.bulk_upload_enabled || false);
@@ -196,9 +200,7 @@ const ClientDashboard = () => {
                     fetchAppointments(data.id);
                     fetchClientVehicles(data.id);
                 } else {
-                    console.warn("⚠️ Nenhum cliente encontrado para user_id:", userId);
                     // Fallback: tentar buscar por email
-                    console.log("🔄 Tentando fallback por email:", userEmail);
                     const { data: emailData, error: emailError } = await supabase
                         .from("clients")
                         .select("*")
@@ -206,19 +208,16 @@ const ClientDashboard = () => {
                         .maybeSingle();
 
                     if (emailData) {
-                        console.log("✅ Cliente encontrado por email:", emailData);
                         setClientData(emailData);
                         setFormData(emailData);
                         setBulkUploadEnabled(emailData.bulk_upload_enabled || false);
                         fetchAppointments(emailData.id);
                         fetchClientVehicles(emailData.id);
                     } else {
-                        console.warn("⚠️ Nenhum cliente encontrado. Email:", userEmail, "Error:", emailError);
                         setClientData(null);
                     }
                 }
             } catch (err) {
-                console.error("❌ Erro ao carregar dados:", err);
                 setClientData(null);
             } finally {
                 setDataLoading(false);
@@ -228,7 +227,6 @@ const ClientDashboard = () => {
         if (session?.user?.id) {
             fetchClientData();
         } else {
-            console.warn("⚠️ Session não pronta ou user não autenticado", session?.user);
             setDataLoading(false);
         }
     }, [session, fetchAppointments, fetchClientVehicles]);
@@ -246,9 +244,74 @@ const ClientDashboard = () => {
         return () => clearInterval(interval);
     }, [clientData?.id, fetchAppointments]);
 
+    const handleVehiclePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validar tipo de arquivo
+        if (!file.type.startsWith("image/")) {
+            toast({ title: "Selecione uma imagem válida", variant: "destructive" });
+            return;
+        }
+
+        // Validar tamanho (máx 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast({ title: "Imagem muito grande (máx 5MB)", variant: "destructive" });
+            return;
+        }
+
+        setNewVehicleForm({ ...newVehicleForm, photoFile: file });
+        
+        // Criar preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setVehiclePhotoPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const uploadVehiclePhoto = async (file: File, clientId: string, plate: string): Promise<string | null> => {
+        try {
+            setUploadingVehiclePhoto(true);
+            
+            // Nome do arquivo: client_id/plate_timestamp.ext
+            const fileExt = file.name.split(".").pop();
+            const fileName = `${clientId}/${plate}_${Date.now()}.${fileExt}`;
+            
+            const { error, data } = await supabase.storage
+                .from("vehicle-photos")
+                .upload(fileName, file, {
+                    cacheControl: "3600",
+                    upsert: false,
+                });
+
+            if (error) {
+                console.error("Erro ao upload foto:", error);
+                return null;
+            }
+
+            // Obter URL pública
+            const { data: publicData } = supabase.storage
+                .from("vehicle-photos")
+                .getPublicUrl(fileName);
+
+            return publicData?.publicUrl || null;
+        } catch (err: any) {
+            console.error("Erro ao upload:", err);
+            return null;
+        } finally {
+            setUploadingVehiclePhoto(false);
+        }
+    };
+
     const handleValidateAndAddVehicle = async () => {
         if (!newVehicleForm.vehicle || !newVehicleForm.plate) {
             toast({ title: "Preencha veículo e placa", variant: "destructive" });
+            return;
+        }
+
+        if (!newVehicleForm.photoFile) {
+            toast({ title: "Foto do veículo é obrigatória", variant: "destructive" });
             return;
         }
 
@@ -285,9 +348,27 @@ const ClientDashboard = () => {
     };
 
     const handleConfirmAddVehicle = async () => {
-        if (!clientData || !validationResult) return;
+        if (!clientData || !validationResult || !newVehicleForm.photoFile) return;
 
         try {
+            setUploadingVehiclePhoto(true);
+            
+            // Upload da foto
+            const photoUrl = await uploadVehiclePhoto(
+                newVehicleForm.photoFile,
+                clientData.id,
+                newVehicleForm.plate
+            );
+
+            if (!photoUrl) {
+                toast({
+                    title: "Erro ao fazer upload da foto",
+                    description: "Tente novamente com uma imagem diferente",
+                    variant: "destructive",
+                });
+                return;
+            }
+
             const isPrimary = clientVehicles.length === 0;
 
             const { error } = await supabase
@@ -298,11 +379,13 @@ const ClientDashboard = () => {
                     plate: newVehicleForm.plate,
                     is_national: true,
                     is_primary: isPrimary,
+                    vehicle_photo_url: photoUrl,
                 });
 
             if (error) throw error;
 
-            setNewVehicleForm({ vehicle: "", plate: "" });
+            setNewVehicleForm({ vehicle: "", plate: "", photoFile: null });
+            setVehiclePhotoPreview("");
             setValidationResult(null);
             setAddVehicleDialogOpen(false);
             fetchClientVehicles(clientData.id);
@@ -313,6 +396,8 @@ const ClientDashboard = () => {
                 description: err.message,
                 variant: "destructive",
             });
+        } finally {
+            setUploadingVehiclePhoto(false);
         }
     };
 
@@ -320,19 +405,66 @@ const ClientDashboard = () => {
         if (!clientData) return;
 
         try {
+            // Buscar veículo para obter a URL da foto
+            const { data: vehicleData, error: fetchError } = await supabase
+                .from("client_vehicles")
+                .select("vehicle_photo_url")
+                .eq("id", vehicleId)
+                .single();
+
+            if (fetchError) {
+                console.error("Erro ao buscar veículo:", fetchError);
+                throw fetchError;
+            }
+
+            // Deletar foto do Storage se existir
+            if (vehicleData?.vehicle_photo_url) {
+                try {
+                    // Extrair o caminho do arquivo da URL
+                    const urlParts = vehicleData.vehicle_photo_url.split('/');
+                    const fileName = urlParts[urlParts.length - 1];
+                    const clientPath = urlParts[urlParts.length - 2];
+                    const filePath = `${clientPath}/${fileName}`;
+
+                    console.log("Removendo foto do Storage:", filePath);
+                    await supabase.storage
+                        .from("vehicle-photos")
+                        .remove([filePath]);
+                } catch (storageErr) {
+                    console.error("Erro ao remover foto do Storage:", storageErr);
+                    // Continuar mesmo se falhar ao remover foto
+                }
+            }
+
+            // Deletar veículo do banco
             const { error } = await supabase
                 .from("client_vehicles")
                 .delete()
                 .eq("id", vehicleId);
+            
+            if (error) {
+                throw error;
+            }
 
-            if (error) throw error;
+            // Verificar se foi realmente deletado
+            const { data: checkData } = await supabase
+                .from("client_vehicles")
+                .select("id")
+                .eq("id", vehicleId)
+                .single();
+            
+            if (checkData) {
+                throw new Error("Veículo não foi deletado - operação bloqueada por RLS");
+            }
 
-            fetchClientVehicles(clientData.id);
-            toast({ title: "Veículo removido" });
+            // Recarregar veículos
+            await fetchClientVehicles(clientData.id);
+            toast({ title: "Veículo removido com sucesso" });
         } catch (err: any) {
+            console.error("Erro ao remover veículo:", err);
             toast({
                 title: "Erro ao remover veículo",
-                description: err.message,
+                description: err.message || "Falha ao remover o veículo. Verifique suas permissões.",
                 variant: "destructive",
             });
         }
@@ -341,6 +473,11 @@ const ClientDashboard = () => {
     const handleAddAppointment = async () => {
         if (!appointmentForm.service_type || !appointmentForm.scheduled_date || !appointmentForm.scheduled_time || !appointmentForm.vehicle_id || !clientData) {
             toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
+            return;
+        }
+
+        if (!appointmentForm.videoFile) {
+            toast({ title: "Vídeo do problema é obrigatório", variant: "destructive" });
             return;
         }
 
@@ -357,6 +494,28 @@ const ClientDashboard = () => {
 
         setSubmittingAppointment(true);
         try {
+            let videoUrl = "";
+
+            // Upload vídeo se existir
+            if (appointmentForm.videoFile) {
+                setUploadingAppointmentVideo(true);
+                const fileExt = appointmentForm.videoFile.name.split('.').pop();
+                const fileName = `${clientData.id}/${Date.now()}.${fileExt}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from("appointment-videos")
+                    .upload(fileName, appointmentForm.videoFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from("appointment-videos")
+                    .getPublicUrl(fileName);
+
+                videoUrl = publicUrl;
+                setUploadingAppointmentVideo(false);
+            }
+
             // Corrigir timezone: adicionar 1 dia à data
             const dateObj = new Date(appointmentForm.scheduled_date);
             dateObj.setDate(dateObj.getDate() + 1);
@@ -376,11 +535,13 @@ const ClientDashboard = () => {
                     status: "pendente",
                     notes: appointmentForm.notes,
                     vehicle_id: appointmentForm.vehicle_id,
+                    appointment_video_url: videoUrl,
                 });
 
             if (error) throw error;
 
-            setAppointmentForm({ service_type: "", scheduled_date: "", scheduled_time: "", notes: "", vehicle_id: "" });
+            setAppointmentForm({ service_type: "", scheduled_date: "", scheduled_time: "", notes: "", vehicle_id: "", videoFile: null });
+            setAppointmentVideoPreview("");
             setAppointmentDialogOpen(false);
             fetchAppointments(clientData.id);
             toast({ title: "Agendamento realizado com sucesso!" });
@@ -392,6 +553,7 @@ const ClientDashboard = () => {
             });
         } finally {
             setSubmittingAppointment(false);
+            setUploadingAppointmentVideo(false);
         }
     };
 
@@ -738,12 +900,59 @@ const ClientDashboard = () => {
                                                 placeholder="Algo especial que devemos saber?"
                                             />
                                         </div>
+                                        <div>
+                                            <Label>Vídeo do Problema *</Label>
+                                            <div className="relative border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
+                                                <input
+                                                    type="file"
+                                                    accept="video/*"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            if (file.size > 100 * 1024 * 1024) {
+                                                                toast({ title: "Vídeo muito grande (máx 100MB)", variant: "destructive" });
+                                                                return;
+                                                            }
+                                                            setAppointmentForm({ ...appointmentForm, videoFile: file });
+                                                            const url = URL.createObjectURL(file);
+                                                            setAppointmentVideoPreview(url);
+                                                        }
+                                                    }}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                />
+                                                {appointmentVideoPreview ? (
+                                                    <div>
+                                                        <p className="text-sm font-medium text-green-600 mb-2">✓ Vídeo selecionado</p>
+                                                        <p className="text-xs text-muted-foreground">{appointmentForm.videoFile?.name}</p>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setAppointmentForm({ ...appointmentForm, videoFile: null });
+                                                                setAppointmentVideoPreview("");
+                                                            }}
+                                                            className="mt-2"
+                                                        >
+                                                            Remover Vídeo
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <div>
+                                                        <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                                                        <p className="text-sm font-medium">Clique ou arraste um vídeo</p>
+                                                        <p className="text-xs text-muted-foreground">Máximo 100MB</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                         <Button
                                             onClick={handleAddAppointment}
-                                            disabled={submittingAppointment}
+                                            disabled={submittingAppointment || uploadingAppointmentVideo}
                                             className="w-full"
                                         >
-                                            {submittingAppointment ? "Agendando..." : "Confirmar Agendamento"}
+                                            {submittingAppointment || uploadingAppointmentVideo ? "Agendando..." : "Confirmar Agendamento"}
                                         </Button>
                                     </div>
                                 </DialogContent>
@@ -874,9 +1083,51 @@ const ClientDashboard = () => {
                                                         placeholder="ABC-1234"
                                                     />
                                                 </div>
+
+                                                <div>
+                                                    <Label>Foto do Veículo * (Obrigatória)</Label>
+                                                    {vehiclePhotoPreview ? (
+                                                        <div className="space-y-3">
+                                                            <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
+                                                                <img
+                                                                    src={vehiclePhotoPreview}
+                                                                    alt="Preview"
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            </div>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="w-full"
+                                                                onClick={() => {
+                                                                    setNewVehicleForm({ ...newVehicleForm, photoFile: null });
+                                                                    setVehiclePhotoPreview("");
+                                                                }}
+                                                            >
+                                                                ✕ Remover Foto
+                                                            </Button>
+                                                        </div>
+                                                    ) : (
+                                                        <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary transition-colors">
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="hidden"
+                                                                onChange={handleVehiclePhotoChange}
+                                                                disabled={uploadingVehiclePhoto}
+                                                            />
+                                                            <div className="text-center">
+                                                                <Image className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                                                                <p className="text-sm font-medium text-foreground">Clique para selecionar foto</p>
+                                                                <p className="text-xs text-muted-foreground mt-1">PNG, JPG ou JPEG (máx 5MB)</p>
+                                                            </div>
+                                                        </label>
+                                                    )}
+                                                </div>
+
                                                 <Button
                                                     onClick={handleValidateAndAddVehicle}
-                                                    disabled={validatingNewVehicle}
+                                                    disabled={validatingNewVehicle || !newVehicleForm.photoFile}
                                                     className="w-full"
                                                 >
                                                     {validatingNewVehicle ? "Verificando..." : "Verificar com IA"}
@@ -913,7 +1164,8 @@ const ClientDashboard = () => {
                                                     variant="outline"
                                                     onClick={() => {
                                                         setValidationResult(null);
-                                                        setNewVehicleForm({ vehicle: "", plate: "" });
+                                                        setNewVehicleForm({ vehicle: "", plate: "", photoFile: null });
+                                                        setVehiclePhotoPreview("");
                                                     }}
                                                     className="w-full"
                                                 >
@@ -927,36 +1179,54 @@ const ClientDashboard = () => {
                         </div>
 
                         {/* Vehicles List */}
-                        <div className="space-y-3">
-                            {clientVehicles.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-8">Nenhum veículo adicionado ainda</p>
-                            ) : (
-                                clientVehicles.map((vehicle) => (
-                                    <div
-                                        key={vehicle.id}
-                                        className="p-4 bg-muted/50 rounded-lg border border-border flex items-center justify-between"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Car className="w-5 h-5 text-primary" />
-                                            <div>
-                                                <p className="font-medium text-foreground">{vehicle.vehicle}</p>
-                                                <p className="text-sm text-muted-foreground">
-                                                    Placa: {vehicle.plate} {vehicle.is_primary && <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Principal</span>}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleDeleteVehicle(vehicle.id)}
-                                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                         <div className="space-y-3">
+                             {clientVehicles.length === 0 ? (
+                                 <p className="text-sm text-muted-foreground text-center py-8">Nenhum veículo adicionado ainda</p>
+                             ) : (
+                                 clientVehicles.map((vehicle) => (
+                                     <div
+                                         key={vehicle.id}
+                                         className="p-4 bg-muted/50 rounded-lg border border-border flex items-center justify-between gap-4"
+                                     >
+                                         <div className="flex items-center gap-3 flex-1 min-w-0">
+                                             {vehicle.vehicle_photo_url ? (
+                                                 <button
+                                                     onClick={() => {
+                                                         setSelectedPhotoUrl(vehicle.vehicle_photo_url || "");
+                                                         setPhotoModalOpen(true);
+                                                     }}
+                                                     className="cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                                                 >
+                                                     <img
+                                                         src={vehicle.vehicle_photo_url}
+                                                         alt={vehicle.vehicle}
+                                                         className="w-12 h-12 object-cover rounded-lg"
+                                                     />
+                                                 </button>
+                                             ) : (
+                                                 <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                     <Car className="w-5 h-5 text-primary" />
+                                                 </div>
+                                             )}
+                                             <div className="min-w-0">
+                                                 <p className="font-medium text-foreground truncate">{vehicle.vehicle}</p>
+                                                 <p className="text-sm text-muted-foreground">
+                                                     Placa: {vehicle.plate} {vehicle.is_primary && <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Principal</span>}
+                                                 </p>
+                                             </div>
+                                         </div>
+                                         <Button
+                                             variant="ghost"
+                                             size="sm"
+                                             onClick={() => handleDeleteVehicle(vehicle.id)}
+                                             className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 flex-shrink-0"
+                                         >
+                                             <Trash2 className="w-4 h-4" />
+                                         </Button>
+                                     </div>
+                                 ))
+                             )}
+                         </div>
                     </motion.div>
 
                     {/* Bulk Upload Section */}
@@ -1197,6 +1467,62 @@ const ClientDashboard = () => {
                                     </Button>
                                 </div>
                             )}
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Modal para Visualizar Foto do Veículo */}
+                    <Dialog open={photoModalOpen} onOpenChange={setPhotoModalOpen}>
+                        <DialogContent className="bg-card border-border max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="font-display">Foto do Veículo</DialogTitle>
+                            </DialogHeader>
+                            <div className="flex justify-center items-center">
+                                <img
+                                    src={selectedPhotoUrl}
+                                    alt="Veículo"
+                                    className="max-w-full max-h-96 rounded-lg object-contain"
+                                />
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Modal para Visualizar Vídeo do Agendamento */}
+                    <Dialog open={videoModalOpen} onOpenChange={setVideoModalOpen}>
+                        <DialogContent className="bg-card border-border max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="font-display">Vídeo do Problema</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div className="flex justify-center items-center bg-black rounded-lg overflow-hidden">
+                                    <video
+                                        src={selectedVideoUrl}
+                                        controls
+                                        className="max-w-full max-h-96"
+                                    />
+                                </div>
+                                <div className="p-4 bg-muted/50 rounded-lg border border-border space-y-3">
+                                    <div>
+                                        <h4 className="font-semibold text-foreground mb-2">Por que o vídeo é obrigatório?</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                            O vídeo documenta o problema do seu veículo antes do atendimento, permitindo que nossa equipe entenda melhor a situação e se prepare adequadamente com os materiais e ferramentas corretos.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-foreground mb-2">Como funciona?</h4>
+                                        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                                            <li>Grave um vídeo mostrando o dano ou problema</li>
+                                            <li>Anexe o vídeo ao criar o agendamento</li>
+                                            <li>Nossa equipe analisa antes do atendimento</li>
+                                            <li>Você pode visualizar a qualquer momento aqui</li>
+                                        </ul>
+                                    </div>
+                                    <div className="pt-2 border-t border-border">
+                                        <p className="text-xs text-muted-foreground italic">
+                                            💡 Dica: Filme em boa iluminação, mostre o problema por diferentes ângulos e inclua som (explicando o problema se possível).
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </DialogContent>
                     </Dialog>
                 </motion.div>
