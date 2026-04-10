@@ -21,8 +21,8 @@ const FloatingChat = () => {
       sender: "bot",
       type: "options",
       options: [
-        { id: "1", label: "1️⃣ Agendar um serviço", value: "agendamento" },
-        { id: "2", label: "2️⃣ Visitar uma de nossas lojas", value: "lojas" },
+        { id: "1", label: "1️⃣ Agendar um serviço", value: "1" },
+        { id: "2", label: "2️⃣ Visitar uma de nossas lojas", value: "2" },
       ],
     },
   ]);
@@ -96,8 +96,8 @@ const FloatingChat = () => {
             sender: "bot",
             type: "options",
             options: [
-              { id: "1", label: "1️⃣ Agendar um serviço", value: "agendamento" },
-              { id: "2", label: "2️⃣ Visitar uma de nossas lojas", value: "lojas" },
+              { id: "1", label: "1️⃣ Agendar um serviço", value: "1" },
+              { id: "2", label: "2️⃣ Visitar uma de nossas lojas", value: "2" },
             ],
           },
         ]);
