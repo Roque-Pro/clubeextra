@@ -104,11 +104,11 @@ const calculateRequiredHeight = (data: ReceiptData): number => {
   // Logo
   yPosition += 26;
 
-  // Nome da loja (mesma lógica de renderização)
+  // Nome da loja (mesma lógica de renderização com splitTextToSize)
   tempPdf.setFontSize(11);
   tempPdf.setFont("helvetica", "bold");
-  const storeNameLines = data.storeName.split('\n');
-  yPosition += storeNameLines.length * 4 + 1;
+  const storeNameSplit = tempPdf.splitTextToSize(data.storeName, 70); // maxWidth 70 igual à renderização
+  yPosition += storeNameSplit.length * 4 + 1;
 
   // Separador e frase evangélica
   yPosition += 3; // separador
