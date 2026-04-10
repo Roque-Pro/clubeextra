@@ -1,0 +1,556 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    🚀 PROMPT PROFISSIONAL DE SEO - TECHNEXOS
+                        CONSULTORIA DE OTIMIZAÇÃO PARA GOOGLE
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJETIVO: Otimização completa de SEO e estrutura de dados para melhor visibilidade no Google
+
+───────────────────────────────────────────────────────────────────────────────
+📋 ANÁLISE ESTRUTURADA E VERIFICAÇÃO COMPLETA
+───────────────────────────────────────────────────────────────────────────────
+
+Você é um consultor SEO sênior. Sua tarefa é analisar e otimizar COMPLETAMENTE o SEO de um site.
+
+FRONTS DE ANÁLISE OBRIGATÓRIOS:
+
+1. META TAGS ESSENCIAIS
+   ├─ <title> (máximo 60 caracteres, com palavra-chave principal)
+   ├─ <meta name="description"> (máximo 160 caracteres, atrativo e comercial)
+   ├─ <meta name="author">
+   └─ <meta name="viewport">
+
+2. OPEN GRAPH & SOCIAL MEDIA
+   ├─ og:title (para Facebook, LinkedIn, etc)
+   ├─ og:description (mesma qualidade do description)
+   ├─ og:image (formato: JPG/PNG, dimensões ideais: 1200x630px, local ou CDN otimizado)
+   ├─ og:url
+   ├─ og:type
+   ├─ twitter:card (summary_large_image recomendado)
+   ├─ twitter:title
+   ├─ twitter:description
+   └─ twitter:image
+
+3. STRUCTURED DATA (JSON-LD) - OBRIGATÓRIO
+   Implementar conforme tipo de negócio:
+   
+   ✓ LocalBusiness (para empresas com endereço físico)
+   ✓ Organization (para empresas em geral)
+   ✓ Product (para e-commerce)
+   ✓ Article (para blogs)
+   ✓ BreadcrumbList (para navegação)
+
+   CAMPOS CRÍTICOS de LocalBusiness:
+   - name (nome exato da empresa)
+   - description (descrição clara do negócio)
+   - image (logo ou imagem principal)
+   - url (website completo)
+   - telephone (com formato +55 XX XXXXX-XXXX)
+   - address (endereço estruturado com PostalAddress)
+     └─ streetAddress
+     └─ addressLocality (cidade)
+     └─ addressRegion (estado - sigla)
+     └─ postalCode (CEP com hífen)
+     └─ addressCountry (país - código ISO)
+   - sameAs (links para redes sociais)
+   - priceRange ($$, $$$, etc)
+
+4. IMAGEM & FAVICON
+   ├─ Logo/Imagem principal (local ou CDN - NÃO servidor externo instável)
+   ├─ Favicon.svg ou .ico
+   ├─ Otimização: WebP quando possível
+   └─ Alt text descritivo em todas as imagens
+
+5. KEYWORDS & CONTEÚDO
+   ├─ Palavra-chave principal (ex: "vidros automotivos Nova Iguaçu")
+   ├─ Palavras-chave secundárias (variações naturais)
+   ├─ Incorporação natural no título, descrição e conteúdo
+   ├─ Evitar "keyword stuffing" (repetição excessiva)
+   └─ Análise de intenção de busca (informacional, transacional, local)
+
+6. DADOS DO NEGÓCIO (PARA SCHEMA)
+   Informações OBRIGATÓRIAS a solicitar:
+   ├─ Nome exato da empresa
+   ├─ Tipo de negócio (LocalBusiness, Services, etc)
+   ├─ Descrição breve (máximo 160 caracteres)
+   ├─ Telefone (com DDD, formato: +55 XX XXXXX-XXXX)
+   ├─ Endereço completo (rua, número, complemento, bairro, cidade, estado, CEP)
+   ├─ URL do website
+   ├─ Redes sociais (Facebook, Instagram, LinkedIn)
+   ├─ Horário de funcionamento (se aplicável)
+   ├─ Faixa de preço ($ | $$ | $$$ | $$$$)
+   └─ Categorias de serviço/produto
+
+───────────────────────────────────────────────────────────────────────────────
+✅ CHECKLIST DE IMPLEMENTAÇÃO
+───────────────────────────────────────────────────────────────────────────────
+
+ANTES DE COMEÇAR:
+
+□ Coletar TODAS as informações do cliente (dados acima)
+□ Identificar o tipo de negócio (LocalBusiness, Service, Product, etc)
+□ Definir palavra-chave principal com melhor potencial
+□ Analisar concorrentes (títulos, descrições, imagens)
+
+DURANTE A IMPLEMENTAÇÃO:
+
+□ Validar todos os meta tags (sem caracteres especiais conflitantes)
+□ Testar JSON-LD em https://schema.org/validator
+□ Verificar comprimento de título (<60 chars) e description (<160 chars)
+□ Confirmar que og:image está otimizada (dimensões, peso)
+□ Garantir que og:image é uma URL ABSOLUTA (com protocolo https://)
+□ Validar telefone com +55 e formato correto
+□ Checar endereço estruturado com todos os campos
+□ Incluir links de redes sociais em sameAs
+□ Garantir og:url aponta para homepage
+
+APÓS IMPLEMENTAÇÃO:
+
+□ Testar no Google Rich Results (https://search.google.com/test/rich-results)
+□ Validar no Mobile-Friendly Test
+□ Testar compartilhamento em redes sociais (debugger do Facebook)
+□ Verificar velocidade de carregamento (Lighthouse)
+□ Monitorar no Google Search Console
+
+───────────────────────────────────────────────────────────────────────────────
+📊 RESULTADO ESPERADO NO GOOGLE
+───────────────────────────────────────────────────────────────────────────────
+
+ANTES (ruim):
+┌─────────────────────────────────────────────────────┐
+│ Título genérico ou vago                             │
+│ https://www.seusite.com.br                          │
+│ Descrição técnica ou desatualizada                  │
+└─────────────────────────────────────────────────────┘
+
+DEPOIS (profissional):
+┌─────────────────────────────────────────────────────┐
+│ [Logo/Imagem] Título com Palavra-Chave Principal   │
+│ https://www.seusite.com.br                          │
+│ Descrição comercial, atrativa e descritiva         │
+│ ☎️ (XX) XXXXX-XXXX | 📍 Cidade, Estado              │
+│ ⭐⭐⭐⭐⭐ Classificação (quando aplicável)           │
+└─────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+🔍 FLUXO DE TRABALHO RECOMENDADO
+───────────────────────────────────────────────────────────────────────────────
+
+1. COLETAR DADOS
+   └─ Solicitar todas as informações listadas acima
+
+2. ANALISAR SITE ATUAL
+   └─ Extrair structure, meta tags, imagens existentes
+
+3. PESQUISAR KEYWORDS
+   └─ Google Trends, Semrush, Ahrefs, ou ferramentas gratuitas
+
+4. DEFINIR ESTRATÉGIA
+   └─ Título, Description, Keywords principais
+
+5. IMPLEMENTAR METAS
+   └─ Title, Description, og:tags
+
+6. ESTRUTURAR DADOS
+   └─ JSON-LD schema.org conforme tipo de negócio
+
+7. OTIMIZAR IMAGEM
+   └─ Formatos modernos, redimensionar, comprimir
+
+8. VALIDAR
+   └─ Rich Results Test, Mobile, Search Console
+
+9. DOCUMENTAR
+   └─ Criar relatório com antes/depois
+
+───────────────────────────────────────────────────────────────────────────────
+⚠️ ERROS COMUNS A EVITAR
+───────────────────────────────────────────────────────────────────────────────
+
+❌ Title com mais de 60 caracteres (é cortado no Google)
+❌ Description genérica ("Sistema de gestão", "Página inicial")
+❌ og:image apontando para URL externa instável
+❌ og:image sem protocolo https:// (URL relativa)
+❌ Telefone sem +55 ou formatação inconsistente
+❌ JSON-LD com syntax errors (testar sempre)
+❌ Esquecer de estruturar o endereço (PostalAddress)
+❌ Meta tags com caracteres especiais não escapados
+❌ Repetição excessiva de keywords (keyword stuffing)
+❌ Imagem muito pesada ou em formato desatualizado
+
+───────────────────────────────────────────────────────────────────────────────
+💡 DICAS PRO
+───────────────────────────────────────────────────────────────────────────────
+
+• Sempre incluir "—" ou "-" no título para separar marca + descrição
+  Exemplo: "Empresa | Serviço Principal de Cidade"
+
+• Description deve começar com ação: "Confira", "Descubra", "Saiba mais"
+  Evitar: "Bem-vindo ao site", "Sistema de"
+
+• og:image ideal: 1200x630px (proporção 1.91:1)
+  Mínimo: 600x315px | Máximo: 10MB
+
+• Telefone deve seguir: +55 [DDD] [99999-9999]
+  Com espaço após +55 e traço no número
+
+• CEP deve incluir hífen: 12345-678
+
+• Sempre validar JSON-LD antes de publicar
+  Link: https://schema.org/validator
+
+───────────────────────────────────────────────────────────────────────────────
+📝 TEMPLATE PRONTO PARA USAR
+───────────────────────────────────────────────────────────────────────────────
+
+<!-- META TAGS ESSENCIAIS -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>[NOME EMPRESA] - [SERVIÇO/PRODUTO PRINCIPAL]</title>
+<meta name="description" content="[Descrição atrativa. Máximo 160 caracteres. Com call-to-action.]">
+<meta name="author" content="[NOME EMPRESA]" />
+
+<!-- OPEN GRAPH -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="[NOME EMPRESA] - [SERVIÇO/PRODUTO]">
+<meta property="og:description" content="[Descrição atrativa. Máximo 160 caracteres.]">
+<meta property="og:image" content="[URL ABSOLUTA DA IMAGEM - MÍNIMO 600x315px]">
+<meta property="og:url" content="[URL HOMEPAGE]">
+
+<!-- TWITTER -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="[NOME EMPRESA] - [SERVIÇO/PRODUTO]">
+<meta name="twitter:description" content="[Descrição atrativa.]">
+<meta name="twitter:image" content="[URL ABSOLUTA DA IMAGEM]">
+
+<!-- JSON-LD STRUCTURED DATA -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "[NOME EXATO DA EMPRESA]",
+  "description": "[Descrição do negócio]",
+  "image": "[URL LOGO/IMAGEM]",
+  "url": "[URL HOMEPAGE]",
+  "telephone": "+55 [DDD] [XXXXX-XXXX]",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "[RUA, NÚMERO]",
+    "addressLocality": "[CIDADE]",
+    "addressRegion": "[UF]",
+    "postalCode": "[XXXXX-XXX]",
+    "addressCountry": "BR"
+  },
+  "sameAs": [
+    "[LINK FACEBOOK]",
+    "[LINK INSTAGRAM]",
+    "[LINK LINKEDIN]"
+  ],
+  "priceRange": "$$"
+}
+</script>
+
+───────────────────────────────────────────────────────────────────────────────
+📞 INFORMAÇÕES A SOLICITAR AO CLIENTE
+───────────────────────────────────────────────────────────────────────────────
+
+IDENTIDADE:
+[ ] Nome completo da empresa (sem abreviações)
+[ ] Tipo de negócio (Consultoria, Loja, Serviço, etc)
+[ ] Descrição breve (máximo 160 caracteres)
+[ ] Palavra-chave principal para SEO
+
+CONTATO:
+[ ] Telefone com DDD (exemplo: 21 97463-6253)
+[ ] Email principal
+
+LOCALIZAÇÃO:
+[ ] Rua e número
+[ ] Complemento (se houver)
+[ ] Bairro/Distrito
+[ ] Cidade
+[ ] Estado (sigla)
+[ ] CEP (formato: 12345-678)
+
+DIGITAL:
+[ ] URL do website
+[ ] Link Facebook
+[ ] Link Instagram
+[ ] Link LinkedIn (se houver)
+
+NEGÓCIO:
+[ ] Faixa de preço ($ | $$ | $$$ | $$$$)
+[ ] Horário de funcionamento
+[ ] Categorias principais de serviço/produto
+[ ] Diferencial competitivo (uma frase)
+
+═══════════════════════════════════════════════════════════════════════════════
+                        Desenvolvido por TECHNEXOS
+                    Consultoria em Desenvolvimento Web & SEO
+═══════════════════════════════════════════════════════════════════════════════
+
+
+═══════════════════════════════════════════════════════════════════════════════
+              📋 FORMULÁRIO PREENCHIDO - PARA A IA UTILIZAR
+                        (Preencha todos os campos)
+═══════════════════════════════════════════════════════════════════════════════
+
+IMPORTANTE: Forneça estas informações ANTES de solicitar otimização SEO
+
+───────────────────────────────────────────────────────────────────────────────
+🏢 IDENTIDADE DA EMPRESA
+───────────────────────────────────────────────────────────────────────────────
+
+Nome da empresa (EXATO):
+Exemplo: Iguaçu Auto Vidros
+Seu preenchimento: _________________________________________________________
+
+Tipo de negócio (Loja, Serviço, Consultoria, etc):
+Exemplo: Serviços Automotivos / Vidraçaria Automotiva
+Seu preenchimento: _________________________________________________________
+
+Descrição breve (máximo 160 caracteres - será usada no Google):
+Exemplo: Serviços automotivos de qualidade. Mais de 20 anos de excelência em 
+soluções automotivas. Confira nossas soluções!
+Seu preenchimento: ________________________________________________________
+_________________________________________________________
+
+Qual é o seu principal serviço/produto?
+Exemplo: Vidros automotivos, instalação de vidros, reparos veiculares
+Seu preenchimento: _________________________________________________________
+
+Qual é a sua palavra-chave principal para SEO? (ex: "vidros automotivos Nova Iguaçu")
+Exemplo: serviços automotivos Nova Iguaçu
+Seu preenchimento: _________________________________________________________
+
+Diferencial competitivo em uma frase (o que te diferencia):
+Exemplo: Mais de 20 anos de experiência e garantia vitalícia em todos os vidros
+Seu preenchimento: _________________________________________________________
+
+───────────────────────────────────────────────────────────────────────────────
+📞 INFORMAÇÕES DE CONTATO
+───────────────────────────────────────────────────────────────────────────────
+
+Telefone com DDD (formato: 21 97463-6253):
+Exemplo: 21 97463-6253
+Seu preenchimento: _________________________________________________________
+
+Email principal:
+Exemplo: contato@iguacuvidros.com.br
+Seu preenchimento: _________________________________________________________
+
+WhatsApp (se diferente do telefone):
+Exemplo: 21 98765-4321 (deixe em branco se for o mesmo)
+Seu preenchimento: _________________________________________________________
+
+───────────────────────────────────────────────────────────────────────────────
+📍 LOCALIZAÇÃO (Endereço Físico)
+───────────────────────────────────────────────────────────────────────────────
+
+Rua:
+Exemplo: Rua Oscar Soares
+Seu preenchimento: _________________________________________________________
+
+Número:
+Exemplo: 1226
+Seu preenchimento: _________________________________________________________
+
+Complemento (apartamento, sala, etc):
+Exemplo: Sala 05 / Loja A (deixe em branco se não houver)
+Seu preenchimento: _________________________________________________________
+
+Bairro/Distrito:
+Exemplo: Califórnia
+Seu preenchimento: _________________________________________________________
+
+Cidade:
+Exemplo: Nova Iguaçu
+Seu preenchimento: _________________________________________________________
+
+Estado (sigla - ex: RJ, SP, MG):
+Exemplo: RJ
+Seu preenchimento: _________________________________________________________
+
+CEP (formato: 12345-678):
+Exemplo: 26030-220
+Seu preenchimento: _________________________________________________________
+
+País (geralmente: Brasil):
+Exemplo: Brasil
+Seu preenchimento: _________________________________________________________
+
+───────────────────────────────────────────────────────────────────────────────
+🌐 PRESENÇA DIGITAL
+───────────────────────────────────────────────────────────────────────────────
+
+URL do site (https://www.seusite.com.br):
+Exemplo: https://www.autovidrosiguacu.com.br
+Seu preenchimento: _________________________________________________________
+
+Link Facebook (completo):
+Exemplo: https://www.facebook.com/iguacuvidros
+Seu preenchimento: _________________________________________________________
+
+Link Instagram (completo):
+Exemplo: https://www.instagram.com/iguacuvidros
+Seu preenchimento: _________________________________________________________
+
+Link LinkedIn (se houver):
+Exemplo: https://www.linkedin.com/company/iguacu-vidros (deixe em branco se não houver)
+Seu preenchimento: _________________________________________________________
+
+Link YouTube (se houver):
+Exemplo: https://www.youtube.com/channel/iguacuvidros (deixe em branco se não houver)
+Seu preenchimento: _________________________________________________________
+
+───────────────────────────────────────────────────────────────────────────────
+💰 INFORMAÇÕES DE NEGÓCIO
+───────────────────────────────────────────────────────────────────────────────
+
+Faixa de preço (marque com X):
+[ ] $ (Baixo custo)
+[ ] $$ (Médio custo)
+[ ] $$$ (Alto custo)
+[ ] $$$$ (Luxo)
+
+Horário de funcionamento:
+Exemplo: Seg-Sex 8:00-18:00 | Sab 8:00-13:00
+Seu preenchimento: _________________________________________________________
+
+Atende finais de semana? 
+Exemplo: [X] Sim [ ] Não
+Seu preenchimento: [ ] Sim [ ] Não
+
+Categorias de serviço/produto (liste as principais):
+Exemplo: 
+- Instalação de vidros automotivos
+- Reparos de vidros danificados
+- Vidros blindados
+- Insulfilm
+Seu preenchimento: _________________________________________________________
+_________________________________________________________
+
+Tempo de atuação no mercado:
+Exemplo: 20 anos (ou desde 2004)
+Seu preenchimento: _________________________________________________________
+
+Quantos clientes/projetos já entregou?
+Exemplo: Mais de 5000 veículos atendidos
+Seu preenchimento: _________________________________________________________
+
+Tem certificações ou prêmios? (liste):
+Exemplo: Certificado ISO 9001 | Melhor Serviço 2023
+Seu preenchimento: _________________________________________________________
+
+───────────────────────────────────────────────────────────────────────────────
+🎨 INFORMAÇÕES SOBRE BRANDING
+───────────────────────────────────────────────────────────────────────────────
+
+Tem logo? 
+Exemplo: [X] Sim [ ] Não
+Se sim, em qual formato? (PNG, SVG, JPG)
+Exemplo: PNG
+Seu preenchimento: [  ] Sim [ ] Não | Formato: _____________________________
+
+Tem imagem de marca/capa? 
+Exemplo: [X] Sim [ ] Não
+Se sim, qual é o caminho? (/img/iguacu_vidros_black.PNG)
+Exemplo: /img/iguacu_vidros_black.PNG
+Seu preenchimento: [  ] Sim [ ] Não | Caminho: ______________________________
+
+Cores principais da marca (hex ou nome):
+Exemplo: Azul (#2c3493) e Branco, com destaque em Laranja (#FF6B35)
+Seu preenchimento: _________________________________________________________
+
+Qual é a sensação que você quer transmitir? (profissional, moderno, acessível, etc):
+Exemplo: Profissional, confiável, experiente, moderna
+Seu preenchimento: _________________________________________________________
+
+───────────────────────────────────────────────────────────────────────────────
+📊 ANÁLISE COMPETITIVA
+───────────────────────────────────────────────────────────────────────────────
+
+Quem são seus 3 principais concorrentes?
+Exemplo:
+1. Vidraçaria Central RJ
+2. Auto Vidros Premium
+3. Vidros Rápido
+Seu preenchimento:
+1. _________________________________________________________________________
+2. _________________________________________________________________________
+3. _________________________________________________________________________
+
+Qual é a sua vantagem em relação a eles?
+Exemplo: Mais experiência (20 anos), garantia vitalícia, serviço 24h, atendimento personalizado
+Seu preenchimento: _________________________________________________________
+_________________________________________________________
+
+───────────────────────────────────────────────────────────────────────────────
+🎯 METAS E OBJETIVOS
+───────────────────────────────────────────────────────────────────────────────
+
+Qual é o principal objetivo do site?
+Exemplo: [X] Gerar leads/contatos [ ] Vender produtos/serviços online [ ] Informação/conteúdo [ ] Agendamento de serviços
+Seu preenchimento:
+[ ] Vender produtos/serviços online
+[ ] Gerar leads/contatos
+[ ] Informação/conteúdo
+[ ] Agendamento de serviços
+[ ] Outro: _________________________________________________________________
+
+Qual é o seu público-alvo principal? (idade, profissão, localização, etc):
+Exemplo: Proprietários de veículos em Nova Iguaçu, 25-60 anos, classe média, 
+que precisam de reparo/manutenção veicular urgente
+Seu preenchimento: _________________________________________________________
+_________________________________________________________
+
+Qual é o seu público-alvo secundário? (se houver):
+Exemplo: Empresas de transportes, locadoras de carros, seguradoras
+Seu preenchimento: _________________________________________________________
+
+Quantas conversões (vendas/leads) você espera por mês?
+Exemplo: 15-20 orçamentos solicitados
+Seu preenchimento: _________________________________________________________
+
+───────────────────────────────────────────────────────────────────────────────
+✉️ CONTEÚDO OPCIONAL
+───────────────────────────────────────────────────────────────────────────────
+
+Você tem uma história da empresa? (resumida)
+Exemplo: Fundada em 2004, a Iguaçu Auto Vidros começou como pequena oficina 
+e cresceu para se tornar referência em vidros automotivos. Atendemos mais de 
+5000 clientes satisfeitos e mantemos compromisso com qualidade e garantia.
+Seu preenchimento: _________________________________________________________
+_________________________________________________________
+_________________________________________________________
+
+Você tem depoimentos de clientes satisfeitos?
+Exemplo: "Excelente atendimento, rápido e eficiente. Recomendo!" - João Silva
+Seu preenchimento: _________________________________________________________
+_________________________________________________________
+
+Tem alguma estatística que destaca seu negócio? (ex: "mais de 20 anos no mercado")
+Exemplo: 20+ anos no mercado | 5000+ clientes atendidos | Garantia vitalícia | 
+Atendimento 24h | 99% de satisfação
+Seu preenchimento: _________________________________________________________
+
+Alguma informação adicional que a IA deve saber:
+Exemplo: Estamos em expansão, queremos aparecer nos primeiros resultados para 
+"vidros automotivos Nova Iguaçu". Temos foto de alta qualidade do nosso local.
+Seu preenchimento: _________________________________________________________
+_________________________________________________________
+_________________________________________________________
+
+═══════════════════════════════════════════════════════════════════════════════
+
+INSTRUÇÕES FINAIS:
+1. Preencha TODOS os campos acima
+2. Copie e cole este formulário preenchido para a IA
+3. Solicite: "Otimize meu SEO com as informações acima usando o prompt TECHNEXOS"
+4. A IA fará uma análise completa e fornecerá:
+   - Meta tags otimizadas
+   - Descrição comercial atrativa
+   - JSON-LD estruturado
+   - Recomendações de imagem
+   - Checklist de implementação
+
+═══════════════════════════════════════════════════════════════════════════════
