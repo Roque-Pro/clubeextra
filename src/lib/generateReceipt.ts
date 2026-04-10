@@ -205,10 +205,10 @@ export const generateReceipt = async (data: ReceiptData): Promise<Blob> => {
   pdf.setFontSize(headerFont);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...primaryColor);
-  const storeNameLines = data.storeName.split('\n');
+  const storeNameSplit = pdf.splitTextToSize(data.storeName, 70);
   let storeNameY = yPosition;
-  storeNameLines.forEach((line) => {
-    pdf.text(line, pageWidth / 2, storeNameY, { align: "center", maxWidth: 70 });
+  storeNameSplit.forEach((line) => {
+    pdf.text(line, pageWidth / 2, storeNameY, { align: "center" });
     storeNameY += 4;
   });
   yPosition = storeNameY + 1;
