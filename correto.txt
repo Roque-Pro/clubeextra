@@ -1,0 +1,12 @@
+
+Antigo:
+
+login: milena-someacessorios@clubedovidro.com.br 
+senha: milenasomeacessorios
+
+
+Novo - CORRETO
+
+
+login: mylena-someacessorios@clubedovidro.com.br 
+senha: mylenasomeacessorios

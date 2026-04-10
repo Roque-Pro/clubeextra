@@ -11,6 +11,7 @@ import Clients from "./pages/Clients";
 import Inventory from "./pages/Inventory";
 import History from "./pages/History";
 import AdminPanel from "./pages/AdminPanel";
+import Financial from "./pages/Financial";
 import SalesNew from "./pages/SalesNew";
 import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/vendas" element={<SalesNew />} />
               <Route path="/analise" element={<Analytics />} />
               <Route path="/historico" element={<History />} />
+              <Route path="/financeiro" element={<Financial />} />
               <Route path="/admin" element={<AdminPanel />} />
             </Route>
             <Route path="*" element={<NotFound />} />
