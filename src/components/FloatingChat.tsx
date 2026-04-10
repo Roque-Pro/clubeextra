@@ -55,7 +55,7 @@ const FloatingChat = () => {
               {
                 id: "1",
                 label: "📋 Agendar Serviço",
-                url: "https://www.autovidrosiguacu.com.br/agendamento", // Substitua pela URL correta
+                url: "/plan-auth",
               },
             ],
           },
