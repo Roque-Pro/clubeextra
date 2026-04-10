@@ -108,12 +108,49 @@ const FloatingChat = () => {
   return (
     <>
       {/* Botão Flutuante */}
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-40"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
+      <motion.div
+        className="fixed bottom-6 right-6 z-40"
+        animate={{
+          y: [0, -10, 0],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
       >
+        {/* Pulso de fundo */}
+        <motion.div
+          className="absolute inset-0 w-16 h-16 bg-blue-600 rounded-full"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.8, 0, 0.8],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+
+        {/* Botão principal */}
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative w-16 h-16 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:shadow-2xl flex items-center justify-center border-4 border-white"
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          animate={{
+            boxShadow: [
+              "0 0 0 0px rgba(59, 130, 246, 0.7)",
+              "0 0 0 15px rgba(59, 130, 246, 0)",
+            ],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeOut",
+          }}
+        >
         <AnimatePresence mode="wait">
           {isOpen ? (
             <motion.div
@@ -137,7 +174,8 @@ const FloatingChat = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.button>
+        </motion.button>
+      </motion.div>
 
       {/* Chat Box */}
       <AnimatePresence>
