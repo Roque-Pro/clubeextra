@@ -262,7 +262,7 @@ const PlanAuth = () => {
               onClick={() => setShowPlanInfo(false)}
               className="text-sm text-primary hover:underline w-full text-center"
             >
-              Continuar com agendamento Rápido e Grátis →
+              Continuar com agendamento Rápido →
             </button>
           </motion.div>
         )}
