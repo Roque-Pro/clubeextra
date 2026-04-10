@@ -557,8 +557,8 @@ const SalesNew = () => {
                         return {
                             name: product?.name || "Produto",
                             quantity: item.quantity,
-                            unitPrice: product?.price || 0,
-                            subtotal: (product?.price || 0) * item.quantity,
+                            unitPrice: item.unit_price || 0,
+                            subtotal: (item.unit_price || 0) * item.quantity,
                             isGlass: isGlass,
                         };
                     });

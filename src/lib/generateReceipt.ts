@@ -45,14 +45,68 @@ const loadImageAsBase64 = async (url: string): Promise<string> => {
   });
 };
 
+// Funções auxiliares para calcular altura com precisão (mesma lógica da renderização)
+const getProductHeight = (pdf: jsPDF, product: ReceiptProduct): number => {
+  const dataWidth = 80 - 8; // pageWidth - 8 (onde pageWidth = 80)
+  const productNameFont = 10;
+  const smallFont = 7;
+  
+  let height = 0;
+  
+  // Nome do produto (font size 10, bold)
+  pdf.setFontSize(productNameFont);
+  pdf.setFont("helvetica", "bold");
+  const productLines = pdf.splitTextToSize(product.name, dataWidth - 1);
+  height += productLines.length * 3.5 + 1;
+  
+  // Quantidade e preço (smallFont = 7)
+  pdf.setFontSize(smallFont);
+  pdf.setFont("helvetica", "normal");
+  height += 3;
+  
+  // Subtotal
+  height += 3;
+  
+  return height;
+};
+
+const getNotesHeight = (pdf: jsPDF, notes: string): number => {
+  const dataWidth = 80 - 8;
+  const smallFont = 7;
+  
+  pdf.setFontSize(smallFont);
+  pdf.setFont("helvetica", "normal");
+  const notesLines = pdf.splitTextToSize(notes, dataWidth - 2);
+  return 3 + notesLines.length * 2.5 + 2;
+};
+
+const getExclusionHeight = (pdf: jsPDF): number => {
+  const dataWidth = 80 - 8;
+  
+  pdf.setFontSize(6);
+  pdf.setFont("helvetica", "normal");
+  const exclusionText = "Não cobrimos quebra de para-brisas, vigias ou vidros de portas.";
+  const exclusionLines = pdf.splitTextToSize(exclusionText, dataWidth - 2);
+  return 12; // Fixed height com padding
+};
+
 // Função auxiliar para calcular a altura necessária do documento
 const calculateRequiredHeight = (data: ReceiptData): number => {
+  // Criar um PDF temporário apenas para medir o texto (não será salvo)
+  const tempPdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: [80, 100], // tamanho temporário
+  });
+
   let yPosition = 5;
 
   // Logo
   yPosition += 26;
 
-  // Nome da loja
+  // Nome da loja (mesma lógica de renderização)
+  tempPdf.setFontSize(11);
+  tempPdf.setFont("helvetica", "bold");
   const storeNameLines = data.storeName.split('\n');
   yPosition += storeNameLines.length * 4 + 1;
 
@@ -74,11 +128,7 @@ const calculateRequiredHeight = (data: ReceiptData): number => {
   yPosition += 2; // linha separação
   
   data.products.forEach((product) => {
-    // Nome do produto
-    const estimatedLines = Math.ceil(product.name.length / 30); // aproximadamente 30 caracteres por linha em 80mm
-    yPosition += estimatedLines * 3 + 1;
-    yPosition += 3; // Qtd e preço
-    yPosition += 3; // Subtotal
+    yPosition += getProductHeight(tempPdf, product);
   });
 
   // Resumo financeiro
@@ -89,7 +139,7 @@ const calculateRequiredHeight = (data: ReceiptData): number => {
   if (data.isGlassWarranty) {
     yPosition += 1;
     yPosition += 18; // Box de garantia
-    yPosition += 12; // Exclusões
+    yPosition += getExclusionHeight(tempPdf); // Exclusões com cálculo preciso
   }
 
   // Método de pagamento
@@ -99,9 +149,7 @@ const calculateRequiredHeight = (data: ReceiptData): number => {
 
   // Observações
   if (data.notes) {
-    yPosition += 3; // "OBS"
-    const estimatedNoteLines = Math.ceil(data.notes.length / 35);
-    yPosition += estimatedNoteLines * 2.5 + 2;
+    yPosition += getNotesHeight(tempPdf, data.notes);
   }
 
   // Rodapé
