@@ -27,7 +27,7 @@ const AppSidebar = ({ onClose }: AppSidebarProps) => {
       {/* Logo */}
       <div className="p-6 border-b border-white/10 flex items-center justify-center">
         <img 
-          src="/img/iguacu_vidros.PNG" 
+          src="/img/iguacu_vidros_black.PNG" 
           alt="Iguaçu Auto Vidros" 
           className="h-24 object-contain"
         />
