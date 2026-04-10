@@ -20,6 +20,7 @@ import ClientDashboard from "./pages/ClientDashboard";
 import Landing from "./pages/Landing";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
+import FloatingChat from "./components/FloatingChat";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <FloatingChat />
       <BrowserRouter>
         <AuthProvider>
           <Routes>
