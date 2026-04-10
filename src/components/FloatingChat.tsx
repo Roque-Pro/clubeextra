@@ -71,18 +71,18 @@ const FloatingChat = () => {
             links: [
               {
                 id: "1",
-                label: "📍 Nova Iguaçu (Sede) - Rua Oscar Soares, 1226",
-                url: "https://maps.google.com/?q=Rua+Oscar+Soares,+1226,+Nova+Iguaçu,+RJ", // Google Maps
+                label: "🗺️ Iguaçu Auto Vidros - Rua Oscar Soares, 1226",
+                url: "https://maps.google.com/?q=Rua+Oscar+Soares,+1226,+Califórnia,+Nova+Iguaçu,+RJ",
               },
               {
                 id: "2",
-                label: "📍 Loja 2 - [Endereço 2]",
-                url: "https://maps.google.com/", // Substitua
+                label: "🗺️ Iguaçu Som e Acessórios - Rua Carlos Marques Rollo, 1123",
+                url: "https://maps.google.com/?q=Rua+Carlos+Marques+Rollo,+1123,+Califórnia,+Nova+Iguaçu,+RJ",
               },
               {
                 id: "3",
-                label: "📍 Loja 3 - [Endereço 3]",
-                url: "https://maps.google.com/", // Substitua
+                label: "🗺️ JJ Parabrisas - Avenida Nilo Peçanha, 1058",
+                url: "https://maps.google.com/?q=Avenida+Nilo+Peçanha,+1058,+Centro,+Nova+Iguaçu,+RJ",
               },
             ],
           },
@@ -239,9 +239,9 @@ const FloatingChat = () => {
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block text-sm bg-blue-700 text-white hover:bg-blue-800 rounded px-3 py-2 text-center transition font-medium"
+                            className="block text-sm bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 rounded px-3 py-2 text-center transition font-bold border-2 border-green-400 shadow-md"
                           >
-                            {link.label}
+                            {link.label} 📍
                           </a>
                         ))}
                       </div>
