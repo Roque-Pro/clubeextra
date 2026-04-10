@@ -73,6 +73,14 @@ const Financial = () => {
     }
   }, []);
 
+  // Limpar autenticação quando sair da página
+  useEffect(() => {
+    return () => {
+      sessionStorage.removeItem("financial_auth");
+      sessionStorage.removeItem("financial_auth_time");
+    };
+  }, []);
+
   const fetchEmployees = async () => {
     try {
       const { data, error } = await supabase
