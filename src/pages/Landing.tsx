@@ -639,8 +639,8 @@ const Landing = () => {
                                 icon: Zap,
                             },
                             {
-                                title: "Proteção e Insulfilmes",
-                                description: "WindowBlue: película de controle solar que reduz calor em até 50%, protege do UV e mantém privacidade com controle de luz",
+                                title: "Proteção e Insulfilms",
+                                description: "WindowBlue: película de controle solar que reduz calor em até 99%, protege do UV e mantém privacidade com controle de luz",
                                 icon: Hammer,
                             },
                         ].map((service, index) => {
