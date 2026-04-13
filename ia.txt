@@ -1,28 +1,10 @@
+Bem-vindo ao Clube do Vidro
+R$ 19,90/mês
 
-chunk-T2SWDQEL.js?v=c4d24aab:3750 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:927:21)
-AdminPanel.tsx:923 Clicou em Inventário
-AdminPanel.tsx:927 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:927:21)
-chunk-T2SWDQEL.js?v=c4d24aab:3750 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:927:21)
-AdminPanel.tsx:923 Clicou em Inventário
-AdminPanel.tsx:927 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:927:21)
-chunk-T2SWDQEL.js?v=c4d24aab:3750 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:927:21)
-AdminPanel.tsx:961 Clicou em Patrimônio
-AdminPanel.tsx:965 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:965:21)
-chunk-T2SWDQEL.js?v=c4d24aab:3750 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:965:21)
-AdminPanel.tsx:961 Clicou em Patrimônio
-AdminPanel.tsx:965 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:965:21)
-chunk-T2SWDQEL.js?v=c4d24aab:3750 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:965:21)
-AdminPanel.tsx:961 Clicou em Patrimônio
-AdminPanel.tsx:965 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:965:21)
-chunk-T2SWDQEL.js?v=c4d24aab:3750 Uncaught ReferenceError: setFinancialAuthenticated is not defined
-    at onClick (AdminPanel.tsx:965:21)
+(R$ 239,00/ano)
+
+3 trocas de vidro por ano: parabrisa, vigia, vidro de porta e janela (renovação automática)
+Assistência 24/7 para emergências
+Sem carência - use no 1º mês
+100% homologados pelo INMETRO com garantia
+Continuar para cadastro →

@@ -23,6 +23,7 @@ const FloatingChat = () => {
       options: [
         { id: "1", label: "1️⃣ Agendar um serviço", value: "1" },
         { id: "2", label: "2️⃣ Visitar uma de nossas lojas", value: "2" },
+        { id: "3", label: "3️⃣ Falar com a Loja", value: "3" },
       ],
     },
   ]);
@@ -87,6 +88,27 @@ const FloatingChat = () => {
             ],
           },
         ]);
+      } else if (messageText === "3" || messageText.toLowerCase().includes("falar")) {
+        const whatsappNumber = "21974636253";
+        const whatsappMessage = "Olá, vi vocês pelo Google e gostaria de saber mais";
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+        
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            text: "Ótimo! Clique no botão abaixo para conversar com a gente no WhatsApp:",
+            sender: "bot",
+            type: "links",
+            links: [
+              {
+                id: "1",
+                label: "💬 Abrir WhatsApp",
+                url: whatsappUrl,
+              },
+            ],
+          },
+        ]);
       } else {
         setMessages((prev) => [
           ...prev,
@@ -98,6 +120,7 @@ const FloatingChat = () => {
             options: [
               { id: "1", label: "1️⃣ Agendar um serviço", value: "1" },
               { id: "2", label: "2️⃣ Visitar uma de nossas lojas", value: "2" },
+              { id: "3", label: "3️⃣ Falar com a Loja", value: "3" },
             ],
           },
         ]);
