@@ -53,7 +53,7 @@ const Financial = () => {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"caixa" | "receitas" | "despesas" | "patrimonio" | "estoque" | "vendas">("caixa");
+  const [activeTab, setActiveTab] = useState<"caixa" | "receitas" | "despesas" | "patrimonio" | "estoque" | "vendas" | "comissoes">("caixa");
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
@@ -61,6 +61,7 @@ const Financial = () => {
   const [submitting, setSubmitting] = useState(false);
   const [financialAuthOpen, setFinancialAuthOpen] = useState(true);
   const [financialAuthenticated, setFinancialAuthenticated] = useState(false);
+  const [commissions, setCommissions] = useState<any[]>([]);
 
   // Verificar autenticação ao montar
   useEffect(() => {
@@ -155,6 +156,79 @@ const Financial = () => {
 
       if (error) throw error;
       setSales(data || []);
+      
+      // Calcular comissões
+      if (data && data.length > 0) {
+        const commissionsMap: Record<string, any> = {};
+        
+        for (const sale of data) {
+          // Comissão do vendedor principal
+          if (sale.main_seller_id) {
+            if (!commissionsMap[sale.main_seller_id]) {
+              commissionsMap[sale.main_seller_id] = {
+                employee_id: sale.main_seller_id,
+                employee_name: sale.main_seller_name || "Desconhecido",
+                total_commission: 0,
+                sales_details: [],
+              };
+            }
+            
+            const mainSellerComm = (sale.amount * (sale.main_seller_commission_percentage || 0)) / 100;
+            commissionsMap[sale.main_seller_id].total_commission += mainSellerComm;
+            commissionsMap[sale.main_seller_id].sales_details.push({
+              sale_id: sale.id,
+              sale_date: sale.sale_date,
+              sale_amount: sale.amount,
+              commission_type: "Vendedor Principal",
+              commission_percentage: sale.main_seller_commission_percentage,
+              commission_value: mainSellerComm,
+            });
+          }
+        }
+        
+        // Comissões dos colaboradores por produto
+        try {
+          const { data: saleProducts, error: saleProductsError } = await supabase
+            .from("sale_products_employees")
+            .select("*");
+          
+          if (!saleProductsError && saleProducts) {
+            for (const saleProduct of saleProducts) {
+              if (saleProduct.employee_id) {
+                if (!commissionsMap[saleProduct.employee_id]) {
+                  commissionsMap[saleProduct.employee_id] = {
+                    employee_id: saleProduct.employee_id,
+                    employee_name: saleProduct.employee_name || "Desconhecido",
+                    total_commission: 0,
+                    sales_details: [],
+                  };
+                }
+                
+                const subtotal = saleProduct.subtotal || ((saleProduct.unit_price || 0) * saleProduct.quantity);
+                const empComm = saleProduct.commission_type === "percentual" 
+                  ? (subtotal * saleProduct.commission_value) / 100 
+                  : saleProduct.commission_value;
+                
+                commissionsMap[saleProduct.employee_id].total_commission += empComm;
+                
+                const sale = data.find(s => s.id === saleProduct.sale_id);
+                commissionsMap[saleProduct.employee_id].sales_details.push({
+                  sale_id: saleProduct.sale_id,
+                  sale_date: sale?.sale_date || new Date().toISOString(),
+                  sale_amount: sale?.amount || 0,
+                  commission_type: "Colaborador em Produto",
+                  commission_percentage: saleProduct.commission_type === "percentual" ? saleProduct.commission_value : null,
+                  commission_value: empComm,
+                });
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Erro ao carregar comissões de colaboradores:", err);
+        }
+        
+        setCommissions(Object.values(commissionsMap));
+      }
     } catch (error: any) {
       console.error("Erro ao carregar vendas:", error);
     }
@@ -494,6 +568,17 @@ const Financial = () => {
                   )}
                 >
                   🛒 Vendas
+                </button>
+                <button
+                  onClick={() => setActiveTab("comissoes")}
+                  className={cn(
+                    "px-6 py-3 text-sm font-semibold border-b-2 transition-colors",
+                    activeTab === "comissoes"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  💰 Comissões
                 </button>
               </div>
             </div>
@@ -963,6 +1048,80 @@ const Financial = () => {
                           </tr>
                         </tbody>
                       </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB: COMISSÕES */}
+              {activeTab === "comissoes" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Comissões por Funcionário</h3>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Total</p>
+                      <p className="text-xl font-bold text-success">
+                        R$ {commissions.reduce((sum, c) => sum + c.total_commission, 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {commissions.length === 0 ? (
+                    <div className="bg-secondary/20 p-8 rounded-lg text-center text-muted-foreground text-sm">
+                      Nenhuma comissão registrada
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {commissions.map((commission, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="bg-card border border-border rounded-lg p-4"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="font-semibold text-foreground">{commission.employee_name}</h4>
+                              <p className="text-xs text-muted-foreground">ID: {commission.employee_id}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground">Total de Comissões</p>
+                              <p className="text-xl font-bold text-success">
+                                R$ {commission.total_commission.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </p>
+                            </div>
+                          </div>
+
+                          {commission.sales_details && commission.sales_details.length > 0 && (
+                            <div className="border-t border-border pt-3">
+                              <p className="text-xs font-semibold text-muted-foreground mb-2">Detalhes:</p>
+                              <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {commission.sales_details.map((detail: any, detailIdx: number) => (
+                                  <div key={detailIdx} className="text-xs p-2 bg-secondary/30 rounded flex justify-between items-center">
+                                    <div>
+                                      <p className="font-medium text-foreground">
+                                        {detail.commission_type}
+                                      </p>
+                                      <p className="text-muted-foreground">
+                                        {detail.commission_percentage 
+                                          ? `${detail.commission_percentage}% de R$ ${detail.sale_amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` 
+                                          : `Venda: R$ ${detail.sale_amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                                        }
+                                      </p>
+                                      <p className="text-muted-foreground text-xs">
+                                        {new Date(detail.sale_date).toLocaleDateString("pt-BR")}
+                                      </p>
+                                    </div>
+                                    <p className="font-bold text-success">
+                                      R$ {detail.commission_value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
                     </div>
                   )}
                 </div>

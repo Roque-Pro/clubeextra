@@ -75,6 +75,9 @@ const SalesNew = () => {
 
     // Form state
      const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
+     const [mainSellerId, setMainSellerId] = useState("");
+     const [mainSellerName, setMainSellerName] = useState("");
+     const [mainSellerCommissionPercentage, setMainSellerCommissionPercentage] = useState(0);
      const [currentItem, setCurrentItem] = useState<Partial<SaleItem> & { employees: SaleItemEmployee[] }>({
          product_id: "",
          employees: [],
@@ -82,9 +85,9 @@ const SalesNew = () => {
          commission_type: "percentual",
          commission_value: 1,
      });
-    const [currentEmployeeId, setCurrentEmployeeId] = useState("");
-    const [currentEmpCommissionType, setCurrentEmpCommissionType] = useState("percentual");
-    const [currentEmpCommissionValue, setCurrentEmpCommissionValue] = useState(1);
+     const [currentEmployeeId, setCurrentEmployeeId] = useState("");
+     const [currentEmpCommissionType, setCurrentEmpCommissionType] = useState("percentual");
+     const [currentEmpCommissionValue, setCurrentEmpCommissionValue] = useState(1);
     const [notes, setNotes] = useState("");
     const [paymentMethods, setPaymentMethods] = useState<Array<{ method: string; amount: number }>>([
         { method: "dinheiro", amount: 0 }
@@ -228,7 +231,29 @@ const SalesNew = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Add employee to current item
+    // Select main seller
+    const handleSelectMainSeller = (sellerId: string) => {
+        if (!sellerId) {
+            setMainSellerId("");
+            setMainSellerName("");
+            setMainSellerCommissionPercentage(0);
+            return;
+        }
+
+        const seller = employees.find((e) => e.id === sellerId);
+        if (!seller) {
+            toast({ title: "Vendedor não encontrado", variant: "destructive" });
+            return;
+        }
+
+        const commissionPercentage = seller.commission_percentage || 0;
+        setMainSellerId(sellerId);
+        setMainSellerName(seller.name);
+        setMainSellerCommissionPercentage(commissionPercentage);
+        toast({ title: "Vendedor selecionado", description: `${seller.name} - Comissão: ${commissionPercentage}%` });
+    };
+
+    // Add employee to current item with commission override capability
      const handleAddEmployeeToItem = () => {
          if (!currentEmployeeId) {
              toast({ title: "Selecione um colaborador", variant: "destructive" });
@@ -248,14 +273,15 @@ const SalesNew = () => {
              return;
          }
 
-         // Puxar comissão do cadastro do funcionário
-         const commissionPercentage = employee.commission_percentage || 1;
+         // Usar comissão customizada se fornecida, senão usar do cadastro
+         const commissionValue = currentEmpCommissionValue || (employee.commission_percentage || 1);
+         const commissionType = currentEmpCommissionType;
 
          const newEmployees = [...(currentItem.employees || []), { 
              employee_id: currentEmployeeId, 
              employee_name: employee.name,
-             commission_type: "percentual",
-             commission_value: commissionPercentage,
+             commission_type: commissionType,
+             commission_value: commissionValue,
          }];
 
          console.log("Adicionando colaborador. newEmployees:", newEmployees);
@@ -267,7 +293,11 @@ const SalesNew = () => {
          setCurrentEmployeeId("");
          setCurrentEmpCommissionType("percentual");
          setCurrentEmpCommissionValue(1);
-         toast({ title: "Colaborador adicionado", description: `${employee.name} - Comissão: ${commissionPercentage}% (do cadastro)` });
+         
+         const commissionDisplay = commissionType === "percentual" 
+             ? `${commissionValue}%` 
+             : `R$ ${commissionValue.toFixed(2)}`;
+         toast({ title: "Colaborador adicionado", description: `${employee.name} - Comissão: ${commissionDisplay}` });
      };
 
     // Add item to sale
@@ -428,6 +458,11 @@ const SalesNew = () => {
             return;
         }
 
+        if (!mainSellerId) {
+            toast({ title: "Selecione o vendedor principal antes de confirmar", variant: "destructive" });
+            return;
+        }
+
         setSubmitting(true);
         try {
             const totalAmount = calculateTotal();
@@ -438,63 +473,72 @@ const SalesNew = () => {
                  .map((pm) => `${pm.method}:${pm.amount.toFixed(2)}`)
                  .join("|");
 
+             // Calcular comissão do vendedor principal (sobre o total da venda)
+             const mainSellerCommission = (totalAmount * mainSellerCommissionPercentage) / 100;
+
              const { data: saleData, error: saleError } = await supabase
+                  .from("sales")
+                  .insert({
+                      description: `Venda com ${saleItems.length} produto(s)`,
+                      amount: totalAmount,
+                      sale_type: "pontual",
+                      sale_date: saleDateTime.toISOString(),
+                      notes: notes || "",
+                      payment_method: paymentMethodsStr,
+                      quantity: saleItems.reduce((sum, item) => sum + item.quantity, 0),
+                      unit_price: totalAmount / saleItems.reduce((sum, item) => sum + item.quantity, 0),
+                      employee_id: mainSellerId, // Vendedor principal
+                      employee_name: mainSellerName, // Nome do vendedor principal
+                      main_seller_id: mainSellerId,
+                      main_seller_name: mainSellerName,
+                      main_seller_commission_percentage: mainSellerCommissionPercentage,
+                      store_id: selectedStoreId,
+                  })
+                  .select();
+
+             if (saleError) throw saleError;
+             if (!saleData || saleData.length === 0) throw new Error("Falha ao criar venda");
+
+             const saleId = saleData[0].id;
+
+             // Insert sale items with all employee associations (múltiplos colaboradores por produto)
+             // Calcula comissão total: vendedor principal + colaboradores por produto
+             let totalCalculatedCommission = mainSellerCommission; // Começa com comissão do vendedor principal
+             const itemsToInsert: any[] = [];
+             
+             saleItems.forEach((item) => {
+                 // Para cada produto, criar um registro para cada colaborador
+                 item.employees.forEach((emp) => {
+                     const subtotal = (item.unit_price || 0) * item.quantity;
+                     const empCommission = emp.commission_type === "percentual" 
+                       ? (subtotal * emp.commission_value) / 100
+                       : emp.commission_value;
+                     
+                     totalCalculatedCommission += empCommission; // Adiciona comissão do colaborador
+                     
+                     itemsToInsert.push({
+                         sale_id: saleId,
+                         product_id: item.product_id,
+                         employee_id: emp.employee_id,
+                         employee_name: emp.employee_name,
+                         quantity: item.quantity,
+                         unit_price: item.unit_price || 0,
+                         subtotal: subtotal,
+                         commission_type: emp.commission_type,
+                         commission_value: emp.commission_value,
+                     });
+                 });
+             });
+             
+             // Atualizar sale com comissão total (vendedor principal + colaboradores)
+             const { error: updateSaleError } = await supabase
                  .from("sales")
-                 .insert({
-                     description: `Venda com ${saleItems.length} produto(s)`,
-                     amount: totalAmount,
-                     sale_type: "pontual",
-                     sale_date: saleDateTime.toISOString(),
-                     notes: notes || "",
-                     payment_method: paymentMethodsStr,
-                     quantity: saleItems.reduce((sum, item) => sum + item.quantity, 0),
-                     unit_price: totalAmount / saleItems.reduce((sum, item) => sum + item.quantity, 0),
-                     employee_id: saleItems[0].employees?.[0]?.employee_id || null, // Store first employee as primary
-                     employee_name: saleItems[0].employees?.[0]?.employee_name || "",
-                     store_id: selectedStoreId,
+                 .update({
+                     commission_type: "fixo",
+                     commission_value: totalCalculatedCommission,
+                     calculated_commission: totalCalculatedCommission,
                  })
-                 .select();
-
-            if (saleError) throw saleError;
-            if (!saleData || saleData.length === 0) throw new Error("Falha ao criar venda");
-
-            const saleId = saleData[0].id;
-
-            // Insert sale items with all employee associations (múltiplos colaboradores por produto)
-            // Calcula comissão total somando todas as comissões individuais dos colaboradores
-            let totalCalculatedCommission = 0;
-            const itemsToInsert: any[] = [];
-            
-            saleItems.forEach((item) => {
-                // Para cada produto, criar um registro para cada colaborador
-                item.employees.forEach((emp) => {
-                    const subtotal = (item.unit_price || 0) * item.quantity;
-                    const empCommission = emp.commission_type === "percentual" 
-                      ? (subtotal * emp.commission_value) / 100
-                      : emp.commission_value;
-                    
-                    totalCalculatedCommission += empCommission;
-                    
-                    itemsToInsert.push({
-                        sale_id: saleId,
-                        product_id: item.product_id,
-                        employee_id: emp.employee_id,
-                        quantity: item.quantity,
-                        unit_price: item.unit_price || 0,
-                        subtotal: subtotal,
-                    });
-                });
-            });
-            
-            // Atualizar sale com comissão total
-            const { error: updateSaleError } = await supabase
-                .from("sales")
-                .update({
-                    commission_type: "fixo",
-                    commission_value: totalCalculatedCommission,
-                    calculated_commission: totalCalculatedCommission,
-                })
-                .eq("id", saleId);
+                 .eq("id", saleId);
             
             if (updateSaleError) throw updateSaleError;
 
@@ -600,6 +644,9 @@ const SalesNew = () => {
 
             // Reset form
              setSaleItems([]);
+             setMainSellerId("");
+             setMainSellerName("");
+             setMainSellerCommissionPercentage(0);
               setCurrentItem({ product_id: "", employees: [], quantity: 0 });
              setNotes("");
              setPaymentMethods([{ method: "dinheiro", amount: 0 }]);
@@ -657,27 +704,50 @@ const SalesNew = () => {
                             </DialogHeader>
 
                             <div className="space-y-4">
-                                {/* Seletor de Loja */}
-                                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
-                                    <Label htmlFor="store" className="font-semibold mb-2 block">🏪 Selecione a Loja *</Label>
-                                    <Select value={selectedStoreId} onValueChange={setSelectedStoreId}>
-                                        <SelectTrigger id="store">
-                                            <SelectValue placeholder="Escolha uma loja" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {stores.map((store) => (
-                                                <SelectItem key={store.id} value={store.id}>
-                                                    {store.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {selectedStoreId && (
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            ✓ Loja selecionada: {stores.find(s => s.id === selectedStoreId)?.name}
-                                        </p>
-                                    )}
-                                </div>
+                                 {/* Seletor de Loja */}
+                                 <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                                     <Label htmlFor="store" className="font-semibold mb-2 block">🏪 Selecione a Loja *</Label>
+                                     <Select value={selectedStoreId} onValueChange={setSelectedStoreId}>
+                                         <SelectTrigger id="store">
+                                             <SelectValue placeholder="Escolha uma loja" />
+                                         </SelectTrigger>
+                                         <SelectContent>
+                                             {stores.map((store) => (
+                                                 <SelectItem key={store.id} value={store.id}>
+                                                     {store.name}
+                                                 </SelectItem>
+                                             ))}
+                                         </SelectContent>
+                                     </Select>
+                                     {selectedStoreId && (
+                                         <p className="text-xs text-muted-foreground mt-2">
+                                             ✓ Loja selecionada: {stores.find(s => s.id === selectedStoreId)?.name}
+                                         </p>
+                                     )}
+                                 </div>
+
+                                 {/* Seletor de Vendedor Principal */}
+                                 <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                                     <Label htmlFor="mainSeller" className="font-semibold mb-2 block">👤 Vendedor Principal *</Label>
+                                     <Select value={mainSellerId} onValueChange={handleSelectMainSeller}>
+                                         <SelectTrigger id="mainSeller">
+                                             <SelectValue placeholder="Selecione o vendedor" />
+                                         </SelectTrigger>
+                                         <SelectContent>
+                                             {employees.map((emp) => (
+                                                 <SelectItem key={emp.id} value={emp.id}>
+                                                     {emp.name} - {emp.commission_percentage || 0}% comissão
+                                                 </SelectItem>
+                                             ))}
+                                         </SelectContent>
+                                     </Select>
+                                     {mainSellerId && (
+                                         <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                             <p>✓ Vendedor: <strong>{mainSellerName}</strong></p>
+                                             <p>💰 Comissão: <strong>{mainSellerCommissionPercentage}%</strong> sobre o total da venda</p>
+                                         </div>
+                                     )}
+                                 </div>
                                 {/* Add Items Section */}
                                 <div className="border rounded-lg p-4 bg-muted/30">
                                     <h3 className="font-semibold mb-4">Adicionar Produto à Venda</h3>
@@ -866,17 +936,41 @@ const SalesNew = () => {
                                                     </div>
 
                                                     {currentEmployeeId && (
-                                                         <div className="p-3 bg-blue-50 rounded border border-blue-200">
-                                                             <p className="text-xs text-blue-900">
-                                                                 <span className="font-semibold">Comissão automática:</span> Será usada a comissão cadastrada do colaborador
-                                                             </p>
-                                                             <p className="text-xs text-blue-800 mt-1">
-                                                                 Comissão: {employees.find(e => e.id === currentEmployeeId)?.commission_percentage || 1}%
-                                                             </p>
+                                                         <div className="space-y-3">
+                                                             <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                                                                 <p className="text-xs text-blue-900">
+                                                                     <span className="font-semibold">Comissão cadastrada:</span> {employees.find(e => e.id === currentEmployeeId)?.commission_percentage || 0}%
+                                                                 </p>
+                                                             </div>
+
+                                                             <div className="space-y-2">
+                                                                 <Label className="text-sm">Customizar Comissão (Opcional)</Label>
+                                                                 <div className="grid grid-cols-2 gap-2">
+                                                                     <Select value={currentEmpCommissionType} onValueChange={setCurrentEmpCommissionType}>
+                                                                         <SelectTrigger>
+                                                                             <SelectValue />
+                                                                         </SelectTrigger>
+                                                                         <SelectContent>
+                                                                             <SelectItem value="percentual">%</SelectItem>
+                                                                             <SelectItem value="fixo">R$</SelectItem>
+                                                                         </SelectContent>
+                                                                     </Select>
+                                                                     <Input
+                                                                         type="number"
+                                                                         step={currentEmpCommissionType === "percentual" ? "0.1" : "0.01"}
+                                                                         placeholder="Valor"
+                                                                         value={currentEmpCommissionValue}
+                                                                         onChange={(e) => setCurrentEmpCommissionValue(parseFloat(e.target.value) || 1)}
+                                                                     />
+                                                                 </div>
+                                                                 <p className="text-xs text-muted-foreground">
+                                                                     Deixe em branco para usar a comissão cadastrada
+                                                                 </p>
+                                                             </div>
                                                          </div>
                                                      )}
 
-                                                    <Button onClick={handleAddEmployeeToItem} className="w-full gap-1">
+                                                     <Button onClick={handleAddEmployeeToItem} className="w-full gap-1">
                                                         <Plus className="w-4 h-4" />
                                                         Adicionar Colaborador
                                                     </Button>
@@ -944,14 +1038,67 @@ const SalesNew = () => {
                                             })}
                                         </div>
 
+                                        {/* Resumo de Comissões */}
+                                        {saleItems.length > 0 && mainSellerId && (
+                                            <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 space-y-2">
+                                                <p className="font-semibold text-sm text-yellow-900">📊 Resumo de Comissões</p>
+                                                <div className="text-xs space-y-1 text-yellow-800">
+                                                    <p>
+                                                        <strong>Vendedor Principal:</strong> {mainSellerName} - 
+                                                        {(() => {
+                                                            const totalVenda = calculateTotal();
+                                                            const comissaoVendedor = (totalVenda * mainSellerCommissionPercentage) / 100;
+                                                            return ` R$ ${comissaoVendedor.toFixed(2)} (${mainSellerCommissionPercentage}% de R$ ${totalVenda.toFixed(2)})`;
+                                                        })()}
+                                                    </p>
+                                                    {saleItems.map((item, idx) => {
+                                                        const subtotal = (item.unit_price || 0) * item.quantity;
+                                                        return (
+                                                            <div key={idx} className="pl-2 border-l border-yellow-300">
+                                                                <p className="font-medium">{item.product_name}</p>
+                                                                {item.employees.map((emp, empIdx) => {
+                                                                    const empComm = emp.commission_type === "percentual" 
+                                                                        ? (subtotal * emp.commission_value) / 100 
+                                                                        : emp.commission_value;
+                                                                    return (
+                                                                        <p key={empIdx} className="text-xs pl-2">
+                                                                            {emp.employee_name}: R$ {empComm.toFixed(2)}
+                                                                        </p>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    <div className="pt-2 border-t border-yellow-300 font-bold">
+                                                        <p>
+                                                            Total de Comissões: R$ {(() => {
+                                                                const totalVenda = calculateTotal();
+                                                                const vendedorComm = (totalVenda * mainSellerCommissionPercentage) / 100;
+                                                                const colabComm = saleItems.reduce((sum, item) => {
+                                                                    const subtotal = (item.unit_price || 0) * item.quantity;
+                                                                    return sum + item.employees.reduce((empSum, emp) => {
+                                                                        const comm = emp.commission_type === "percentual" 
+                                                                            ? (subtotal * emp.commission_value) / 100 
+                                                                            : emp.commission_value;
+                                                                        return empSum + comm;
+                                                                    }, 0);
+                                                                }, 0);
+                                                                return (vendedorComm + colabComm).toFixed(2);
+                                                            })()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* Total */}
-                                        <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
-                                            <p className="text-lg font-bold text-primary">
-                                                Total: R$ {calculateTotal().toFixed(2)}
-                                            </p>
+                                         <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                                             <p className="text-lg font-bold text-primary">
+                                                 Total: R$ {calculateTotal().toFixed(2)}
+                                             </p>
+                                         </div>
                                         </div>
-                                    </div>
-                                )}
+                                        )}
 
                                 {/* Sale Details */}
                                 <div className="space-y-4 border-t pt-4">
