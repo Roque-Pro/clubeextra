@@ -37,25 +37,24 @@ const AppContent = () => {
         <Route path="/auth" element={<Auth />} />
         <Route path="/plan-auth" element={<PlanAuth />} />
         <Route path="/client-dashboard" element={<ClientDashboard />} />
-            <Route
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/clientes" element={<Clients />} />
-              <Route path="/estoque" element={<Inventory />} />
-              <Route path="/vendas" element={<SalesNew />} />
-              <Route path="/analise" element={<Analytics />} />
-              <Route path="/historico" element={<History />} />
-              <Route path="/financeiro" element={<Financial />} />
-              <Route path="/admin" element={<AdminPanel />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/clientes" element={<Clients />} />
+          <Route path="/estoque" element={<Inventory />} />
+          <Route path="/vendas" element={<SalesNew />} />
+          <Route path="/analise" element={<Analytics />} />
+          <Route path="/historico" element={<History />} />
+          <Route path="/financeiro" element={<Financial />} />
+          <Route path="/admin" element={<AdminPanel />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </>
   );
 };
