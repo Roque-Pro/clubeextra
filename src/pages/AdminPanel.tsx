@@ -77,7 +77,7 @@ const AdminPanel = () => {
      const [loading, setLoading] = useState(true);
      const { toast } = useToast();
      const [dialogOpen, setDialogOpen] = useState(false);
-     const [empForm, setEmpForm] = useState({ name: "", role: "", phone: "", email: "", salary: "1600", commission_percentage: "0", password: "" });
+     const [empForm, setEmpForm] = useState({ name: "", role: "", phone: "", email: "", salary: "1600", commission_percentage: "0", password: "funcionario2026#" });
      const [submitting, setSubmitting] = useState(false);
      const [editingEmp, setEditingEmp] = useState<Employee | null>(null);
      const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -407,7 +407,7 @@ const AdminPanel = () => {
                }
             }
 
-            setEmpForm({ name: "", role: "", phone: "", email: "", salary: "1600", commission_percentage: "0", password: "" });
+            setEmpForm({ name: "", role: "", phone: "", email: "", salary: "1600", commission_percentage: "0", password: "funcionario2026#" });
             setEditingEmp(null);
             setDialogOpen(false);
             
@@ -1196,7 +1196,7 @@ const stores = ["Loja 1", "Loja 2", "Loja 3"];
                                                  type="password"
                                                  value={empForm.password}
                                                  onChange={(e) => setEmpForm({ ...empForm, password: e.target.value })}
-                                                 placeholder={editingEmp ? "Deixe vazio para não alterar" : "Mínimo 6 caracteres"}
+                                                 placeholder={editingEmp ? "Deixe vazio para não alterar" : "funcionario2026#"}
                                                  minLength={6}
                                                  autoComplete="new-password"
                                              />
