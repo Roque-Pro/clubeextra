@@ -264,6 +264,13 @@ const AdminPanel = () => {
             toast({ title: "Preencha os campos obrigatórios (Nome, Cargo, Email)", variant: "destructive" });
             return;
         }
+        
+        // Determinar tipo de comissão baseado no role
+        let commissionType = 'percentual';
+        if (empForm.role === 'Instalador' || empForm.role === 'Instaladora') {
+            commissionType = 'fixo';
+        }
+        
         setSubmitting(true);
         try {
             if (editingEmp) {
@@ -276,6 +283,7 @@ const AdminPanel = () => {
                         email: empForm.email,
                         salary: parseFloat(empForm.salary) || 1600,
                         commission_percentage: parseFloat(empForm.commission_percentage) || 0,
+                        commission_type: commissionType,
                     })
                     .eq("id", editingEmp.id);
 
@@ -346,6 +354,7 @@ const AdminPanel = () => {
                        email: empForm.email,
                        salary: parseFloat(empForm.salary) || 1600,
                        commission_percentage: parseFloat(empForm.commission_percentage) || 0,
+                       commission_type: commissionType,
                        hire_date: new Date().toISOString().split("T")[0],
                        active: true,
                    });
@@ -1215,18 +1224,26 @@ const stores = ["Loja 1", "Loja 2", "Loja 3"];
                                          />
                                         </div>
                                         <div className="col-span-2">
-                                         <Label>Comissão (%)</Label>
+                                         <Label>
+                                             {empForm.role === 'Instalador' || empForm.role === 'Instaladora' 
+                                                 ? 'Comissão (R$ valor fixo)' 
+                                                 : 'Comissão (%)'}
+                                         </Label>
                                          <Input
                                              type="number"
-                                             step="0.01"
+                                             step={empForm.role === 'Instalador' || empForm.role === 'Instaladora' ? "0.01" : "0.01"}
                                              min="0"
-                                             max="100"
+                                             max={empForm.role === 'Instalador' || empForm.role === 'Instaladora' ? undefined : "100"}
                                              value={empForm.commission_percentage}
                                              onChange={(e) => setEmpForm({ ...empForm, commission_percentage: e.target.value })}
                                              placeholder="0"
                                              autoComplete="off"
                                          />
-                                         <p className="text-xs text-muted-foreground mt-1">Percentual padrão de comissão sobre vendas - será puxado automaticamente ao registrar vendas</p>
+                                         <p className="text-xs text-muted-foreground mt-1">
+                                             {empForm.role === 'Instalador' || empForm.role === 'Instaladora' 
+                                                 ? 'Valor em reais por instalação' 
+                                                 : 'Percentual padrão de comissão sobre vendas - será puxado automaticamente ao registrar vendas'}
+                                         </p>
                                         </div>
                                         <Button
                                         onClick={handleAddEmployee}

@@ -72,15 +72,17 @@ export const SalesCommissionsTab = () => {
   const fetchData = async () => {
     try {
       if (!refreshing) setLoading(true);
-      const [empRes, servRes, salesRes] = await Promise.all([
+      const [empRes, servRes, salesRes, saleEmpRes] = await Promise.all([
         (supabase as any).from("employees").select("*").eq("active", true),
         (supabase as any).from("services").select("*").order("service_date", { ascending: false }),
         (supabase as any).from("sales").select("*").order("sale_date", { ascending: false }),
+        (supabase as any).from("sale_products_employees").select("*").order("created_at", { ascending: false }),
       ]);
 
       if (empRes.error) throw empRes.error;
       if (servRes.error) throw servRes.error;
       if (salesRes.error) throw salesRes.error;
+      if (saleEmpRes.error) throw saleEmpRes.error;
 
       setEmployees(empRes.data || []);
 
@@ -115,8 +117,25 @@ export const SalesCommissionsTab = () => {
           calculatedCommission: sale.calculated_commission,
         }));
 
-      // Combinar transações de serviços e vendas
-      const trans = [...servTransactions, ...salesTransactions];
+      // Adicionar transações dos colaboradores (sale_products_employees)
+      const saleEmployeeTransactions: Transaction[] = (saleEmpRes.data || []).map((spe: any) => ({
+        id: spe.id,
+        type: "venda",
+        employeeId: spe.employee_id,
+        employeeName: spe.employee_name,
+        clientName: "Cliente",
+        description: `Produto (${spe.quantity}x)`,
+        value: spe.subtotal,
+        date: spe.created_at,
+        commissionType: spe.commission_type,
+        commissionValue: spe.commission_value,
+        calculatedCommission: spe.commission_type === "percentual" 
+          ? (spe.subtotal * spe.commission_value) / 100 
+          : spe.commission_value,
+      }));
+
+      // Combinar transações de serviços, vendas e colaboradores
+      const trans = [...servTransactions, ...salesTransactions, ...saleEmployeeTransactions];
 
       setTransactions(trans);
 

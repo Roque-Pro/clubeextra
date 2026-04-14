@@ -1,58 +1,7 @@
-09:18:07.299 Running build in Washington, D.C., USA (East) – iad1
-09:18:07.300 Build machine configuration: 2 cores, 8 GB
-09:18:07.492 Cloning github.com/Roque-Pro/clube (Branch: main, Commit: 2e99008)
-09:18:08.760 Cloning completed: 1.267s
-09:18:08.906 Restored build cache from previous deployment (2vUDLzRc2XmVQ9C1YyQnACnonDAU)
-09:18:09.242 Running "vercel build"
-09:18:10.445 Vercel CLI 50.43.0
-09:18:11.205 Installing dependencies...
-09:18:12.554 
-09:18:12.555 up to date in 1s
-09:18:12.555 
-09:18:12.555 102 packages are looking for funding
-09:18:12.556   run `npm fund` for details
-09:18:12.588 Running "npm run build"
-09:18:12.691 
-09:18:12.692 > vite_react_shadcn_ts@0.0.0 build
-09:18:12.692 > vite build
-09:18:12.692 
-09:18:12.973 [36mvite v5.4.19 [32mbuilding for production...[36m[39m
-09:18:13.038 transforming...
-09:18:13.361 Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
-09:18:13.361   npx update-browserslist-db@latest
-09:18:13.361   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-09:18:13.634 [32m✓[39m 3 modules transformed.
-09:18:13.637 [31mx[39m Build failed in 632ms
-09:18:13.637 [31merror during build:
-09:18:13.637 [31m[vite:esbuild] Transform failed with 2 errors:
-09:18:13.637 /vercel/path0/src/App.tsx:58:10: ERROR: Unexpected closing "AuthProvider" tag does not match opening fragment tag
-09:18:13.637 /vercel/path0/src/App.tsx:59:7: ERROR: Unterminated regular expression[31m
-09:18:13.637 file: [36m/vercel/path0/src/App.tsx:58:10[31m
-09:18:13.637 [33m
-09:18:13.638 [33mUnexpected closing "AuthProvider" tag does not match opening fragment tag[33m
-09:18:13.638 56 |              <Route path="*" element={<NotFound />} />
-09:18:13.638 57 |            </Routes>
-09:18:13.638 58 |          </AuthProvider>
-09:18:13.638    |            ^
-09:18:13.638 59 |      </>
-09:18:13.638 60 |    );
-09:18:13.638 
-09:18:13.638 [33mUnterminated regular expression[33m
-09:18:13.638 57 |            </Routes>
-09:18:13.638 58 |          </AuthProvider>
-09:18:13.638 59 |      </>
-09:18:13.638    |         ^
-09:18:13.638 60 |    );
-09:18:13.638 61 |  };
-09:18:13.638 [31m
-09:18:13.638     at failureErrorWithLog (/vercel/path0/node_modules/esbuild/lib/main.js:1472:15)
-09:18:13.638     at /vercel/path0/node_modules/esbuild/lib/main.js:755:50
-09:18:13.638     at responseCallbacks.<computed> (/vercel/path0/node_modules/esbuild/lib/main.js:622:9)
-09:18:13.638     at handleIncomingPacket (/vercel/path0/node_modules/esbuild/lib/main.js:677:12)
-09:18:13.639     at Socket.readFromStdout (/vercel/path0/node_modules/esbuild/lib/main.js:600:7)
-09:18:13.639     at Socket.emit (node:events:508:28)
-09:18:13.639     at addChunk (node:internal/streams/readable:563:12)
-09:18:13.639     at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
-09:18:13.639     at Readable.push (node:internal/streams/readable:394:5)
-09:18:13.639     at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)[39m
-09:18:13.662 Error: Command "npm run build" exited with 1
+Adicionando colaborador. newEmployees: [{…}]
+SalesNew.tsx?t=1776180379152:253 handleAddItem called. currentItem: {product_id: '28af8c67-41c3-42cb-b588-0d03a4d58592', employees: Array(1), quantity: 2, commission_type: 'percentual', commission_value: 1, …}
+@supabase_supabase-js.js?v=7f07a2b9:11298  POST https://cxtbixroqlexxmvqhqjp.supabase.co/rest/v1/sale_products_employees?columns=%22sale_id%22%2C%22product_id%22%2C%22employee_id%22%2C%22employee_name%22%2C%22quantity%22%2C%22unit_price%22%2C%22subtotal%22%2C%22commission_type%22%2C%22commission_value%22 400 (Bad Request)
+(anonymous) @ @supabase_supabase-js.js?v=7f07a2b9:11298
+(anonymous) @ @supabase_supabase-js.js?v=7f07a2b9:11312
+await in (anonymous)
+then @ @supabase_supabase-js.js?v=7f07a2b9:274Understand this error

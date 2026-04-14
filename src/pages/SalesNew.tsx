@@ -25,7 +25,9 @@ interface Product {
 interface Employee {
     id: string;
     name: string;
+    role: string;
     commission_percentage?: number;
+    commission_type?: string;
 }
 
 interface SaleItemEmployee {
@@ -175,7 +177,7 @@ const SalesNew = () => {
         try {
             const { data, error } = await supabase
                 .from("employees")
-                .select("id, name, commission_percentage")
+                .select("id, name, role, commission_percentage, commission_type")
                 .eq("active", true)
                 .order("name");
 
@@ -273,9 +275,9 @@ const SalesNew = () => {
              return;
          }
 
-         // Usar comissão customizada se fornecida, senão usar do cadastro
-         const commissionValue = currentEmpCommissionValue || (employee.commission_percentage || 1);
-         const commissionType = currentEmpCommissionType;
+         // Usar comissão cadastrada do employee (sem customização)
+         const commissionValue = employee.commission_percentage || 1;
+         const commissionType = employee.commission_type || "percentual";
 
          const newEmployees = [...(currentItem.employees || []), { 
              employee_id: currentEmployeeId, 
@@ -926,7 +928,7 @@ const SalesNew = () => {
                                                                 <SelectValue placeholder="Selecione colaborador" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                {employees.map((employee) => (
+                                                                {employees.filter(emp => emp.role === "Instalador" || emp.role === "Instalador Senior").map((employee) => (
                                                                     <SelectItem key={employee.id} value={employee.id}>
                                                                         {employee.name}
                                                                     </SelectItem>
@@ -937,38 +939,34 @@ const SalesNew = () => {
 
                                                     {currentEmployeeId && (
                                                          <div className="space-y-3">
-                                                             <div className="p-3 bg-blue-50 rounded border border-blue-200">
-                                                                 <p className="text-xs text-blue-900">
-                                                                     <span className="font-semibold">Comissão cadastrada:</span> {employees.find(e => e.id === currentEmployeeId)?.commission_percentage || 0}%
-                                                                 </p>
-                                                             </div>
-
-                                                             <div className="space-y-2">
-                                                                 <Label className="text-sm">Customizar Comissão (Opcional)</Label>
-                                                                 <div className="grid grid-cols-2 gap-2">
-                                                                     <Select value={currentEmpCommissionType} onValueChange={setCurrentEmpCommissionType}>
-                                                                         <SelectTrigger>
-                                                                             <SelectValue />
-                                                                         </SelectTrigger>
-                                                                         <SelectContent>
-                                                                             <SelectItem value="percentual">%</SelectItem>
-                                                                             <SelectItem value="fixo">R$</SelectItem>
-                                                                         </SelectContent>
-                                                                     </Select>
-                                                                     <Input
-                                                                         type="number"
-                                                                         step={currentEmpCommissionType === "percentual" ? "0.1" : "0.01"}
-                                                                         placeholder="Valor"
-                                                                         value={currentEmpCommissionValue}
-                                                                         onChange={(e) => setCurrentEmpCommissionValue(parseFloat(e.target.value) || 1)}
-                                                                     />
-                                                                 </div>
-                                                                 <p className="text-xs text-muted-foreground">
-                                                                     Deixe em branco para usar a comissão cadastrada
-                                                                 </p>
-                                                             </div>
-                                                         </div>
-                                                     )}
+                                                             <div className="p-3 bg-green-50 rounded border-2 border-green-500">
+                                                                  {(() => {
+                                                                      const emp = employees.find(e => e.id === currentEmployeeId);
+                                                                      const value = emp?.commission_percentage || 0;
+                                                                      return (
+                                                                          <div>
+                                                                              <p className="text-sm font-bold text-green-900">
+                                                                                  💰 Comissão: <span className="text-xl text-green-600">R$ {Number(value).toFixed(2)}</span>
+                                                                              </p>
+                                                                          </div>
+                                                                      );
+                                                                  })()}
+                                                              </div>
+                                                              {currentItem.employees && currentItem.employees.length > 0 && (
+                                                                  <div className="p-3 bg-amber-50 rounded border-2 border-amber-300">
+                                                                      <p className="text-xs font-bold text-amber-900 mb-2">📋 COMISSÕES DEFINIDAS:</p>
+                                                                      <div className="space-y-1">
+                                                                          {currentItem.employees.map((emp, idx) => (
+                                                                              <div key={idx} className="flex items-center justify-between text-xs text-amber-800">
+                                                                                  <span className="font-medium">{emp.employee_name}</span>
+                                                                                  <span className="font-bold text-amber-600">R$ {emp.commission_value.toFixed(2)}</span>
+                                                                              </div>
+                                                                          ))}
+                                                                      </div>
+                                                                  </div>
+                                                              )}
+                                                          </div>
+                                                      )}
 
                                                      <Button onClick={handleAddEmployeeToItem} className="w-full gap-1">
                                                         <Plus className="w-4 h-4" />
@@ -1038,60 +1036,60 @@ const SalesNew = () => {
                                             })}
                                         </div>
 
-                                        {/* Resumo de Comissões */}
-                                        {saleItems.length > 0 && mainSellerId && (
-                                            <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 space-y-2">
-                                                <p className="font-semibold text-sm text-yellow-900">📊 Resumo de Comissões</p>
-                                                <div className="text-xs space-y-1 text-yellow-800">
-                                                    <p>
-                                                        <strong>Vendedor Principal:</strong> {mainSellerName} - 
-                                                        {(() => {
-                                                            const totalVenda = calculateTotal();
-                                                            const comissaoVendedor = (totalVenda * mainSellerCommissionPercentage) / 100;
-                                                            return ` R$ ${comissaoVendedor.toFixed(2)} (${mainSellerCommissionPercentage}% de R$ ${totalVenda.toFixed(2)})`;
-                                                        })()}
-                                                    </p>
-                                                    {saleItems.map((item, idx) => {
-                                                        const subtotal = (item.unit_price || 0) * item.quantity;
-                                                        return (
-                                                            <div key={idx} className="pl-2 border-l border-yellow-300">
-                                                                <p className="font-medium">{item.product_name}</p>
-                                                                {item.employees.map((emp, empIdx) => {
-                                                                    const empComm = emp.commission_type === "percentual" 
-                                                                        ? (subtotal * emp.commission_value) / 100 
-                                                                        : emp.commission_value;
-                                                                    return (
-                                                                        <p key={empIdx} className="text-xs pl-2">
-                                                                            {emp.employee_name}: R$ {empComm.toFixed(2)}
-                                                                        </p>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                    <div className="pt-2 border-t border-yellow-300 font-bold">
-                                                        <p>
-                                                            Total de Comissões: R$ {(() => {
-                                                                const totalVenda = calculateTotal();
-                                                                const vendedorComm = (totalVenda * mainSellerCommissionPercentage) / 100;
-                                                                const colabComm = saleItems.reduce((sum, item) => {
-                                                                    const subtotal = (item.unit_price || 0) * item.quantity;
-                                                                    return sum + item.employees.reduce((empSum, emp) => {
-                                                                        const comm = emp.commission_type === "percentual" 
-                                                                            ? (subtotal * emp.commission_value) / 100 
-                                                                            : emp.commission_value;
-                                                                        return empSum + comm;
-                                                                    }, 0);
-                                                                }, 0);
-                                                                return (vendedorComm + colabComm).toFixed(2);
-                                                            })()}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+                                         {/* Resumo de Comissões */}
+                                         {saleItems.length > 0 && mainSellerId && (
+                                             <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 space-y-2">
+                                                 <p className="font-semibold text-sm text-yellow-900">📊 Resumo de Comissões</p>
+                                                 <div className="text-xs space-y-1 text-yellow-800">
+                                                     <p>
+                                                         <strong>Vendedor Principal:</strong> {mainSellerName} - 
+                                                         {(() => {
+                                                             const totalVenda = calculateTotal();
+                                                             const comissaoVendedor = (totalVenda * mainSellerCommissionPercentage) / 100;
+                                                             return ` R$ ${comissaoVendedor.toFixed(2)} (${mainSellerCommissionPercentage}% de R$ ${totalVenda.toFixed(2)})`;
+                                                         })()}
+                                                     </p>
+                                                     {saleItems.map((item, idx) => {
+                                                         const subtotal = (item.unit_price || 0) * item.quantity;
+                                                         return (
+                                                             <div key={idx} className="pl-2 border-l border-yellow-300">
+                                                                 <p className="font-medium">{item.product_name}</p>
+                                                                 {item.employees.map((emp, empIdx) => {
+                                                                     const empComm = emp.commission_type === "percentual" 
+                                                                         ? (subtotal * emp.commission_value) / 100 
+                                                                         : emp.commission_value;
+                                                                     return (
+                                                                         <p key={empIdx} className="text-xs pl-2">
+                                                                             {emp.employee_name}: R$ {empComm.toFixed(2)}
+                                                                         </p>
+                                                                     );
+                                                                 })}
+                                                             </div>
+                                                         );
+                                                     })}
+                                                     <div className="pt-2 border-t border-yellow-300 font-bold">
+                                                         <p>
+                                                             Total de Comissões: R$ {(() => {
+                                                                 const totalVenda = calculateTotal();
+                                                                 const vendedorComm = (totalVenda * mainSellerCommissionPercentage) / 100;
+                                                                 const colabComm = saleItems.reduce((sum, item) => {
+                                                                     const subtotal = (item.unit_price || 0) * item.quantity;
+                                                                     return sum + item.employees.reduce((empSum, emp) => {
+                                                                         const comm = emp.commission_type === "percentual" 
+                                                                             ? (subtotal * emp.commission_value) / 100 
+                                                                             : emp.commission_value;
+                                                                         return empSum + comm;
+                                                                     }, 0);
+                                                                 }, 0);
+                                                                 return (vendedorComm + colabComm).toFixed(2);
+                                                             })()}
+                                                         </p>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         )}
 
-                                        {/* Total */}
+                                         {/* Total */}
                                          <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
                                              <p className="text-lg font-bold text-primary">
                                                  Total: R$ {calculateTotal().toFixed(2)}
@@ -1203,45 +1201,7 @@ const SalesNew = () => {
                                              )}
                                          </div>
 
-                                         {/* Comissões Resumo */}
-                                         {saleItems.length > 0 && (
-                                             <div className="mt-3 p-3 rounded-lg bg-blue-50/50 border border-blue-200">
-                                                 <p className="text-xs font-semibold text-blue-900 mb-2">💰 COMISSÕES DEFINIDAS</p>
-                                                 {saleItems.map((item, itemIdx) => {
-                                                     const product = products.find((p) => p.id === item.product_id);
-                                                     return item.employees.map((emp, empIdx) => {
-                                                         const subtotal = item.quantity * (item.unit_price || 0);
-                                                         const empComm = emp.commission_type === "percentual"
-                                                           ? (subtotal * emp.commission_value) / 100
-                                                           : emp.commission_value;
-                                                         return (
-                                                             <div key={`${itemIdx}-${empIdx}`} className="flex justify-between text-xs mb-1">
-                                                                 <span className="text-blue-900">{emp.employee_name}</span>
-                                                                 <span className="font-semibold text-blue-900">R$ {empComm.toFixed(2)}</span>
-                                                             </div>
-                                                         );
-                                                     });
-                                                 })}
-                                                 {saleItems.some(item => item.employees.length > 0) && (
-                                                     <div className="border-t border-blue-200 mt-2 pt-2 flex justify-between text-xs font-bold">
-                                                         <span className="text-blue-900">Total Comissões:</span>
-                                                         <span className="text-blue-900">
-                                                             R$ {saleItems.reduce((total, item) => {
-                                                                 const itemTotal = item.employees.reduce((sum, emp) => {
-                                                                     const subtotal = item.quantity * (item.unit_price || 0);
-                                                                     const empComm = emp.commission_type === "percentual"
-                                                                       ? (subtotal * emp.commission_value) / 100
-                                                                       : emp.commission_value;
-                                                                     return sum + empComm;
-                                                                 }, 0);
-                                                                 return total + itemTotal;
-                                                             }, 0).toFixed(2)}
-                                                         </span>
-                                                     </div>
-                                                 )}
-                                             </div>
-                                         )}
-                                    </div>
+                                         </div>
 
                                     <div>
                                         <Label htmlFor="notes">Observações</Label>
