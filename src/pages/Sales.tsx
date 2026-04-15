@@ -77,6 +77,7 @@ const Sales = () => {
   const [lastSaleData, setLastSaleData] = useState<any>(null);
   const [addEmployeeDialogOpen, setAddEmployeeDialogOpen] = useState(false);
   const [selectedAdditionalEmployee, setSelectedAdditionalEmployee] = useState("");
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
 
   // Fetch products
   const fetchProducts = async () => {
@@ -113,6 +114,20 @@ const Sales = () => {
     }
   };
 
+  const fetchAllEmployees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id, name")
+        .order("name");
+
+      if (error) throw error;
+      setAllEmployees(data || []);
+    } catch (err: any) {
+      console.error("Erro ao carregar todos os funcionários:", err);
+    }
+  };
+
   // Fetch sales
   const fetchSales = async () => {
     try {
@@ -141,6 +156,7 @@ const Sales = () => {
   useEffect(() => {
     fetchProducts();
     fetchEmployees();
+    fetchAllEmployees();
     fetchSales();
   }, []);
 
@@ -775,7 +791,7 @@ const Sales = () => {
                   <SelectValue placeholder="Selecione um colaborador" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.map((employee) => (
+                  {allEmployees.map((employee) => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.name}
                     </SelectItem>
