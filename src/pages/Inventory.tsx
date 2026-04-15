@@ -52,7 +52,8 @@ const Inventory = () => {
             const { data, error } = await supabase
                 .from("products")
                 .select("*")
-                .order("name", { ascending: true });
+                .order("name", { ascending: true })
+                .limit(10000);
 
             if (error) throw error;
             setProducts(data || []);
