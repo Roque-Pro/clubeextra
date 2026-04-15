@@ -53,7 +53,7 @@ const Inventory = () => {
                 .from("products")
                 .select("*")
                 .order("name", { ascending: true })
-                .limit(10000);
+                .limit(200000);
 
             if (error) throw error;
             setProducts(data || []);
