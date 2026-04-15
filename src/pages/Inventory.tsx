@@ -347,15 +347,11 @@ const Inventory = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <AnimatePresence>
                                 {filtered.map((p, i) => {
                                     const isLow = p.quantity <= p.min_quantity;
                                     return (
-                                        <motion.tr
+                                        <tr
                                              key={p.id}
-                                             initial={{ opacity: 0 }}
-                                             animate={{ opacity: 1 }}
-                                             transition={{ delay: i * 0.03 }}
                                              className="border-b border-border/50 hover:bg-secondary/30 transition-colors"
                                          >
                                              <td className="p-4" colSpan={9}>
@@ -413,10 +409,9 @@ const Inventory = () => {
                                                      </div>
                                                  </div>
                                              </td>
-                                         </motion.tr>
+                                        </tr>
                                     );
                                 })}
-                            </AnimatePresence>
                         </tbody>
                     </table>
                 </div>
