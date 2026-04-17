@@ -1250,8 +1250,8 @@ const ClientDashboard = () => {
                     </motion.div>
 
                     {/* Bulk Upload Section */}
-                    {bulkUploadEnabled && clientData && (
-                        <BulkVehicleUpload 
+                    {clientData && (
+                        <BulkVehicleUpload
                             clientId={clientData.id!}
                             isEnabled={bulkUploadEnabled}
                             onSuccess={() => fetchClientVehicles(clientData.id!)}
