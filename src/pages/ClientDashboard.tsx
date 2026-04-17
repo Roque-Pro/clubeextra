@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Shield, Edit, Save, X, Mail, Phone, User, Car, DollarSign, LogOut, Calendar, Plus, Trash2, Check, AlertCircle, Upload, Image } from "lucide-react";
+import { Shield, Edit, Save, X, Mail, Phone, User, Car, LogOut, Calendar, Plus, Trash2, Check, AlertCircle, Upload, Image } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,25 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PlanStatusCard from "@/components/PlanStatusCard";
-import FreeTrocasCard from "@/components/FreeTrocasCard";
-import PlanPaymentModal from "@/components/PlanPaymentModal";
-import PlanPromotionCard from "@/components/PlanPromotionCard";
-import ClientStatusBadge from "@/components/ClientStatusBadge";
 import { BulkVehicleUpload } from "@/components/BulkVehicleUpload";
-
-// Helper function para calcular status do plano
-const getPlanStatus = (planActive: boolean, planEnd?: string): "free" | "active" | "expired" => {
-    if (!planActive) return "free";
-    
-    if (planEnd) {
-        const endDate = new Date(planEnd);
-        const today = new Date();
-        if (endDate < today) return "expired";
-    }
-    
-    return "active";
-};
 
 interface ClientProfile {
      id?: string;
@@ -71,6 +53,10 @@ interface Appointment {
     time_changed_at?: string;
     time_change_reason?: string;
 }
+
+const normalizeEmail = (value?: string | null) => value?.trim().toLowerCase() || "";
+const normalizeCpf = (value?: string | null) => value?.trim() || "";
+const normalizePlate = (value?: string | null) => value?.trim().toUpperCase() || "";
 
 const ClientDashboard = () => {
     const navigate = useNavigate();
@@ -119,22 +105,11 @@ const ClientDashboard = () => {
     });
     const [submittingEditAppointment, setSubmittingEditAppointment] = useState(false);
     const [confirmingChangedAppointmentId, setConfirmingChangedAppointmentId] = useState<string | null>(null);
-    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [bulkUploadEnabled, setBulkUploadEnabled] = useState(false);
     const [photoModalOpen, setPhotoModalOpen] = useState(false);
     const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string>("");
 
     const replacementItems = ["Para-brisa", "Retrovisor", "Vigia", "Farol", "Janela", "Porta", "Óculos", "Insumo", "Ferramenta", "Outro"];
-
-    // Handle payment click
-    const handlePaymentClick = async () => {
-        toast({
-            title: "Pagamento",
-            description: "Integração com Stripe será implementada em breve",
-            variant: "default",
-        });
-        // TODO: Integrar com Stripe quando disponível
-    };
 
     // All hooks must be called before any conditional logic below
 
@@ -183,39 +158,59 @@ const ClientDashboard = () => {
                     return;
                 }
 
-                // Search by user_id first (mais confiável)
-                const { data, error } = await supabase
+                // Buscar cliente: primeiro por user_id, depois por email
+                let clientRecord: any = null;
+
+                // 1. Tentar por user_id
+                const { data: byUserId } = await supabase
                     .from("clients")
                     .select("*")
                     .eq("user_id", userId)
                     .maybeSingle();
 
-                if (error && error.code !== "PGRST116") {
-                    setClientData(null);
-                } else if (data) {
-                    setClientData(data);
-                    setFormData(data);
-                    setBulkUploadEnabled(data.bulk_upload_enabled || false);
-                    // Fetch appointments and vehicles for this client
-                    fetchAppointments(data.id);
-                    fetchClientVehicles(data.id);
+                if (byUserId) {
+                    clientRecord = byUserId;
                 } else {
-                    // Fallback: tentar buscar por email
-                    const { data: emailData, error: emailError } = await supabase
+                    // 2. Fallback: buscar por email
+                    const normalizedEmail = normalizeEmail(userEmail);
+                    const { data: byEmail } = await supabase
                         .from("clients")
                         .select("*")
-                        .eq("email", userEmail)
+                        .eq("email", normalizedEmail)
                         .maybeSingle();
 
-                    if (emailData) {
-                        setClientData(emailData);
-                        setFormData(emailData);
-                        setBulkUploadEnabled(emailData.bulk_upload_enabled || false);
-                        fetchAppointments(emailData.id);
-                        fetchClientVehicles(emailData.id);
-                    } else {
-                        setClientData(null);
+                    if (byEmail) {
+                        clientRecord = byEmail;
+
+                        // Vincula o cadastro legado ao usuário autenticado para evitar
+                        // futuros fallbacks por email e garantir persistência correta.
+                        if (!byEmail.user_id || byEmail.user_id !== userId) {
+                            const { error: linkError } = await supabase
+                                .from("clients")
+                                .update({ user_id: userId })
+                                .eq("id", byEmail.id);
+
+                            if (!linkError) {
+                                clientRecord = { ...byEmail, user_id: userId };
+                            }
+                        }
                     }
+                }
+
+                if (clientRecord) {
+                    setClientData(clientRecord);
+                    setFormData({
+                        ...clientRecord,
+                        cpf: clientRecord.cpf || "",
+                        plate: clientRecord.plate || "",
+                        phone: clientRecord.phone || "",
+                        vehicle: clientRecord.vehicle || "",
+                    });
+                    setBulkUploadEnabled(clientRecord.bulk_upload_enabled || false);
+                    fetchAppointments(clientRecord.id);
+                    fetchClientVehicles(clientRecord.id);
+                } else {
+                    setClientData(null);
                 }
             } catch (err) {
                 setClientData(null);
@@ -558,16 +553,85 @@ const ClientDashboard = () => {
     };
 
     const handleSave = async () => {
+        if (!clientData?.id) return;
         setSaving(true);
         try {
+            const sanitizedData = {
+                name: formData.name.trim(),
+                email: normalizeEmail(formData.email),
+                phone: formData.phone.trim(),
+                cpf: normalizeCpf(formData.cpf) || null,
+                vehicle: formData.vehicle.trim(),
+                plate: normalizePlate(formData.plate) || null,
+            };
+
+            const currentData = {
+                name: clientData.name || "",
+                email: normalizeEmail(clientData.email),
+                phone: clientData.phone || "",
+                cpf: normalizeCpf(clientData.cpf) || null,
+                vehicle: clientData.vehicle || "",
+                plate: normalizePlate(clientData.plate) || null,
+            };
+
+            const changedData = Object.fromEntries(
+                Object.entries(sanitizedData).filter(([key, value]) => currentData[key as keyof typeof currentData] !== value)
+            );
+
+            if (Object.keys(changedData).length === 0) {
+                setEditingSection(null);
+                toast({ title: "Nenhuma alteração para salvar." });
+                return;
+            }
+
+            if (changedData.email) {
+                const { data: emailConflict } = await supabase
+                    .from("clients")
+                    .select("id")
+                    .eq("email", changedData.email)
+                    .neq("id", clientData.id)
+                    .maybeSingle();
+
+                if (emailConflict) {
+                    throw new Error("Este email já está sendo usado por outro cliente.");
+                }
+            }
+
+            if (changedData.cpf) {
+                const { data: cpfConflict } = await supabase
+                    .from("clients")
+                    .select("id")
+                    .eq("cpf", changedData.cpf)
+                    .neq("id", clientData.id)
+                    .maybeSingle();
+
+                if (cpfConflict) {
+                    throw new Error("Este CPF já está cadastrado para outro cliente.");
+                }
+            }
+
+            if (changedData.plate) {
+                const { data: plateConflict } = await supabase
+                    .from("clients")
+                    .select("id")
+                    .eq("plate", changedData.plate)
+                    .neq("id", clientData.id)
+                    .maybeSingle();
+
+                if (plateConflict) {
+                    throw new Error("Esta placa já está cadastrada para outro cliente.");
+                }
+            }
+
             const { error } = await supabase
                 .from("clients")
-                .update(formData)
-                .eq("email", session.user?.email);
+                .update(changedData)
+                .eq("id", clientData.id);
 
             if (error) throw error;
 
-            setClientData(formData);
+            setClientData({ ...clientData, ...changedData });
+            setFormData((prev) => ({ ...prev, ...changedData }));
             setEditingSection(null);
             toast({ title: "Dados atualizados com sucesso!" });
         } catch (err: any) {
@@ -748,7 +812,7 @@ const ClientDashboard = () => {
                             <Shield className="w-6 h-6 text-primary-foreground" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-display font-bold text-foreground">Clube do Vidro</h1>
+                            <h1 className="text-xl font-display font-bold text-foreground">Iguaçu Auto Vidros</h1>
                             <p className="text-xs text-muted-foreground">Minha Conta</p>
                         </div>
                     </div>
@@ -777,52 +841,11 @@ const ClientDashboard = () => {
                             <h2 className="text-3xl font-display font-bold text-foreground">
                                 Bem-vindo, {clientData?.name}! 👋
                             </h2>
-                            {clientData && (
-                                <ClientStatusBadge
-                                    planStatus={getPlanStatus(clientData.plan_active ?? false, clientData.plan_end)}
-                                    size="md"
-                                />
-                            )}
                         </div>
                         <p className="text-lg text-muted-foreground mb-6">
-                            Você faz parte da família Clube do Vidro. Aqui você pode gerenciar seus dados e acompanhar seu plano.
+                            Aqui você pode gerenciar seus dados e acompanhar seus serviços.
                         </p>
                     </div>
-
-                    {/* Plan Status Card - Replaced old card */}
-                     {clientData && (
-                         <PlanStatusCard
-                             planStatus={getPlanStatus(clientData.plan_active ?? false, clientData.plan_end)}
-                             planPaidAt={clientData.plan_paid_at}
-                             planEnd={clientData.plan_end}
-                             onPaymentClick={() => setPaymentModalOpen(true)}
-                             onRenewClick={() => setPaymentModalOpen(true)}
-                         />
-                     )}
-
-                     {/* Plan Promotion Card */}
-                     {clientData && (
-                         <PlanPromotionCard
-                             planStatus={getPlanStatus(clientData.plan_active ?? false, clientData.plan_end)}
-                         />
-                     )}
-
-                     {/* Free Trocas Card */}
-                    {clientData && (
-                        <FreeTrocasCard
-                            replacementsUsed={clientData.replacements_used || 0}
-                            maxReplacements={clientData.max_replacements || 3}
-                            planStatus={getPlanStatus(clientData.plan_active ?? false, clientData.plan_end)}
-                        />
-                    )}
-
-                    {/* Payment Modal */}
-                    <PlanPaymentModal
-                        isOpen={paymentModalOpen}
-                        onClose={() => setPaymentModalOpen(false)}
-                        onPaymentClick={handlePaymentClick}
-                        clientName={clientData?.name}
-                    />
 
                     {/* Appointments Section */}
                     <motion.div
@@ -961,9 +984,6 @@ const ClientDashboard = () => {
 
                         {/* Appointments List */}
                         <div className="space-y-3">
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Agendamentos: <strong>{appointments.filter((apt) => new Date(apt.scheduled_date).getFullYear() === new Date().getFullYear() && apt.status !== "cancelado").length}</strong> de <strong>{clientData?.max_replacements || 3}</strong> por ano
-                            </p>
                             {appointments.length === 0 ? (
                                 <p className="text-sm text-muted-foreground text-center py-8">Nenhum agendamento realizado ainda</p>
                             ) : (
