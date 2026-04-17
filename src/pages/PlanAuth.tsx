@@ -28,7 +28,7 @@ const PlanAuth = () => {
   const [vehicle, setVehicle] = useState("");
   const [plate, setPlate] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [showPlanInfo, setShowPlanInfo] = useState(true);
+  const [showPlanInfo, setShowPlanInfo] = useState(false);
 
   useEffect(() => {
     // Se vem com state skipPlanInfo, vai direto para o form

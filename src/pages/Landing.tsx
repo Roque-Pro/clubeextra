@@ -47,7 +47,7 @@ const Landing = () => {
         if (email) {
             setSubmitted(true);
             setTimeout(() => {
-                navigate("/plan-auth", { state: { email } });
+                navigate("/plan-auth", { state: { email, skipPlanInfo: true } });
             }, 1500);
         }
     };
@@ -258,7 +258,7 @@ const Landing = () => {
                                             </Button>
                                         ) : (
                                             <Button
-                                                onClick={() => navigate("/plan-auth")}
+                                                onClick={() => navigate("/plan-auth", { state: { skipPlanInfo: true } })}
                                                 size="lg"
                                                 className="bg-white text-purple-600 hover:bg-blue-50 font-bold text-xl px-10 py-7 rounded-full shadow-xl hover:shadow-2xl transition-all gap-2 w-full sm:w-auto"
                                             >
@@ -537,7 +537,7 @@ const Landing = () => {
                                     </div>
                                 </div>
                                 <Button
-                                    onClick={() => navigate("/plan-auth")}
+                                    onClick={() => navigate("/plan-auth", { state: { skipPlanInfo: true } })}
                                     size="lg"
                                     className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold w-full sm:w-auto"
                                 >
