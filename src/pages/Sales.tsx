@@ -82,13 +82,25 @@ const Sales = () => {
   // Fetch products
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("name");
+      let allProducts: any[] = [];
+      const pageSize = 1000;
+      let from = 0;
+      let hasMore = true;
 
-      if (error) throw error;
-      setProducts(data || []);
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .order("name")
+          .range(from, from + pageSize - 1);
+
+        if (error) throw error;
+        allProducts = allProducts.concat(data || []);
+        hasMore = (data?.length || 0) === pageSize;
+        from += pageSize;
+      }
+
+      setProducts(allProducts);
     } catch (err: any) {
       toast({
         title: "Erro ao carregar produtos",
