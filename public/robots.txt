@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.autovidrosiguacu.com.br/sitemap.xml
+Sitemap: https://www.iguacuautovidross.com.br/sitemap.xml
