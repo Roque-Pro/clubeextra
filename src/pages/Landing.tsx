@@ -353,7 +353,7 @@ const Landing = () => {
                         className="text-center mb-16"
                     >
                         <h2 className="text-4xl sm:text-6xl md:text-7xl font-display font-black text-blue-900 mb-6 leading-tight">
-                            Somos referência no ramo Automotivo na Baixada Fluminense
+                            Somos referência no ramo Automotivo no Rio de Janeiro
                         </h2>
                         
                         <div className="inline-block px-6 py-2 bg-blue-100 rounded-full mb-8">
