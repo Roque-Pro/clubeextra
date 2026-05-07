@@ -371,7 +371,6 @@ const Landing = () => {
                                         className="h-full w-full object-contain"
                                     />
                                 </div>
-                                <p className="font-semibold text-gray-500">AutoGlass MaxPar</p>
                             </div>
                             <div className="flex flex-col items-center">
                                 <div className="h-20 w-48 mb-2 flex items-center justify-center">
@@ -381,7 +380,6 @@ const Landing = () => {
                                         className="h-full w-full object-contain"
                                     />
                                 </div>
-                                <p className="font-semibold text-gray-500">Security Partner</p>
                             </div>
                         </div>
                     </motion.div>
