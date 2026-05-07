@@ -472,11 +472,6 @@ const SalesNew = () => {
             return;
         }
 
-        if (!mainSellerId) {
-            toast({ title: "Selecione o vendedor principal antes de confirmar", variant: "destructive" });
-            return;
-        }
-
         setSubmitting(true);
         try {
             const totalAmount = calculateTotal();
@@ -488,7 +483,7 @@ const SalesNew = () => {
                  .join("|");
 
              // Calcular comissão do vendedor principal (sobre o total da venda)
-             const mainSellerCommission = (totalAmount * mainSellerCommissionPercentage) / 100;
+             const mainSellerCommission = mainSellerId ? (totalAmount * mainSellerCommissionPercentage) / 100 : 0;
 
              const { data: saleData, error: saleError } = await supabase
                   .from("sales")
@@ -500,12 +495,12 @@ const SalesNew = () => {
                       notes: notes || "",
                       payment_method: paymentMethodsStr,
                       quantity: saleItems.reduce((sum, item) => sum + item.quantity, 0),
-                      unit_price: totalAmount / saleItems.reduce((sum, item) => sum + item.quantity, 0),
-                      employee_id: mainSellerId, // Vendedor principal
-                      employee_name: mainSellerName, // Nome do vendedor principal
-                      main_seller_id: mainSellerId,
-                      main_seller_name: mainSellerName,
-                      main_seller_commission_percentage: mainSellerCommissionPercentage,
+                      unit_price: totalAmount / (saleItems.reduce((sum, item) => sum + item.quantity, 0) || 1),
+                      employee_id: mainSellerId || null, // Vendedor principal
+                      employee_name: mainSellerName || null, // Nome do vendedor principal
+                      main_seller_id: mainSellerId || null,
+                      main_seller_name: mainSellerName || null,
+                      main_seller_commission_percentage: mainSellerCommissionPercentage || 0,
                       store_id: selectedStoreId,
                   })
                   .select();
@@ -740,28 +735,6 @@ const SalesNew = () => {
                                      )}
                                  </div>
 
-                                 {/* Seletor de Vendedor Principal */}
-                                 <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-                                     <Label htmlFor="mainSeller" className="font-semibold mb-2 block">👤 Vendedor Principal *</Label>
-                                     <Select value={mainSellerId} onValueChange={handleSelectMainSeller}>
-                                         <SelectTrigger id="mainSeller">
-                                             <SelectValue placeholder="Selecione o vendedor" />
-                                         </SelectTrigger>
-                                         <SelectContent>
-                                             {employees.map((emp) => (
-                                                 <SelectItem key={emp.id} value={emp.id}>
-                                                     {emp.name} - {emp.commission_percentage || 0}% comissão
-                                                 </SelectItem>
-                                             ))}
-                                         </SelectContent>
-                                     </Select>
-                                     {mainSellerId && (
-                                         <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                                             <p>✓ Vendedor: <strong>{mainSellerName}</strong></p>
-                                             <p>💰 Comissão: <strong>{mainSellerCommissionPercentage}%</strong> sobre o total da venda</p>
-                                         </div>
-                                     )}
-                                 </div>
                                 {/* Add Items Section */}
                                 <div className="border rounded-lg p-4 bg-muted/30">
                                     <h3 className="font-semibold mb-4">Adicionar Produto à Venda</h3>
@@ -940,7 +913,7 @@ const SalesNew = () => {
                                                                 <SelectValue placeholder="Selecione colaborador" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                {employees.filter(emp => emp.role === "Instalador" || emp.role === "Instalador Senior").map((employee) => (
+                                                                {employees.map((employee) => (
                                                                     <SelectItem key={employee.id} value={employee.id}>
                                                                         {employee.name}
                                                                     </SelectItem>
@@ -1049,18 +1022,10 @@ const SalesNew = () => {
                                         </div>
 
                                          {/* Resumo de Comissões */}
-                                         {saleItems.length > 0 && mainSellerId && (
+                                         {saleItems.length > 0 && (
                                              <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 space-y-2">
                                                  <p className="font-semibold text-sm text-yellow-900">📊 Resumo de Comissões</p>
                                                  <div className="text-xs space-y-1 text-yellow-800">
-                                                     <p>
-                                                         <strong>Vendedor Principal:</strong> {mainSellerName} - 
-                                                         {(() => {
-                                                             const totalVenda = calculateTotal();
-                                                             const comissaoVendedor = (totalVenda * mainSellerCommissionPercentage) / 100;
-                                                             return ` R$ ${comissaoVendedor.toFixed(2)} (${mainSellerCommissionPercentage}% de R$ ${totalVenda.toFixed(2)})`;
-                                                         })()}
-                                                     </p>
                                                      {saleItems.map((item, idx) => {
                                                          const subtotal = (item.unit_price || 0) * item.quantity;
                                                          return (
@@ -1082,8 +1047,6 @@ const SalesNew = () => {
                                                      <div className="pt-2 border-t border-yellow-300 font-bold">
                                                          <p>
                                                              Total de Comissões: R$ {(() => {
-                                                                 const totalVenda = calculateTotal();
-                                                                 const vendedorComm = (totalVenda * mainSellerCommissionPercentage) / 100;
                                                                  const colabComm = saleItems.reduce((sum, item) => {
                                                                      const subtotal = (item.unit_price || 0) * item.quantity;
                                                                      return sum + item.employees.reduce((empSum, emp) => {
@@ -1093,7 +1056,7 @@ const SalesNew = () => {
                                                                          return empSum + comm;
                                                                      }, 0);
                                                                  }, 0);
-                                                                 return (vendedorComm + colabComm).toFixed(2);
+                                                                 return colabComm.toFixed(2);
                                                              })()}
                                                          </p>
                                                      </div>

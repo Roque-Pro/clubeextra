@@ -30,7 +30,7 @@ const Landing = () => {
     const [email, setEmail] = useState("");
     const [submitted, setSubmitted] = useState(false);
     const [slideIndex, setSlideIndex] = useState(0);
-    const [heroSlideIndex, setHeroSlideIndex] = useState(0);
+    const [heroSlideIndex, setHeroSlideIndex] = useState(1);
     const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
 
     useEffect(() => {
@@ -342,52 +342,6 @@ const Landing = () => {
                 </motion.div>
             </section>
 
-            {/* Success Story Section */}
-            <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-blue-50">
-                <div className="max-w-6xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        viewport={{ once: true }}
-                        className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
-                    >
-                        {/* Video */}
-                        <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                            <iframe
-                                width="100%"
-                                height="400"
-                                src="https://www.youtube.com/embed/PoNBRFUj-Z0"
-                                title="Nossa História de Sucesso"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="rounded-2xl"
-                            />
-                        </div>
-
-                        {/* Text Content */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 30 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
-                            viewport={{ once: true }}
-                            className="space-y-6"
-                        >
-                            <h2 className="text-4xl sm:text-5xl font-display font-black text-gray-900">
-                                Nossa História de Sucesso
-                            </h2>
-                            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
-                                Com mais de 20 anos de excelência, a Iguaçu Auto Vidros consolidou-se como referência no mercado de vidraçaria automotiva. Nossa jornada é marcada pela dedicação à qualidade, inovação constante e, principalmente, pela confiança de milhares de clientes satisfeitos.
-                            </p>
-                            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
-                                Investimos continuamente em tecnologia, treinamento de nossa equipe e na expansão de nossos serviços para sempre oferecer o melhor atendimento. Somos mais que um serviço, somos parceiros da sua segurança na estrada.
-                            </p>
-                        </motion.div>
-                    </motion.div>
-                </div>
-            </section>
-
             {/* Store Locations Section */}
             <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-white">
                 <div className="max-w-6xl mx-auto">
@@ -396,11 +350,119 @@ const Landing = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
                         viewport={{ once: true }}
+                        className="text-center mb-16"
+                    >
+                        <h2 className="text-4xl sm:text-6xl md:text-7xl font-display font-black text-blue-900 mb-6 leading-tight">
+                            Somos referência no ramo Automotivo na Baixada Fluminense
+                        </h2>
+                        
+                        <div className="inline-block px-6 py-2 bg-blue-100 rounded-full mb-8">
+                            <p className="text-xl font-bold text-blue-700 uppercase tracking-wider">
+                                Somos Credenciados
+                            </p>
+                        </div>
+                        
+                        <div className="flex flex-wrap justify-center items-center gap-12 mb-16 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+                            <div className="flex flex-col items-center">
+                                <div className="h-20 w-48 mb-2 flex items-center justify-center">
+                                    <img 
+                                        src="/img/autoglass.jpg" 
+                                        alt="AutoGlass MaxPar" 
+                                        className="h-full w-full object-contain"
+                                    />
+                                </div>
+                                <p className="font-semibold text-gray-500">AutoGlass MaxPar</p>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <div className="h-20 w-48 mb-2 flex items-center justify-center">
+                                    <img 
+                                        src="/img/sekutity partner.png" 
+                                        alt="Security Partner" 
+                                        className="h-full w-full object-contain"
+                                    />
+                                </div>
+                                <p className="font-semibold text-gray-500">Security Partner</p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Why Choose Us - Inside the flow */}
+                    <div className="mb-24">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8 }}
+                            viewport={{ once: true }}
+                            className="text-center mb-12"
+                        >
+                            <h2 className="text-3xl sm:text-4xl font-display font-black text-gray-900 mb-4">
+                                Porque Confiar em Nós
+                            </h2>
+                        </motion.div>
+
+                        <motion.div
+                            initial="hidden"
+                            whileInView="visible"
+                            variants={containerVariants}
+                            viewport={{ once: true }}
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+                        >
+                            {[
+                                {
+                                    icon: Award,
+                                    title: "Experiência de 20 Anos",
+                                    description: "Décadas de confiança e excelência em vidraçaria automotiva",
+                                },
+                                {
+                                    icon: TrendingUp,
+                                    title: "Qualidade Garantida",
+                                    description: "Vidros originais e reparos com padrão de fábrica",
+                                },
+                                {
+                                    icon: Clock,
+                                    title: "Atendimento Rápido",
+                                    description: "Serviço ágil sem comprometer a qualidade",
+                                },
+                                {
+                                    icon: Users,
+                                    title: "Equipe Profissional",
+                                    description: "Técnicos experientes e certificados no ramo",
+                                },
+                            ].map((feature, index) => {
+                                const IconComponent = feature.icon;
+                                return (
+                                    <motion.div
+                                        key={index}
+                                        variants={itemVariants}
+                                        className="flex flex-col items-center text-center gap-4"
+                                    >
+                                        <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/30">
+                                            <IconComponent className="w-7 h-7 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-display font-bold text-gray-900 mb-2">
+                                                {feature.title}
+                                            </h3>
+                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                {feature.description}
+                                            </p>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </motion.div>
+                    </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        viewport={{ once: true }}
                         className="text-center mb-12"
                     >
-                        <h2 className="text-4xl sm:text-5xl font-display font-black text-gray-900 mb-4">
+                        <h3 className="text-3xl font-display font-bold text-gray-900 mb-4">
                             Nossas Lojas
-                        </h2>
+                        </h3>
                         <p className="text-lg text-gray-600">
                             Visite-nos em uma de nossas unidades
                         </p>
@@ -485,260 +547,87 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Agendamento Rápido Section */}
-            <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-white">
-                <div className="max-w-6xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        viewport={{ once: true }}
-                        className="text-center mb-12"
-                    >
-                        <h2 className="text-4xl sm:text-5xl font-display font-black text-gray-900 mb-4">
-                            Agendamento Rápido e Fácil
-                        </h2>
-                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                            Agende seu serviço com conforto e segurança
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8 }}
-                        viewport={{ once: true }}
-                        className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-2xl p-8 sm:p-10 shadow-2xl"
-                    >
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                            <div className="flex flex-col justify-center">
-                                <h3 className="text-3xl font-display font-bold text-blue-700 mb-4">
-                                    Agende Agora
-                                </h3>
-                                <p className="text-gray-700 mb-6 text-lg leading-relaxed">
-                                    Precisa apenas de um cadastro rápido para realizar seu agendamento com conforto, segurança e profissionalismo. Nossa equipe está pronta para atender você da melhor forma possível.
-                                </p>
-                                <div className="space-y-3 mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                                        <span className="text-gray-700">Cadastro rápido e seguro</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                                        <span className="text-gray-700">Agendamento online facilitado</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                                        <span className="text-gray-700">Atendimento profissional</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                                        <span className="text-gray-700">Suporte 24/7 para você</span>
-                                    </div>
-                                </div>
-                                <Button
-                                    onClick={() => navigate("/plan-auth", { state: { skipPlanInfo: true } })}
-                                    size="lg"
-                                    className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold w-full sm:w-auto"
-                                >
-                                    Agendar Agora <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
-                            </div>
-
-                            <div className="flex flex-col justify-center items-center">
-                                <div className="bg-white rounded-2xl p-8 shadow-lg w-full">
-                                    <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-4">
-                                        Processo Simples
-                                    </p>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">1</div>
-                                                <span className="font-semibold text-gray-900">Cadastre-se</span>
-                                            </div>
-                                            <p className="text-sm text-gray-600 ml-11">Preencha seus dados em poucos segundos</p>
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">2</div>
-                                                <span className="font-semibold text-gray-900">Escolha o Serviço</span>
-                                            </div>
-                                            <p className="text-sm text-gray-600 ml-11">Selecione o vidro ou acessório que precisa</p>
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">3</div>
-                                                <span className="font-semibold text-gray-900">Agende a Data</span>
-                                            </div>
-                                            <p className="text-sm text-gray-600 ml-11">Escolha o melhor dia e horário para você</p>
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">4</div>
-                                                <span className="font-semibold text-gray-900">Receba Confirmação</span>
-                                            </div>
-                                            <p className="text-sm text-gray-600 ml-11">Pronto! Você receberá a confirmação</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* Services Section */}
-            <section id="servicos" className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-blue-50">
-                <div className="max-w-6xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        viewport={{ once: true }}
-                        className="text-center mb-12 sm:mb-16"
-                    >
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-display font-black text-gray-900 mb-4">
-                            Nossos Serviços
-                        </h2>
-                        <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-                            Tudo que seu veículo precisa em vidraçaria automotiva, com qualidade e rapidez
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        variants={containerVariants}
-                        viewport={{ once: true }}
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-                    >
-                        {[
-                            {
-                                title: "Parabrisas",
-                                description: "Troca de parabrisas com vidros de qualidade",
-                                icon: Sparkles,
-                            },
-                            {
-                                title: "Vigias",
-                                description: "Troca de vidros laterais e traseiros com instalação profissional",
-                                icon: Shield,
-                            },
-                            {
-                                title: "Faróis e Lanternas",
-                                description: "Troca de faróis traseiros, dianteiros e lanternas automotivas",
-                                icon: Zap,
-                            },
-                            {
-                                title: "Vidros Especiais",
-                                description: "Troca de vidros de portas, janelas e componentes",
-                                icon: Hammer,
-                            },
-                            {
-                                title: "Som Automotivo e Acessórios",
-                                description: "Instalação de áudio automotivo, rádios, auto-falantes, painéis multimídia, insulfilm térmico, películas de proteção e muito mais",
-                                icon: Zap,
-                            },
-                            {
-                                title: "Proteção e Insulfilms",
-                                description: "WindowBlue: película de controle solar que reduz calor em até 99%, protege do UV e mantém privacidade com controle de luz",
-                                icon: Hammer,
-                            },
-                        ].map((service, index) => {
-                            const IconComponent = service.icon;
-                            return (
-                                <motion.div
-                                    key={index}
-                                    variants={itemVariants}
-                                    className="bg-white border-2 border-gray-200 hover:border-blue-300 rounded-xl p-6 sm:p-8 transition-all hover:shadow-lg"
-                                >
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center mb-4 shadow-lg shadow-blue-500/30">
-                                        <IconComponent className="w-6 h-6 text-white" />
-                                    </div>
-                                    <h3 className="text-xl font-display font-bold text-gray-900 mb-2">
-                                        {service.title}
-                                    </h3>
-                                    <p className="text-gray-600 leading-relaxed">
-                                        {service.description}
-                                    </p>
-                                </motion.div>
-                            );
-                        })}
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* Why Choose Us */}
-            <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-white">
-                <div className="max-w-6xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        viewport={{ once: true }}
-                        className="text-center mb-12 sm:mb-16"
-                    >
-                        <h2 className="text-4xl sm:text-5xl font-display font-black text-gray-900 mb-4">
-                            Por Que Confiar em Nós
-                        </h2>
-                    </motion.div>
-
-                    <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        variants={containerVariants}
-                        viewport={{ once: true }}
-                        className="grid grid-cols-1 sm:grid-cols-2 gap-8"
-                    >
-                        {[
-                            {
-                                icon: Award,
-                                title: "Experiência de 20 Anos",
-                                description: "Décadas de confiança e excelência em vidraçaria automotiva",
-                            },
-                            {
-                                icon: TrendingUp,
-                                title: "Qualidade Garantida",
-                                description: "Vidros originais e reparos com padrão de fábrica",
-                            },
-                            {
-                                icon: Clock,
-                                title: "Atendimento Rápido",
-                                description: "Serviço ágil sem comprometer a qualidade",
-                            },
-                            {
-                                icon: Users,
-                                title: "Equipe Profissional",
-                                description: "Técnicos experientes e certificados no ramo",
-                            },
-                        ].map((feature, index) => {
-                            const IconComponent = feature.icon;
-                            return (
-                                <motion.div
-                                    key={index}
-                                    variants={itemVariants}
-                                    className="flex gap-6 items-start"
-                                >
-                                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/30">
-                                        <IconComponent className="w-7 h-7 text-white" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-display font-bold text-gray-900 mb-2">
-                                            {feature.title}
-                                        </h3>
-                                        <p className="text-gray-600 leading-relaxed">
-                                            {feature.description}
-                                        </p>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
-                    </motion.div>
-                </div>
-            </section>
-
             {/* FAQ Section */}
             <section id="faq" className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-blue-50">
                 <div className="max-w-4xl mx-auto">
+                    {/* Nossos Serviços - Repositioned here */}
+                    <div className="mb-24">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8 }}
+                            viewport={{ once: true }}
+                            className="text-center mb-12"
+                        >
+                            <h2 className="text-4xl sm:text-5xl md:text-6xl font-display font-black text-gray-900 mb-4">
+                                Nossos Serviços
+                            </h2>
+                            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+                                Tudo que seu veículo precisa em vidraçaria automotiva, com qualidade e rapidez
+                            </p>
+                        </motion.div>
+
+                        <motion.div
+                            initial="hidden"
+                            whileInView="visible"
+                            variants={containerVariants}
+                            viewport={{ once: true }}
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                        >
+                            {[
+                                {
+                                    title: "Parabrisas",
+                                    description: "Troca de parabrisas com vidros de qualidade",
+                                    icon: Sparkles,
+                                },
+                                {
+                                    title: "Vigias",
+                                    description: "Troca de vidros laterais e traseiros com instalação profissional",
+                                    icon: Shield,
+                                },
+                                {
+                                    title: "Faróis e Lanternas",
+                                    description: "Troca de faróis traseiros, dianteiros e lanternas automotivas",
+                                    icon: Zap,
+                                },
+                                {
+                                    title: "Vidros Especiais",
+                                    description: "Troca de vidros de portas, janelas e componentes",
+                                    icon: Hammer,
+                                },
+                                {
+                                    title: "Som Automotivo e Acessórios",
+                                    description: "Instalação de áudio automotivo, rádios, auto-falantes, painéis multimídia, insulfilm térmico, películas de proteção e muito mais",
+                                    icon: Zap,
+                                },
+                                {
+                                    title: "Proteção e Insulfilms",
+                                    description: "WindowBlue: película de controle solar que reduz calor em até 99%, protege do UV e mantém privacidade com controle de luz",
+                                    icon: Hammer,
+                                },
+                            ].map((service, index) => {
+                                const IconComponent = service.icon;
+                                return (
+                                    <motion.div
+                                        key={index}
+                                        variants={itemVariants}
+                                        className="bg-white border-2 border-gray-200 hover:border-blue-300 rounded-xl p-6 sm:p-8 transition-all hover:shadow-lg"
+                                    >
+                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center mb-4 shadow-lg shadow-blue-500/30">
+                                            <IconComponent className="w-6 h-6 text-white" />
+                                        </div>
+                                        <h3 className="text-xl font-display font-bold text-gray-900 mb-2">
+                                            {service.title}
+                                        </h3>
+                                        <p className="text-gray-600 leading-relaxed">
+                                            {service.description}
+                                        </p>
+                                    </motion.div>
+                                );
+                            })}
+                        </motion.div>
+                    </div>
+
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -817,6 +706,52 @@ const Landing = () => {
                         >
                             Entrar em Contato <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Success Story Section */}
+            <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-white">
+                <div className="max-w-6xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        viewport={{ once: true }}
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+                    >
+                        {/* Video */}
+                        <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+                            <iframe
+                                width="100%"
+                                height="400"
+                                src="https://www.youtube.com/embed/PoNBRFUj-Z0"
+                                title="Nossa História de Sucesso"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="rounded-2xl"
+                            />
+                        </div>
+
+                        {/* Text Content */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                            viewport={{ once: true }}
+                            className="space-y-6"
+                        >
+                            <h2 className="text-4xl sm:text-5xl font-display font-black text-gray-900">
+                                Nossa História de Sucesso
+                            </h2>
+                            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
+                                Com mais de 20 anos de excelência, a Iguaçu Auto Vidros consolidou-se como referência no mercado de vidraçaria automotiva. Nossa jornada é marcada pela dedicação à qualidade, inovação constante e, principalmente, pela confiança de milhares de clientes satisfeitos.
+                            </p>
+                            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
+                                Investimos continuamente em tecnologia, treinamento de nossa equipe e na expansão de nossos serviços para sempre oferecer o melhor atendimento. Somos mais que um serviço, somos parceiros da sua segurança na estrada.
+                            </p>
+                        </motion.div>
                     </motion.div>
                 </div>
             </section>

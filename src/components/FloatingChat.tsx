@@ -144,7 +144,7 @@ const FloatingChat = () => {
       >
         {/* Pulso de fundo */}
         <motion.div
-          className="absolute inset-0 w-16 h-16 bg-blue-600 rounded-full"
+          className="absolute inset-0 w-16 h-16 bg-[#25D366] rounded-full"
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.8, 0, 0.8],
@@ -159,13 +159,13 @@ const FloatingChat = () => {
         {/* Botão principal */}
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
-          className="relative w-16 h-16 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:shadow-2xl flex items-center justify-center border-4 border-white"
+          className="relative w-16 h-16 bg-[#25D366] text-white rounded-full shadow-lg hover:shadow-2xl flex items-center justify-center border-4 border-white"
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.9 }}
           animate={{
             boxShadow: [
-              "0 0 0 0px rgba(59, 130, 246, 0.7)",
-              "0 0 0 15px rgba(59, 130, 246, 0)",
+              "0 0 0 0px rgba(37, 211, 102, 0.7)",
+              "0 0 0 15px rgba(37, 211, 102, 0)",
             ],
           }}
           transition={{
@@ -211,9 +211,9 @@ const FloatingChat = () => {
             className="fixed bottom-24 right-6 w-96 h-screen max-h-96 bg-white rounded-lg shadow-2xl flex flex-col z-40 border border-gray-200"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-t-lg">
+            <div className="bg-[#25D366] text-white p-4 rounded-t-lg">
               <h3 className="font-semibold text-lg">Iguaçu Auto Vidros</h3>
-              <p className="text-xs text-blue-100">Responde em poucos segundos</p>
+              <p className="text-xs text-white/80">Responde em poucos segundos</p>
             </div>
 
             {/* Mensagens */}
@@ -233,7 +233,7 @@ const FloatingChat = () => {
                       "max-w-xs px-4 py-2 rounded-lg",
                       msg.sender === "bot"
                         ? "bg-gray-100 text-gray-900"
-                        : "bg-blue-600 text-white"
+                        : "bg-[#25D366] text-white"
                     )}
                   >
                     <p className="text-sm">{msg.text}</p>
@@ -286,11 +286,11 @@ const FloatingChat = () => {
                   }
                 }}
                 placeholder="Digite 1 ou 2..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#25D366] text-sm"
               />
               <button
                 onClick={() => handleSendMessage()}
-                className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"
+                className="bg-[#25D366] text-white p-2 rounded-lg hover:bg-[#128C7E] transition"
               >
                 <Send className="w-4 h-4" />
               </button>
