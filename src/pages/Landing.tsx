@@ -362,9 +362,9 @@ const Landing = () => {
                             </p>
                         </div>
                         
-                        <div className="flex flex-wrap justify-center items-center gap-12 mb-16 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+                        <div className="flex flex-wrap justify-center items-center gap-16 mb-16">
                             <div className="flex flex-col items-center">
-                                <div className="h-20 w-48 mb-2 flex items-center justify-center">
+                                <div className="h-28 w-64 mb-2 flex items-center justify-center">
                                     <img 
                                         src="/img/autoglass.jpg" 
                                         alt="AutoGlass MaxPar" 
@@ -373,7 +373,7 @@ const Landing = () => {
                                 </div>
                             </div>
                             <div className="flex flex-col items-center">
-                                <div className="h-20 w-48 mb-2 flex items-center justify-center">
+                                <div className="h-28 w-64 mb-2 flex items-center justify-center">
                                     <img 
                                         src="/img/sekutity partner.png" 
                                         alt="Security Partner" 
