@@ -110,7 +110,7 @@ const Landing = () => {
         },
         {
             title: "CLUBE DO VIDRO",
-            subtitle: "Comunidade Premium",
+            subtitle: "Iguaçu Auto Vidros",
             description: "Junte-se à nossa comunidade exclusiva de clientes VIP. Receba benefícios especiais, descontos prioritários e atendimento personalizado.",
             image: "💎",
             bgImage: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #172554 100%)",
@@ -280,8 +280,8 @@ const Landing = () => {
                                     {/* Logo centered - large overlay */}
                                     <div className="absolute z-20 flex items-end justify-center" style={{width: '70%', left: 'calc(25% - 200px)', top: '50px', height: 'calc(100% - 50px)'}}>
                                         <img 
-                                            src={heroSlideIndex === 0 ? "/img/iguacu_vidros_white.png" : "/img/clube.png"} 
-                                            alt={heroSlideIndex === 0 ? "Iguaçu" : "Clube do Vidro"} 
+                                            src="/img/iguacu_vidros_white.png" 
+                                            alt="Iguaçu Auto Vidros" 
                                             className="h-full object-contain drop-shadow-2xl"
                                             style={{filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.6))'}}
                                         />
