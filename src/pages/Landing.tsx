@@ -113,7 +113,7 @@ const Landing = () => {
             subtitle: "Comunidade Premium",
             description: "Junte-se à nossa comunidade exclusiva de clientes VIP. Receba benefícios especiais, descontos prioritários e atendimento personalizado.",
             image: "💎",
-            bgImage: "linear-gradient(135deg, #5B4A9E 0%, #8B5FBF 50%, #6F4FA0 100%)",
+            bgImage: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #172554 100%)",
         },
     ];
 
