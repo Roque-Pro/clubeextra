@@ -58,7 +58,7 @@ export const VehicleValidationModal = ({
                 </p>
 
                 <p className="text-sm text-muted-foreground text-center mb-6">
-                  Este é um veículo <strong className="text-success">nacional</strong> e você está elegível para criar sua conta e aderir ao Clube do Vidro.
+                  Este é um veículo <strong className="text-success">nacional</strong> e você está elegível para criar sua conta.
                 </p>
 
                 <Button onClick={onConfirm || onClose} className="w-full">
@@ -87,7 +87,7 @@ export const VehicleValidationModal = ({
                     <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-muted-foreground">
                       <p className="font-semibold text-foreground mb-1">
-                        Apenas proprietários de veículos nacionais podem aderir ao Clube do Vidro
+                        Apenas proprietários de veículos nacionais podem aderir
                       </p>
                       <p>
                         O veículo informado é <strong>importado</strong> e não está elegível para o plano.

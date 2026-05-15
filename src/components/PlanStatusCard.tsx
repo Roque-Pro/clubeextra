@@ -8,6 +8,7 @@ interface PlanStatusCardProps {
     planEnd?: string;
     onPaymentClick: () => void;
     onRenewClick?: () => void;
+    isPending?: boolean;
 }
 
 const PlanStatusCard = ({
@@ -16,8 +17,20 @@ const PlanStatusCard = ({
     planEnd,
     onPaymentClick,
     onRenewClick,
+    isPending = false,
 }: PlanStatusCardProps) => {
     const getStatusDisplay = () => {
+        if (isPending) {
+            return {
+                title: "Cadastro em Vistoria",
+                description: "Seu cadastro está sendo analisado por nossa equipe. Aguarde a liberação.",
+                icon: Clock,
+                color: "from-amber-400 to-amber-600",
+                bgColor: "bg-amber-50 dark:bg-amber-950/20",
+                badgeColor: "bg-amber-100 text-amber-800",
+            };
+        }
+
         switch (planStatus) {
             case "active":
                 return {
@@ -31,7 +44,7 @@ const PlanStatusCard = ({
             case "expired":
                 return {
                     title: "Plano Expirado",
-                    description: "Seu plano expirou em " + new Date(planEnd || "").toLocaleDateString("pt-BR"),
+                    description: "Seu plano expirou em " + (planEnd ? new Date(planEnd).toLocaleDateString("pt-BR") : ""),
                     icon: AlertCircle,
                     color: "from-orange-500 to-red-600",
                     bgColor: "bg-orange-50 dark:bg-orange-950/20",
@@ -75,7 +88,7 @@ const PlanStatusCard = ({
                 </div>
             </div>
 
-            {planStatus === "active" && (
+            {planStatus === "active" && !isPending && (
                 <div className="grid grid-cols-3 gap-4 mb-6 pt-4 border-t border-current/10">
                     <div>
                         <p className="text-xs text-muted-foreground mb-1">Plano Válido Até</p>
@@ -102,6 +115,7 @@ const PlanStatusCard = ({
             {planStatus === "expired" && (
                 <Button
                     onClick={onRenewClick}
+                    disabled={isPending}
                     className="w-full gap-2 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold"
                 >
                     <DollarSign className="w-4 h-4" />
@@ -127,10 +141,11 @@ const PlanStatusCard = ({
                     </div>
                     <Button
                         onClick={onPaymentClick}
+                        disabled={isPending}
                         className="w-full gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold"
                     >
                         <DollarSign className="w-4 h-4" />
-                        Ativar Plano - R$ 19,90/mês (R$ 239/ano)
+                        {isPending ? "Aguardando Vistoria" : "Ativar Plano - R$ 19,90/mês (R$ 239/ano)"}
                     </Button>
                 </div>
             )}

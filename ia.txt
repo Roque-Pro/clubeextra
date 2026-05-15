@@ -1,7 +1,84 @@
-Adicionando colaborador. newEmployees: [{…}]
-SalesNew.tsx?t=1776180379152:253 handleAddItem called. currentItem: {product_id: '28af8c67-41c3-42cb-b588-0d03a4d58592', employees: Array(1), quantity: 2, commission_type: 'percentual', commission_value: 1, …}
-@supabase_supabase-js.js?v=7f07a2b9:11298  POST https://cxtbixroqlexxmvqhqjp.supabase.co/rest/v1/sale_products_employees?columns=%22sale_id%22%2C%22product_id%22%2C%22employee_id%22%2C%22employee_name%22%2C%22quantity%22%2C%22unit_price%22%2C%22subtotal%22%2C%22commission_type%22%2C%22commission_value%22 400 (Bad Request)
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+react-router-dom.js?v=7f07a2b9:4393 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+warnOnce @ react-router-dom.js?v=7f07a2b9:4393
+logDeprecation @ react-router-dom.js?v=7f07a2b9:4396
+logV6DeprecationWarnings @ react-router-dom.js?v=7f07a2b9:4399
+(anonymous) @ react-router-dom.js?v=7f07a2b9:5271
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=7f07a2b9:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=7f07a2b9:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=7f07a2b9:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:19447
+performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18868
+flushSyncCallbacks @ chunk-T2SWDQEL.js?v=7f07a2b9:9119
+commitRootImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19432
+commitRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:19277
+finishConcurrentRender @ chunk-T2SWDQEL.js?v=7f07a2b9:18805
+performConcurrentWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18718
+workLoop @ chunk-T2SWDQEL.js?v=7f07a2b9:197
+flushWork @ chunk-T2SWDQEL.js?v=7f07a2b9:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:384
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:407
+requestHostCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:418
+unstable_scheduleCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:330
+scheduleCallback$1 @ chunk-T2SWDQEL.js?v=7f07a2b9:19826
+ensureRootIsScheduled @ chunk-T2SWDQEL.js?v=7f07a2b9:18652
+scheduleUpdateOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18562
+updateContainer @ chunk-T2SWDQEL.js?v=7f07a2b9:20776
+ReactDOMHydrationRoot.render.ReactDOMRoot.render @ chunk-T2SWDQEL.js?v=7f07a2b9:21116
+(anonymous) @ main.tsx:5Understand this warning
+react-router-dom.js?v=7f07a2b9:4393 ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+warnOnce @ react-router-dom.js?v=7f07a2b9:4393
+logDeprecation @ react-router-dom.js?v=7f07a2b9:4396
+logV6DeprecationWarnings @ react-router-dom.js?v=7f07a2b9:4402
+(anonymous) @ react-router-dom.js?v=7f07a2b9:5271
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=7f07a2b9:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=7f07a2b9:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=7f07a2b9:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:19447
+performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18868
+flushSyncCallbacks @ chunk-T2SWDQEL.js?v=7f07a2b9:9119
+commitRootImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19432
+commitRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:19277
+finishConcurrentRender @ chunk-T2SWDQEL.js?v=7f07a2b9:18805
+performConcurrentWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18718
+workLoop @ chunk-T2SWDQEL.js?v=7f07a2b9:197
+flushWork @ chunk-T2SWDQEL.js?v=7f07a2b9:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:384
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:407
+requestHostCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:418
+unstable_scheduleCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:330
+scheduleCallback$1 @ chunk-T2SWDQEL.js?v=7f07a2b9:19826
+ensureRootIsScheduled @ chunk-T2SWDQEL.js?v=7f07a2b9:18652
+scheduleUpdateOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18562
+updateContainer @ chunk-T2SWDQEL.js?v=7f07a2b9:20776
+ReactDOMHydrationRoot.render.ReactDOMRoot.render @ chunk-T2SWDQEL.js?v=7f07a2b9:21116
+(anonymous) @ main.tsx:5Understand this warning
+@supabase_supabase-js.js?v=7f07a2b9:11298  GET https://cxtbixroqlexxmvqhqjp.supabase.co/rest/v1/profiles?select=id%2Cstatus%2Cemail&status=eq.pending 400 (Bad Request)
 (anonymous) @ @supabase_supabase-js.js?v=7f07a2b9:11298
 (anonymous) @ @supabase_supabase-js.js?v=7f07a2b9:11312
 await in (anonymous)
 then @ @supabase_supabase-js.js?v=7f07a2b9:274Understand this error
+VistoriaTab.tsx:120 Erro ao buscar dados de vistoria: {code: '42703', details: null, hint: null, message: 'column profiles.email does not exist'}
+(anonymous) @ VistoriaTab.tsx:120
+await in (anonymous)
+(anonymous) @ VistoriaTab.tsx:132
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=7f07a2b9:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=7f07a2b9:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=7f07a2b9:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:19447
+commitRootImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19416
+commitRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:19277
+performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18895
+flushSyncCallbacks @ chunk-T2SWDQEL.js?v=7f07a2b9:9119
+(anonymous) @ chunk-T2SWDQEL.js?v=7f07a2b9:18627Understand this error

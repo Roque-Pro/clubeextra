@@ -98,6 +98,7 @@ CREATE TABLE public.employees (
   installations_count integer DEFAULT 0,
   store_name character varying,
   commission_percentage numeric DEFAULT 0.00,
+  commission_type text DEFAULT 'percentual'::text,
   CONSTRAINT employees_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.expenses (
@@ -205,6 +206,9 @@ CREATE TABLE public.sale_products_employees (
   subtotal numeric NOT NULL CHECK (subtotal >= 0::numeric),
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  employee_name text,
+  commission_type text DEFAULT 'percentual'::text,
+  commission_value numeric DEFAULT 0,
   CONSTRAINT sale_products_employees_pkey PRIMARY KEY (id),
   CONSTRAINT sale_products_employees_sale_id_fkey FOREIGN KEY (sale_id) REFERENCES public.sales(id),
   CONSTRAINT sale_products_employees_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
@@ -234,9 +238,13 @@ CREATE TABLE public.sales (
   commission_value numeric DEFAULT 1,
   calculated_commission numeric,
   store_id uuid,
+  main_seller_id uuid,
+  main_seller_name text,
+  main_seller_commission_percentage numeric DEFAULT 0,
   CONSTRAINT sales_pkey PRIMARY KEY (id),
   CONSTRAINT sales_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES public.employees(id),
-  CONSTRAINT sales_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(id)
+  CONSTRAINT sales_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(id),
+  CONSTRAINT sales_main_seller_id_fkey FOREIGN KEY (main_seller_id) REFERENCES public.employees(id)
 );
 CREATE TABLE public.services (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

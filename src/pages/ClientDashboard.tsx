@@ -12,9 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BulkVehicleUpload } from "@/components/BulkVehicleUpload";
+import PlanStatusCard from "@/components/PlanStatusCard";
+import PlanPaymentModal from "@/components/PlanPaymentModal";
+import PlanPromotionCard from "@/components/PlanPromotionCard";
 
 interface ClientProfile {
      id?: string;
+     user_id?: string;
      name: string;
      email: string;
      phone: string;
@@ -27,6 +31,7 @@ interface ClientProfile {
      plan_paid_at?: string;
      plan_start?: string;
      plan_end?: string;
+     profile_status?: string;
 }
 
 interface ClientVehicle {
@@ -36,6 +41,7 @@ interface ClientVehicle {
      is_national: boolean;
      is_primary: boolean;
      vehicle_photo_url?: string;
+     status?: string;
 }
 
 interface Appointment {
@@ -92,8 +98,20 @@ const ClientDashboard = () => {
     const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>("");
     const [clientVehicles, setClientVehicles] = useState<ClientVehicle[]>([]);
     const [addVehicleDialogOpen, setAddVehicleDialogOpen] = useState(false);
-    const [newVehicleForm, setNewVehicleForm] = useState({ vehicle: "", plate: "", photoFile: null as File | null });
-    const [vehiclePhotoPreview, setVehiclePhotoPreview] = useState<string>("");
+    const [newVehicleForm, setNewVehicleForm] = useState({ 
+        vehicle: "", 
+        plate: "", 
+        photoFront: null as File | null,
+        photoBack: null as File | null,
+        photoLeft: null as File | null,
+        photoRight: null as File | null
+    });
+    const [photoPreviews, setPhotoPreviews] = useState({
+        front: "",
+        back: "",
+        left: "",
+        right: ""
+    });
     const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
     const [validatingNewVehicle, setValidatingNewVehicle] = useState(false);
     const [validationResult, setValidationResult] = useState<any>(null);
@@ -108,6 +126,52 @@ const ClientDashboard = () => {
     const [bulkUploadEnabled, setBulkUploadEnabled] = useState(false);
     const [photoModalOpen, setPhotoModalOpen] = useState(false);
     const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string>("");
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+    // ... inside ClientDashboard ...
+    const handlePaymentClick = () => {
+        setPaymentModalOpen(true);
+    };
+
+    const handleConfirmPayment = async () => {
+        if (!clientData?.id) return;
+        setIsProcessingPayment(true);
+        try {
+            // Simular sucesso do pagamento
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const today = new Date();
+            const nextYear = new Date(today);
+            nextYear.setFullYear(nextYear.getFullYear() + 1);
+            
+            const { error } = await supabase
+                .from("clients")
+                .update({ 
+                    plan_active: true,
+                    plan_paid_at: today.toISOString(),
+                    plan_start: today.toISOString().split("T")[0],
+                    plan_end: nextYear.toISOString().split("T")[0],
+                    plan_status: "active"
+                })
+                .eq("id", clientData.id);
+
+            if (error) throw error;
+
+            toast({ 
+                title: "Pagamento processado!", 
+                description: "Seu plano foi ativado com sucesso. Agora você pode realizar agendamentos." 
+            });
+            setPaymentModalOpen(false);
+            
+            // Forçar recarregamento da página para atualizar todos os estados
+            window.location.reload();
+        } catch (error: any) {
+            toast({ title: "Erro no pagamento", description: error.message, variant: "destructive" });
+        } finally {
+            setIsProcessingPayment(false);
+        }
+    };
 
     const replacementItems = ["Para-brisa", "Retrovisor", "Vigia", "Farol", "Janela", "Porta", "Óculos", "Insumo", "Ferramenta", "Outro"];
 
@@ -198,7 +262,14 @@ const ClientDashboard = () => {
                 }
 
                 if (clientRecord) {
-                    setClientData(clientRecord);
+                    // Fetch profile status
+                    const { data: profileData } = await supabase
+                        .from("profiles")
+                        .select("status")
+                        .eq("id", clientRecord.user_id)
+                        .maybeSingle();
+
+                    setClientData({ ...clientRecord, profile_status: profileData?.status || "pending" });
                     setFormData({
                         ...clientRecord,
                         cpf: clientRecord.cpf || "",
@@ -239,64 +310,34 @@ const ClientDashboard = () => {
         return () => clearInterval(interval);
     }, [clientData?.id, fetchAppointments]);
 
-    const handleVehiclePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePhotoChange = (side: "front" | "back" | "left" | "right", e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validar tipo de arquivo
         if (!file.type.startsWith("image/")) {
             toast({ title: "Selecione uma imagem válida", variant: "destructive" });
             return;
         }
 
-        // Validar tamanho (máx 5MB)
         if (file.size > 5 * 1024 * 1024) {
             toast({ title: "Imagem muito grande (máx 5MB)", variant: "destructive" });
             return;
         }
 
-        setNewVehicleForm({ ...newVehicleForm, photoFile: file });
+        const fieldMap = {
+            front: "photoFront",
+            back: "photoBack",
+            left: "photoLeft",
+            right: "photoRight"
+        };
+
+        setNewVehicleForm({ ...newVehicleForm, [fieldMap[side]]: file });
         
-        // Criar preview
         const reader = new FileReader();
         reader.onloadend = () => {
-            setVehiclePhotoPreview(reader.result as string);
+            setPhotoPreviews(prev => ({ ...prev, [side]: reader.result as string }));
         };
         reader.readAsDataURL(file);
-    };
-
-    const uploadVehiclePhoto = async (file: File, clientId: string, plate: string): Promise<string | null> => {
-        try {
-            setUploadingVehiclePhoto(true);
-            
-            // Nome do arquivo: client_id/plate_timestamp.ext
-            const fileExt = file.name.split(".").pop();
-            const fileName = `${clientId}/${plate}_${Date.now()}.${fileExt}`;
-            
-            const { error, data } = await supabase.storage
-                .from("vehicle-photos")
-                .upload(fileName, file, {
-                    cacheControl: "3600",
-                    upsert: false,
-                });
-
-            if (error) {
-                console.error("Erro ao upload foto:", error);
-                return null;
-            }
-
-            // Obter URL pública
-            const { data: publicData } = supabase.storage
-                .from("vehicle-photos")
-                .getPublicUrl(fileName);
-
-            return publicData?.publicUrl || null;
-        } catch (err: any) {
-            console.error("Erro ao upload:", err);
-            return null;
-        } finally {
-            setUploadingVehiclePhoto(false);
-        }
     };
 
     const handleValidateAndAddVehicle = async () => {
@@ -305,22 +346,28 @@ const ClientDashboard = () => {
             return;
         }
 
-        if (!newVehicleForm.photoFile) {
-            toast({ title: "Foto do veículo é obrigatória", variant: "destructive" });
+        const skipInspection = (clientData as any)?.skip_inspection;
+
+        if (!skipInspection && (!newVehicleForm.photoFront || !newVehicleForm.photoBack || !newVehicleForm.photoLeft || !newVehicleForm.photoRight)) {
+            toast({ title: "As 4 fotos do veículo são obrigatórias para vistoria", variant: "destructive" });
             return;
         }
 
         if (!clientData) return;
 
+        // Se o cliente tem skip_inspection, pula a validação de IA e vai direto pro salvamento
+        if (skipInspection) {
+            setValidationResult({ isNational: true, message: "Vistoria desativada para este cliente.", brand: "N/A", model: "N/A", confidence: 1 });
+            return;
+        }
+
         setValidatingNewVehicle(true);
         try {
             const result = await validateVehicle(newVehicleForm.vehicle);
-
             if (!result) {
                 toast({ title: "Erro ao validar veículo", variant: "destructive" });
                 return;
             }
-
             if (!result.isNational) {
                 toast({
                     title: "Veículo importado",
@@ -329,39 +376,39 @@ const ClientDashboard = () => {
                 });
                 return;
             }
-
             setValidationResult(result);
         } catch (err: any) {
-            toast({
-                title: "Erro ao validar",
-                description: err.message,
-                variant: "destructive",
-            });
+            toast({ title: "Erro ao validar", description: err.message, variant: "destructive" });
         } finally {
             setValidatingNewVehicle(false);
         }
     };
 
     const handleConfirmAddVehicle = async () => {
-        if (!clientData || !validationResult || !newVehicleForm.photoFile) return;
+        if (!clientData || !validationResult) return;
+
+        const skipInspection = (clientData as any)?.skip_inspection === true;
 
         try {
             setUploadingVehiclePhoto(true);
             
-            // Upload da foto
-            const photoUrl = await uploadVehiclePhoto(
-                newVehicleForm.photoFile,
-                clientData.id,
-                newVehicleForm.plate
-            );
+            let photoUrls = { front: "", back: "", left: "", right: "" };
 
-            if (!photoUrl) {
-                toast({
-                    title: "Erro ao fazer upload da foto",
-                    description: "Tente novamente com uma imagem diferente",
-                    variant: "destructive",
-                });
-                return;
+            if (!skipInspection) {
+                // Upload das 4 fotos
+                const uploadPromises = [
+                    uploadVehiclePhoto(newVehicleForm.photoFront!, clientData.id!, `${newVehicleForm.plate}_front`),
+                    uploadVehiclePhoto(newVehicleForm.photoBack!, clientData.id!, `${newVehicleForm.plate}_back`),
+                    uploadVehiclePhoto(newVehicleForm.photoLeft!, clientData.id!, `${newVehicleForm.plate}_left`),
+                    uploadVehiclePhoto(newVehicleForm.photoRight!, clientData.id!, `${newVehicleForm.plate}_right`)
+                ];
+
+                const results = await Promise.all(uploadPromises);
+                if (results.some(r => !r)) {
+                    toast({ title: "Erro ao fazer upload de uma ou mais fotos", variant: "destructive" });
+                    return;
+                }
+                photoUrls = { front: results[0]!, back: results[1]!, left: results[2]!, right: results[3]! };
             }
 
             const isPrimary = clientVehicles.length === 0;
@@ -374,23 +421,24 @@ const ClientDashboard = () => {
                     plate: newVehicleForm.plate,
                     is_national: true,
                     is_primary: isPrimary,
-                    vehicle_photo_url: photoUrl,
+                    vehicle_photo_url: photoUrls.front || null, // Usar frontal como principal
+                    photo_front_url: photoUrls.front || null,
+                    photo_back_url: photoUrls.back || null,
+                    photo_left_url: photoUrls.left || null,
+                    photo_right_url: photoUrls.right || null,
+                    status: skipInspection ? "approved" : "pending"
                 });
 
             if (error) throw error;
 
-            setNewVehicleForm({ vehicle: "", plate: "", photoFile: null });
-            setVehiclePhotoPreview("");
+            setNewVehicleForm({ vehicle: "", plate: "", photoFront: null, photoBack: null, photoLeft: null, photoRight: null });
+            setPhotoPreviews({ front: "", back: "", left: "", right: "" });
             setValidationResult(null);
             setAddVehicleDialogOpen(false);
-            fetchClientVehicles(clientData.id);
-            toast({ title: "Veículo adicionado com sucesso!" });
+            fetchClientVehicles(clientData.id!);
+            toast({ title: skipInspection ? "Veículo adicionado e liberado!" : "Veículo enviado para vistoria!" });
         } catch (err: any) {
-            toast({
-                title: "Erro ao adicionar veículo",
-                description: err.message,
-                variant: "destructive",
-            });
+            toast({ title: "Erro ao adicionar veículo", description: err.message, variant: "destructive" });
         } finally {
             setUploadingVehiclePhoto(false);
         }
@@ -847,6 +895,23 @@ const ClientDashboard = () => {
                         </p>
                     </div>
 
+                    {/* Plan Status & Promotion */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="md:col-span-2">
+                            <PlanStatusCard
+                                planStatus={clientData?.plan_active ? "active" : "free"}
+                                planEnd={clientData?.plan_end}
+                                onPaymentClick={handlePaymentClick}
+                                isPending={clientData?.profile_status === "pending" || clientVehicles.some(v => v.is_primary && v.status === "pending")}
+                            />
+                        </div>
+                        <div className="md:col-span-1">
+                            <PlanPromotionCard 
+                                planStatus={clientData?.plan_active ? "active" : "free"} 
+                            />
+                        </div>
+                    </div>
+
                     {/* Appointments Section */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -859,9 +924,36 @@ const ClientDashboard = () => {
                                 <Calendar className="w-5 h-5 text-primary" />
                                 Agendar Serviço
                             </h3>
-                            <Dialog open={appointmentDialogOpen} onOpenChange={setAppointmentDialogOpen}>
+                            <Dialog open={appointmentDialogOpen} onOpenChange={(open) => {
+                                if (open) {
+                                    if (clientData?.profile_status === "pending" || clientVehicles.some(v => v.is_primary && v.status === "pending")) {
+                                        toast({
+                                            title: "Acesso bloqueado",
+                                            description: "Seu cadastro ou veículo está em fase de vistoria. Aguarde a liberação.",
+                                            variant: "destructive"
+                                        });
+                                        return;
+                                    }
+                                    if (!clientData?.plan_active) {
+                                        toast({
+                                            title: "Plano Inativo",
+                                            description: "Você precisa ativar seu plano antes de realizar agendamentos.",
+                                            variant: "destructive"
+                                        });
+                                        return;
+                                    }
+                                }
+                                setAppointmentDialogOpen(open);
+                            }}>
                                 <DialogTrigger asChild>
-                                    <Button className="gap-2">
+                                    <Button 
+                                        className="gap-2"
+                                        disabled={
+                                            clientData?.profile_status === "pending" || 
+                                            clientVehicles.some(v => v.is_primary && v.status === "pending") ||
+                                            !clientData?.plan_active
+                                        }
+                                    >
                                         <Plus className="w-4 h-4" />
                                         Novo Agendamento
                                     </Button>
@@ -1087,70 +1179,112 @@ const ClientDashboard = () => {
                                     <div className="space-y-4">
                                         {!validationResult ? (
                                             <>
-                                                <div>
-                                                    <Label>Veículo (marca e modelo) *</Label>
-                                                    <Input
-                                                        value={newVehicleForm.vehicle}
-                                                        onChange={(e) => setNewVehicleForm({ ...newVehicleForm, vehicle: e.target.value })}
-                                                        placeholder="Ex: Honda Civic 2022"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label>Placa *</Label>
-                                                    <Input
-                                                        value={newVehicleForm.plate}
-                                                        onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plate: e.target.value })}
-                                                        placeholder="ABC-1234"
-                                                    />
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <Label>Veículo *</Label>
+                                                        <Input
+                                                            value={newVehicleForm.vehicle}
+                                                            onChange={(e) => setNewVehicleForm({ ...newVehicleForm, vehicle: e.target.value })}
+                                                            placeholder="Ex: Honda Civic"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Placa *</Label>
+                                                        <Input
+                                                            value={newVehicleForm.plate}
+                                                            onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plate: e.target.value })}
+                                                            placeholder="ABC-1234"
+                                                        />
+                                                    </div>
                                                 </div>
 
-                                                <div>
-                                                    <Label>Foto do Veículo * (Obrigatória)</Label>
-                                                    {vehiclePhotoPreview ? (
-                                                        <div className="space-y-3">
-                                                            <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
-                                                                <img
-                                                                    src={vehiclePhotoPreview}
-                                                                    alt="Preview"
-                                                                    className="w-full h-full object-cover"
-                                                                />
+                                                {!(clientData as any)?.skip_inspection ? (
+                                                    <div className="space-y-4">
+                                                        <Label className="text-primary font-bold">Fotos Necessárias para Vistoria (Obrigatório)</Label>
+                                                        <p className="text-xs text-muted-foreground bg-primary/5 p-2 rounded border border-primary/10">
+                                                            Para sua segurança e aprovação do plano, precisamos de 4 fotos nítidas do veículo.
+                                                        </p>
+                                                        
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            {/* FRENTE */}
+                                                            <div className="space-y-2">
+                                                                <Label className="text-xs uppercase text-muted-foreground">Frente</Label>
+                                                                <label className={`relative flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${photoPreviews.front ? 'border-success' : 'border-border'}`}>
+                                                                    {photoPreviews.front ? (
+                                                                        <img src={photoPreviews.front} className="w-full h-full object-cover rounded-lg" alt="Front" />
+                                                                    ) : (
+                                                                        <div className="text-center p-2">
+                                                                            <Image className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                                                                            <span className="text-[10px] font-medium">Lado Frontal</span>
+                                                                        </div>
+                                                                    )}
+                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange("front", e)} />
+                                                                </label>
                                                             </div>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="w-full"
-                                                                onClick={() => {
-                                                                    setNewVehicleForm({ ...newVehicleForm, photoFile: null });
-                                                                    setVehiclePhotoPreview("");
-                                                                }}
-                                                            >
-                                                                ✕ Remover Foto
-                                                            </Button>
+
+                                                            {/* TRASEIRA */}
+                                                            <div className="space-y-2">
+                                                                <Label className="text-xs uppercase text-muted-foreground">Traseira</Label>
+                                                                <label className={`relative flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${photoPreviews.back ? 'border-success' : 'border-border'}`}>
+                                                                    {photoPreviews.back ? (
+                                                                        <img src={photoPreviews.back} className="w-full h-full object-cover rounded-lg" alt="Back" />
+                                                                    ) : (
+                                                                        <div className="text-center p-2">
+                                                                            <Image className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                                                                            <span className="text-[10px] font-medium">Lado Traseiro</span>
+                                                                        </div>
+                                                                    )}
+                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange("back", e)} />
+                                                                </label>
+                                                            </div>
+
+                                                            {/* ESQUERDA */}
+                                                            <div className="space-y-2">
+                                                                <Label className="text-xs uppercase text-muted-foreground">Lado Esquerdo</Label>
+                                                                <label className={`relative flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${photoPreviews.left ? 'border-success' : 'border-border'}`}>
+                                                                    {photoPreviews.left ? (
+                                                                        <img src={photoPreviews.left} className="w-full h-full object-cover rounded-lg" alt="Left" />
+                                                                    ) : (
+                                                                        <div className="text-center p-2">
+                                                                            <Image className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                                                                            <span className="text-[10px] font-medium">Lado Esquerdo</span>
+                                                                        </div>
+                                                                    )}
+                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange("left", e)} />
+                                                                </label>
+                                                            </div>
+
+                                                            {/* DIREITA */}
+                                                            <div className="space-y-2">
+                                                                <Label className="text-xs uppercase text-muted-foreground">Lado Direito</Label>
+                                                                <label className={`relative flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${photoPreviews.right ? 'border-success' : 'border-border'}`}>
+                                                                    {photoPreviews.right ? (
+                                                                        <img src={photoPreviews.right} className="w-full h-full object-cover rounded-lg" alt="Right" />
+                                                                    ) : (
+                                                                        <div className="text-center p-2">
+                                                                            <Image className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                                                                            <span className="text-[10px] font-medium">Lado Direito</span>
+                                                                        </div>
+                                                                    )}
+                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange("right", e)} />
+                                                                </label>
+                                                            </div>
                                                         </div>
-                                                    ) : (
-                                                        <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary transition-colors">
-                                                            <input
-                                                                type="file"
-                                                                accept="image/*"
-                                                                className="hidden"
-                                                                onChange={handleVehiclePhotoChange}
-                                                                disabled={uploadingVehiclePhoto}
-                                                            />
-                                                            <div className="text-center">
-                                                                <Image className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                                                                <p className="text-sm font-medium text-foreground">Clique para selecionar foto</p>
-                                                                <p className="text-xs text-muted-foreground mt-1">PNG, JPG ou JPEG (máx 5MB)</p>
-                                                            </div>
-                                                        </label>
-                                                    )}
-                                                </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-lg">
+                                                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                                                            🌟 Cliente Especial: Vistoria e fotos desativadas. O veículo será aprovado automaticamente.
+                                                        </p>
+                                                    </div>
+                                                )}
 
                                                 <Button
                                                     onClick={handleValidateAndAddVehicle}
-                                                    disabled={validatingNewVehicle || !newVehicleForm.photoFile}
-                                                    className="w-full"
+                                                    disabled={validatingNewVehicle}
+                                                    className="w-full gradient-primary"
                                                 >
-                                                    {validatingNewVehicle ? "Verificando..." : "Verificar com IA"}
+                                                    {(clientData as any)?.skip_inspection ? "Adicionar Veículo" : (validatingNewVehicle ? "Processando..." : "Enviar para Vistoria")}
                                                 </Button>
                                             </>
                                         ) : (
@@ -1545,6 +1679,15 @@ const ClientDashboard = () => {
                             </div>
                         </DialogContent>
                     </Dialog>
+
+                    {/* Modal de Pagamento do Plano */}
+                    <PlanPaymentModal
+                        isOpen={paymentModalOpen}
+                        onClose={() => setPaymentModalOpen(false)}
+                        onPaymentClick={handleConfirmPayment}
+                        isLoading={isProcessingPayment}
+                        clientName={clientData?.name}
+                    />
                 </motion.div>
             </main>
         </div>

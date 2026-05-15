@@ -14,6 +14,7 @@ import AdminPanel from "./pages/AdminPanel";
 import Financial from "./pages/Financial";
 import SalesNew from "./pages/SalesNew";
 import Analytics from "./pages/Analytics";
+import Vistoria from "./pages/Vistoria";
 import Auth from "./pages/Auth";
 import PlanAuth from "./pages/PlanAuth";
 import ClientDashboard from "./pages/ClientDashboard";
@@ -51,6 +52,7 @@ const AppContent = () => {
           <Route path="/analise" element={<Analytics />} />
           <Route path="/historico" element={<History />} />
           <Route path="/financeiro" element={<Financial />} />
+          <Route path="/vistoria" element={<Vistoria />} />
           <Route path="/admin" element={<AdminPanel />} />
         </Route>
         <Route path="*" element={<NotFound />} />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, UserCheck, UserX, Repeat, Edit2, Eye, Upload } from "lucide-react";
+import { Plus, Search, UserCheck, UserX, Repeat, Edit2, Eye, Upload, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ClientStatusBadge from "@/components/ClientStatusBadge";
@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Client, Replacement } from "@/types";
-import { mockReplacements as initialReplacements, mockEmployees, replacementItems } from "@/data/mockData";
+import { replacementItems } from "@/data/mockData";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { logAction } from "@/lib/auditLog";
+import { generateClientReport } from "@/lib/generateClientReport";
 
 // Helper function para calcular status do plano
 const getPlanStatus = (planActive: boolean, planEnd?: string): "free" | "active" | "expired" => {
@@ -44,7 +45,30 @@ const Clients = () => {
      const [photoModalOpen, setPhotoModalOpen] = useState(false);
      const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string>("");
      const [clientVehicles, setClientVehicles] = useState<any[]>([]);
+     const [reportDialogOpen, setReportDialogOpen] = useState(false);
+     const [reportPeriod, setReportPeriod] = useState<"week" | "month" | "quarter" | "all">("month");
+     const [reportingClient, setReportingClient] = useState<Client | null>(null);
      const { toast } = useToast();
+
+     const handleGenerateReport = async () => {
+       if (!reportingClient) return;
+       
+       try {
+         await generateClientReport({
+           clientId: reportingClient.id,
+           clientName: reportingClient.name,
+           clientPhone: reportingClient.phone,
+           clientEmail: reportingClient.email || "",
+           clientCpf: reportingClient.cpf || "",
+           period: reportPeriod
+         });
+         
+         setReportDialogOpen(false);
+         toast({ title: "Relatório gerado com sucesso!" });
+       } catch (error: any) {
+         toast({ title: "Erro ao gerar relatório", description: error.message, variant: "destructive" });
+       }
+     };
 
     // Fetch clients, employees and replacements from Supabase
     useEffect(() => {
@@ -93,7 +117,6 @@ const Clients = () => {
                         let vehiclesCount = vehiclesCountMap.get(client.id) || 0;
                         
                         // Adicionar 1 se o cliente tem um veículo legado (na tabela clients) que não foi migrado
-                        // Verificar se tem veículo e placa e se não está duplicado em client_vehicles
                         if (client.vehicle && client.plate && vehiclesCount === 0) {
                             vehiclesCount = 1;
                         }
@@ -114,8 +137,36 @@ const Clients = () => {
                             active: client.active || true,
                             planActive: client.plan_active !== false,
                             vehiclesCount: vehiclesCount,
+                            bulk_upload_enabled: client.bulk_upload_enabled || false,
+                            skip_inspection: client.skip_inspection || false
                         } as any;
                     });
+// ... later ...
+    const toggleSkipInspection = async (client: Client) => {
+        setBulkUploadToggling(true);
+        try {
+            const newState = !(client as any).skip_inspection;
+            const { error } = await supabase
+                .from("clients")
+                .update({ skip_inspection: newState })
+                .eq("id", client.id);
+
+            if (error) throw error;
+
+            setClients(clients.map((c) =>
+                c.id === client.id ? { ...c, skip_inspection: newState } : c
+            ));
+
+            toast({
+                title: newState ? "Vistoria Desativada" : "Vistoria Ativada",
+                description: `Necessidade de fotos e aprovação foi ${newState ? "removida" : "reabilitada"} para ${client.name}`,
+            });
+        } catch (error: any) {
+            toast({ title: "Erro", description: error.message, variant: "destructive" });
+        } finally {
+            setBulkUploadToggling(false);
+        }
+    };
                     setClients(mappedClients);
                 }
 
@@ -166,6 +217,7 @@ const Clients = () => {
                     maxReplacements: client.max_replacements || 3,
                     active: client.active || true,
                     planActive: client.plan_active !== false,
+                    bulk_upload_enabled: client.bulk_upload_enabled || false
                 }));
                 setClients(mappedClients);
                 return mappedClients;
@@ -262,9 +314,6 @@ const Clients = () => {
 
         setSubmitting(true);
         try {
-            // 0. Validar se email ou CPF já existem
-            console.log("🔍 Validando email e CPF...", { email: form.email, cpf: form.cpf });
-            
             const [emailCheck, cpfCheck] = await Promise.all([
                 supabase
                     .from("clients")
@@ -278,18 +327,7 @@ const Clients = () => {
                     .maybeSingle() : Promise.resolve({ data: null, error: null })
             ]);
 
-            console.log("📋 Resultado da validação:", { emailCheck, cpfCheck });
-
-            if (emailCheck.error) {
-                console.warn("⚠️ Erro ao validar email:", emailCheck.error);
-            }
-            
-            if (cpfCheck.error) {
-                console.warn("⚠️ Erro ao validar CPF:", cpfCheck.error);
-            }
-
             if (emailCheck.data) {
-                console.warn("❌ Email duplicado:", form.email);
                 toast({
                     title: "Email já cadastrado",
                     description: `O email "${form.email}" já existe no sistema.`,
@@ -300,7 +338,6 @@ const Clients = () => {
             }
 
             if (cpfCheck.data) {
-                console.warn("❌ CPF duplicado:", form.cpf);
                 toast({
                     title: "CPF já cadastrado",
                     description: `O CPF "${form.cpf}" já está associado a outro cliente.`,
@@ -310,10 +347,8 @@ const Clients = () => {
                 return;
             }
 
-            // Gerar senha padrão se não fornecida
             const password = form.password || `Cliente${form.phone.slice(-4)}`;
 
-            // 1. Criar usuário no Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: form.email,
                 password: password,
@@ -335,7 +370,6 @@ const Clients = () => {
             const planStart = now.toISOString().split("T")[0];
             const planEnd = end.toISOString().split("T")[0];
 
-            // 2. Inserir na tabela clients com user_id
             const { data, error } = await supabase
                 .from("clients")
                 .insert({
@@ -374,10 +408,9 @@ const Clients = () => {
                 setClients([newClient, ...clients]);
             }
 
-            setForm({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "" });
+            setForm({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "", maxReplacements: 3 });
             setDialogOpen(false);
 
-            // Log da ação
             if (data && data[0]) {
                 logAction("create", "clients", data[0].id, form.name, `Novo cliente: ${form.vehicle} (${form.plate}) - Email: ${form.email}`);
             }
@@ -387,36 +420,11 @@ const Clients = () => {
                 description: `Email: ${form.email} | Senha: ${password}`
             });
         } catch (error: any) {
-            console.error("❌ Erro ao cadastrar cliente:", error);
-            
-            // Tratamento específico para duplicatas
-            if (error.message?.includes("23505") || error.message?.includes("duplicate")) {
-                if (error.message?.includes("cpf")) {
-                    toast({
-                        title: "CPF já cadastrado",
-                        description: `O CPF "${form.cpf}" já existe no sistema.`,
-                        variant: "destructive",
-                    });
-                } else if (error.message?.includes("email")) {
-                    toast({
-                        title: "Email já cadastrado",
-                        description: `O email "${form.email}" já existe no sistema.`,
-                        variant: "destructive",
-                    });
-                } else {
-                    toast({
-                        title: "Dado duplicado",
-                        description: "Este email ou CPF já está cadastrado.",
-                        variant: "destructive",
-                    });
-                }
-            } else {
-                toast({
-                    title: "Erro ao cadastrar cliente",
-                    description: error.message,
-                    variant: "destructive",
-                });
-            }
+            toast({
+                title: "Erro ao cadastrar cliente",
+                description: error.message,
+                variant: "destructive",
+            });
         } finally {
             setSubmitting(false);
         }
@@ -444,14 +452,10 @@ const Clients = () => {
 
              if (error) throw error;
 
-            // Se preencheu senha, atualizar no auth através da Edge Function
             if (form.password && form.password.length >= 6) {
                 try {
-                    // Get current session token
                     const { data } = await supabase.auth.getSession();
                     const token = data?.session?.access_token;
-
-                    console.log("Token obtido:", token);
 
                     if (!token) {
                         throw new Error("Sessão expirada. Faça login novamente.");
@@ -473,14 +477,8 @@ const Clients = () => {
                     );
 
                     const result = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(result.error || "Erro ao atualizar senha");
-                    }
-
-                    console.log("Resultado da atualização de senha:", result);
+                    if (!response.ok) throw new Error(result.error || "Erro ao atualizar senha");
                 } catch (passwordError: any) {
-                    console.error("Erro ao atualizar senha:", passwordError);
                     toast({
                         title: "Erro ao atualizar senha",
                         description: passwordError.message,
@@ -510,7 +508,6 @@ const Clients = () => {
             setEditingClient(null);
             setEditDialogOpen(false);
 
-            // Log da ação
             logAction("update", "clients", editingClient.id, form.name, `Atualizado: ${form.vehicle} (${form.plate})`);
 
             toast({ title: "Cliente atualizado com sucesso!" });
@@ -545,7 +542,6 @@ const Clients = () => {
             const newStatus = !client.planActive;
             const updateData: any = { plan_active: newStatus };
 
-            // Se ativando o plano, atualizar data de término para 1 ano a partir de hoje
             if (newStatus) {
                 const today = new Date();
                 const nextYear = new Date(today);
@@ -572,7 +568,6 @@ const Clients = () => {
             );
             setClients(updatedClients);
 
-            // Log da ação
             logAction("update", "clients", client.id, client.name, newStatus ? "Plano ativado (válido por 1 ano)" : "Plano desativado");
 
             toast({
@@ -601,7 +596,6 @@ const Clients = () => {
         try {
             const emp = employees.find((e) => e.id === replForm.employeeId);
 
-            // Inserir na tabela de serviços com informações completas
             const { error: serviceError } = await supabase
                 .from("services")
                 .insert({
@@ -614,13 +608,12 @@ const Clients = () => {
                     value: parseFloat(replForm.value) || 0,
                     employee_id: replForm.employeeId,
                     employee_name: emp?.name || "",
-                    installations: 1, // Marcando como 1 instalação ao registrar troca
+                    installations: 1,
                     service_date: new Date().toISOString().split("T")[0],
                 });
 
             if (serviceError) throw serviceError;
 
-            // Inserir na tabela de replacements (mantendo compatibilidade)
             const { data: replacementData, error: replacementError } = await supabase
                 .from("replacements")
                 .insert({
@@ -636,12 +629,10 @@ const Clients = () => {
 
             if (replacementError) throw replacementError;
 
-            // Log da ação
             if (replacementData && replacementData[0]) {
                 logAction("register", "replacements", replacementData[0].id, selectedClient.name, `Item trocado: ${replForm.item} - Funcionário: ${emp?.name || "N/A"} - ${replForm.notes ? "Obs: " + replForm.notes : ""}`);
             }
 
-            // Refetch trocas e clientes para garantir dados atualizados
             await Promise.all([fetchReplacements(), fetchClients()]);
 
             setReplForm({ item: "", employeeId: "", notes: "", value: "" });
@@ -822,12 +813,29 @@ const Clients = () => {
                                          </Button>
                                          <Button
                                              size="sm"
+                                             variant={(client as any).skip_inspection ? "default" : "outline"}
+                                             className={`gap-1 text-xs md:text-sm flex-1 md:flex-none ${(client as any).skip_inspection ? "bg-amber-600 hover:bg-amber-700" : ""}`}
+                                             onClick={() => toggleSkipInspection(client)}
+                                             disabled={bulkUploadToggling}
+                                         >
+                                             {(client as any).skip_inspection ? "Vistoria: OFF" : "Vistoria: ON"}
+                                         </Button>
+                                         <Button
+                                             size="sm"
                                              variant={(client as any).bulk_upload_enabled ? "default" : "outline"}
                                              className={`gap-1 text-xs md:text-sm flex-1 md:flex-none ${(client as any).bulk_upload_enabled ? "bg-primary/80 hover:bg-primary" : ""}`}
                                              onClick={() => toggleBulkUpload(client)}
                                              disabled={bulkUploadToggling}
                                          >
                                              <Upload className="w-4 h-4" /> {(client as any).bulk_upload_enabled ? "Upload Ativo" : "Liberar Upload"}
+                                         </Button>
+                                         <Button
+                                             size="sm"
+                                             variant="ghost"
+                                             className="gap-1 text-xs md:text-sm flex-1 md:flex-none text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                             onClick={() => { setReportingClient(client); setReportDialogOpen(true); }}
+                                         >
+                                             <FileText className="w-4 h-4" /> Relatório
                                          </Button>
                                          <Button
                                              size="sm"
@@ -1008,6 +1016,49 @@ const Clients = () => {
                             alt="Veículo"
                             className="max-w-full max-h-96 rounded-lg object-contain"
                         />
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Report Period Dialog */}
+            <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+                <DialogContent className="bg-card border-border">
+                    <DialogHeader>
+                        <DialogTitle className="font-display">Gerar Relatório de Cliente</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                            <Label>Selecione o período dos serviços</Label>
+                            <Select 
+                                value={reportPeriod} 
+                                onValueChange={(v: any) => setReportPeriod(v)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o período" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="week">Última Semana</SelectItem>
+                                    <SelectItem value="month">Último Mês</SelectItem>
+                                    <SelectItem value="quarter">Último Trimestre</SelectItem>
+                                    <SelectItem value="all">Todo o Período</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                            <p>O relatório incluirá:</p>
+                            <ul className="list-disc list-inside mt-2 space-y-1">
+                                <li>Dados cadastrais do cliente</li>
+                                <li>Lista de veículos e quantidade de carros</li>
+                                <li>Frequência de serviços por veículo</li>
+                                <li>Histórico detalhado no período selecionado</li>
+                            </ul>
+                        </div>
+                        <Button 
+                            onClick={handleGenerateReport} 
+                            className="w-full gradient-primary text-primary-foreground font-semibold"
+                        >
+                            Gerar PDF
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

@@ -59,7 +59,7 @@ const PlanPaymentModal = ({
             <DialogContent className="max-w-lg bg-card border-border">
                 <DialogHeader>
                     <DialogTitle className="font-display text-2xl text-center">
-                        Ativar Plano Clube do Vidro
+                        Ativar Plano
                     </DialogTitle>
                 </DialogHeader>
 

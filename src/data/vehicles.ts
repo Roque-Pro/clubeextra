@@ -728,7 +728,7 @@ export const validateVehicleOffline = (
         model: foundModel || "Desconhecido",
         year,
         confidence: foundModel ? 0.95 : 0.85,
-        message: `${data.brand} ${foundModel || ""} é um veículo nacional, elegível para o Clube do Vidro.`,
+        message: `${data.brand} ${foundModel || ""} é um veículo nacional, elegível para o plano.`,
       };
     }
   }
@@ -746,7 +746,7 @@ export const validateVehicleOffline = (
         model: foundModel || "Desconhecido",
         year,
         confidence: foundModel ? 0.95 : 0.85,
-        message: `${data.brand} ${foundModel || ""} é um veículo importado e não está elegível para o Clube do Vidro.`,
+        message: `${data.brand} ${foundModel || ""} é um veículo importado e não está elegível para o plano.`,
       };
     }
   }
@@ -764,7 +764,7 @@ export const validateVehicleOffline = (
           model,
           year,
           confidence: 0.9,
-          message: `${data.brand} ${model} é um veículo nacional, elegível para o Clube do Vidro.`,
+          message: `${data.brand} ${model} é um veículo nacional, elegível para o plano.`,
         };
       }
     }
@@ -782,7 +782,7 @@ export const validateVehicleOffline = (
           model,
           year,
           confidence: 0.9,
-          message: `${data.brand} ${model} é um veículo importado e não está elegível para o Clube do Vidro.`,
+          message: `${data.brand} ${model} é um veículo importado e não está elegível para o plano.`,
         };
       }
     }

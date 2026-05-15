@@ -113,6 +113,9 @@ const PlanAuth = () => {
       if (isLogin) {
          const { error } = await supabase.auth.signInWithPassword({ email, password });
          if (error) throw error;
+
+         // user_id será vinculado no dashboard se necessário
+
          toast({ title: "Bem-vindo de volta!", description: "Login realizado com sucesso." });
          setTimeout(() => navigate("/client-dashboard"), 1500);
        } else {
@@ -150,6 +153,7 @@ const PlanAuth = () => {
             const { data: insertResult, error: clientError } = await supabase
               .from("clients")
               .insert({
+                user_id: userId,
                 email: email,
                 name: fullName,
                 phone: phone || "",
@@ -174,12 +178,10 @@ const PlanAuth = () => {
             } else {
               console.log("Cliente criado com sucesso:", insertResult);
             }
-          } else {
-            console.log("Cliente já existe com este email");
           }
         }
 
-        toast({ title: "Conta criada com sucesso!", description: "Bem-vindo ao Clube do Vidro!" });
+        toast({ title: "Conta criada com sucesso!", description: "Bem-vindo!" });
         
         // Redirect to client dashboard
         setTimeout(() => navigate("/client-dashboard"), 1500);

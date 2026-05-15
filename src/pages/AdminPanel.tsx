@@ -18,6 +18,8 @@ import { RearrangeProductModal } from "@/components/RearrangeProductModal";
 import { StoreCashBox } from "@/components/StoreCashBox";
 import { AuthRestrictedModal } from "@/components/AuthRestrictedModal";
 
+import { VistoriaTab } from "@/components/VistoriaTab";
+
 interface Employee {
   id: string;
   name: string;
@@ -32,39 +34,7 @@ interface Employee {
   attendance_count?: number;
   installations_count?: number;
 }
-
-interface Product {
-     id: string;
-     name: string;
-     category: string;
-     quantity: number;
-     min_quantity: number;
-     price: number;
-     supplier: string;
-     store?: string;
-     cost_price?: number;
-     code?: string;
-     description?: string;
-}
-
-interface Asset {
-    id: string;
-    name: string;
-    asset_type: "Imóvel" | "Veículo" | "Equipamento" | "Outro";
-    value: number;
-    acquisition_date?: string;
-    notes?: string;
-    created_at?: string;
-}
-
-const employeeRoles = [
-    "Instalador Senior",
-    "Instalador",
-    "Atendente",
-    "Gerente",
-    "Auxiliar",
-];
-
+// ... rest of interfaces ...
 const AdminPanel = () => {
      const [employees, setEmployees] = useState<Employee[]>([]);
      const [products, setProducts] = useState<Product[]>([]);
