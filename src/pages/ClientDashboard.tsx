@@ -306,24 +306,24 @@ const ClientDashboard = () => {
                     // Fetch profile status
                     const { data: profileData } = await supabase
                         .from("profiles")
-                        .select("status")
+                        .select("status, full_name, phone, cpf") // Incluindo full_name, phone e cpf
                         .eq("id", clientRecord.user_id)
                         .maybeSingle();
 
                     setClientData({
                         ...clientRecord,
-                        name: clientRecord.name || "",
-                        email: clientRecord.email || "",
-                        phone: clientRecord.phone || "",
-                        cpf: clientRecord.cpf || "",
+                        name: profileData?.full_name || clientRecord.name || "", // Prioriza profile, depois clientRecord
+                        email: clientRecord.email || session.user?.email || "", // Email do cliente ou da sessão
+                        phone: profileData?.phone || clientRecord.phone || "", // Prioriza profile, depois clientRecord
+                        cpf: profileData?.cpf || clientRecord.cpf || "", // Prioriza profile, depois clientRecord
                         profile_status: profileData?.status || "pending"
                     });
                     setFormData({
                         ...clientRecord,
-                        name: clientRecord.name || "",
-                        email: clientRecord.email || "",
-                        phone: clientRecord.phone || "",
-                        cpf: clientRecord.cpf || "",
+                        name: profileData?.full_name || clientRecord.name || "", // Prioriza profile, depois clientRecord
+                        email: clientRecord.email || session.user?.email || "", // Email do cliente ou da sessão
+                        phone: profileData?.phone || clientRecord.phone || "", // Prioriza profile, depois clientRecord
+                        cpf: profileData?.cpf || clientRecord.cpf || "", // Prioriza profile, depois clientRecord
                         plate: clientRecord.plate || "",
                         vehicle: clientRecord.vehicle || "",
                     });
