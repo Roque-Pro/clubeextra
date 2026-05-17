@@ -263,43 +263,8 @@ const ClientDashboard = () => {
                     return;
                 }
 
-                // Buscar cliente: primeiro por user_id, depois por email
+                let clientRecord: any = null;
 
-                // 1. Tentar por user_id
-                const { data: byUserId } = await supabase
-                    .from("clients")
-                    .select("*")
-                    .eq("user_id", userId)
-                    .maybeSingle();
-
-                if (byUserId) {
-                    clientRecord = byUserId;
-                } else {
-                    // 2. Fallback: buscar por email
-                    const normalizedEmail = normalizeEmail(userEmail);
-                    const { data: byEmail } = await supabase
-                        .from("clients")
-                        .select("*")
-                        .eq("email", normalizedEmail)
-                        .maybeSingle();
-
-                    if (byEmail) {
-                        clientRecord = byEmail;
-
-                        // Vincula o cadastro legado ao usuário autenticado para evitar
-                        // futuros fallbacks por email e garantir persistência correta.
-                        if (!byEmail.user_id || byEmail.user_id !== userId) {
-                            const { error: linkError } = await supabase
-                                .from("clients")
-                                .update({ user_id: userId })
-                                .eq("id", byEmail.id);
-
-                            if (!linkError) {
-                                clientRecord = { ...byEmail, user_id: userId };
-                            }
-                        }
-                    }
-                }
 
                 let clientRecord: any = null;
 
