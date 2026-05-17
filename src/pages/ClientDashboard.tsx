@@ -264,7 +264,6 @@ const ClientDashboard = () => {
                 }
 
                 // Buscar cliente: primeiro por user_id, depois por email
-                let clientRecord: any = null;
 
                 // 1. Tentar por user_id
                 const { data: byUserId } = await supabase
