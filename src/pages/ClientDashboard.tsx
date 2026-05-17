@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Shield, Edit, Save, X, Mail, Phone, User, Car, LogOut, Calendar, Plus, Trash2, Check, AlertCircle, Upload, Image } from "lucide-react";
+import { Shield, Edit, Save, X, Mail, Phone, User, Car, LogOut, Calendar, Plus, Trash2, Check, AlertCircle, Upload, Image, DollarSign, Eye, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,7 +41,22 @@ interface ClientVehicle {
      is_national: boolean;
      is_primary: boolean;
      vehicle_photo_url?: string;
+     photo_front_url?: string;
+     photo_back_url?: string;
+     photo_left_url?: string;
+     photo_right_url?: string;
+     photo_headlights_front_url?: string;
+     photo_headlights_rear_url?: string;
+     photo_mirrors_url?: string;
+     photo_interior_rear_url?: string;
+     photo_interior_front_url?: string;
+     photo_dashboard_url?: string;
+     photo_trunk_open_url?: string;
      status?: string;
+     plan_active?: boolean;
+     plan_start?: string;
+     plan_end?: string;
+     plan_paid_at?: string;
 }
 
 interface Appointment {
@@ -104,13 +119,27 @@ const ClientDashboard = () => {
         photoFront: null as File | null,
         photoBack: null as File | null,
         photoLeft: null as File | null,
-        photoRight: null as File | null
+        photoRight: null as File | null,
+        photoHeadlightsFront: null as File | null,
+        photoHeadlightsRear: null as File | null,
+        photoMirrors: null as File | null,
+        photoInteriorRear: null as File | null,
+        photoInteriorFront: null as File | null,
+        photoDashboard: null as File | null,
+        photoTrunkOpen: null as File | null
     });
     const [photoPreviews, setPhotoPreviews] = useState({
         front: "",
         back: "",
         left: "",
-        right: ""
+        right: "",
+        headlightsFront: "",
+        headlightsRear: "",
+        mirrors: "",
+        interiorRear: "",
+        interiorFront: "",
+        dashboard: "",
+        trunkOpen: ""
     });
     const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
     const [validatingNewVehicle, setValidatingNewVehicle] = useState(false);
@@ -128,48 +157,60 @@ const ClientDashboard = () => {
     const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string>("");
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+    const [selectedVehicleForPayment, setSelectedVehicleForPayment] = useState<string | null>(null);
 
     // ... inside ClientDashboard ...
-    const handlePaymentClick = () => {
+    const now = new Date();
+    const planEndDate = clientData?.plan_end ? new Date(clientData.plan_end) : null;
+    const isPlanExpired = planEndDate && now > planEndDate;
+    const calculatedPlanStatus: "free" | "active" | "expired" = clientData?.plan_active 
+        ? (isPlanExpired ? "expired" : "active") 
+        : "free";
+
+    const isPendingApproval = clientData?.profile_status === "pending" || 
+                             clientVehicles.some(v => v.is_primary && v.status === "pending");
+
+    const handlePaymentClick = (vehicleId: string) => {
+        setSelectedVehicleForPayment(vehicleId);
         setPaymentModalOpen(true);
     };
 
     const handleConfirmPayment = async () => {
-        if (!clientData?.id) return;
+        if (!clientData?.id || !selectedVehicleForPayment) return;
         setIsProcessingPayment(true);
         try {
             // Simular sucesso do pagamento
             await new Promise(resolve => setTimeout(resolve, 2000));
             
             const today = new Date();
-            const nextYear = new Date(today);
-            nextYear.setFullYear(nextYear.getFullYear() + 1);
+            const nextMonth = new Date(today);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
             
             const { error } = await supabase
-                .from("clients")
+                .from("client_vehicles")
                 .update({ 
                     plan_active: true,
                     plan_paid_at: today.toISOString(),
                     plan_start: today.toISOString().split("T")[0],
-                    plan_end: nextYear.toISOString().split("T")[0],
-                    plan_status: "active"
+                    plan_end: nextMonth.toISOString().split("T")[0]
                 })
-                .eq("id", clientData.id);
+                .eq("id", selectedVehicleForPayment);
 
             if (error) throw error;
 
             toast({ 
                 title: "Pagamento processado!", 
-                description: "Seu plano foi ativado com sucesso. Agora você pode realizar agendamentos." 
+                description: "O plano para este veículo foi ativado com sucesso por 1 mês." 
             });
             setPaymentModalOpen(false);
             
-            // Forçar recarregamento da página para atualizar todos os estados
-            window.location.reload();
+            // Recarregar veículos
+            fetchClientVehicles(clientData.id);
         } catch (error: any) {
             toast({ title: "Erro no pagamento", description: error.message, variant: "destructive" });
         } finally {
             setIsProcessingPayment(false);
+            setSelectedVehicleForPayment(null);
         }
     };
 
@@ -310,7 +351,29 @@ const ClientDashboard = () => {
         return () => clearInterval(interval);
     }, [clientData?.id, fetchAppointments]);
 
-    const handlePhotoChange = (side: "front" | "back" | "left" | "right", e: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadVehiclePhoto = async (file: File, clientId: string, side: string) => {
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${clientId}/${Date.now()}_${side}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from("vehicle-photos")
+                .upload(fileName, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from("vehicle-photos")
+                .getPublicUrl(fileName);
+
+            return publicUrl;
+        } catch (error) {
+            console.error(`Erro ao fazer upload da foto ${side}:`, error);
+            return null;
+        }
+    };
+
+    const handlePhotoChange = (side: string, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -324,11 +387,18 @@ const ClientDashboard = () => {
             return;
         }
 
-        const fieldMap = {
+        const fieldMap: Record<string, string> = {
             front: "photoFront",
             back: "photoBack",
             left: "photoLeft",
-            right: "photoRight"
+            right: "photoRight",
+            headlightsFront: "photoHeadlightsFront",
+            headlightsRear: "photoHeadlightsRear",
+            mirrors: "photoMirrors",
+            interiorRear: "photoInteriorRear",
+            interiorFront: "photoInteriorFront",
+            dashboard: "photoDashboard",
+            trunkOpen: "photoTrunkOpen"
         };
 
         setNewVehicleForm({ ...newVehicleForm, [fieldMap[side]]: file });
@@ -348,8 +418,13 @@ const ClientDashboard = () => {
 
         const skipInspection = (clientData as any)?.skip_inspection;
 
-        if (!skipInspection && (!newVehicleForm.photoFront || !newVehicleForm.photoBack || !newVehicleForm.photoLeft || !newVehicleForm.photoRight)) {
-            toast({ title: "As 4 fotos do veículo são obrigatórias para vistoria", variant: "destructive" });
+        if (!skipInspection && (
+            !newVehicleForm.photoFront || !newVehicleForm.photoBack || !newVehicleForm.photoLeft || !newVehicleForm.photoRight ||
+            !newVehicleForm.photoHeadlightsFront || !newVehicleForm.photoHeadlightsRear || !newVehicleForm.photoMirrors ||
+            !newVehicleForm.photoInteriorRear || !newVehicleForm.photoInteriorFront || !newVehicleForm.photoDashboard ||
+            !newVehicleForm.photoTrunkOpen
+        )) {
+            toast({ title: "Todas as 11 fotos do veículo são obrigatórias para vistoria", variant: "destructive" });
             return;
         }
 
@@ -392,15 +467,26 @@ const ClientDashboard = () => {
         try {
             setUploadingVehiclePhoto(true);
             
-            let photoUrls = { front: "", back: "", left: "", right: "" };
+            let photoUrls = { 
+                front: "", back: "", left: "", right: "",
+                headlightsFront: "", headlightsRear: "", mirrors: "",
+                interiorRear: "", interiorFront: "", dashboard: "", trunkOpen: ""
+            };
 
             if (!skipInspection) {
-                // Upload das 4 fotos
+                // Upload das 11 fotos
                 const uploadPromises = [
                     uploadVehiclePhoto(newVehicleForm.photoFront!, clientData.id!, `${newVehicleForm.plate}_front`),
                     uploadVehiclePhoto(newVehicleForm.photoBack!, clientData.id!, `${newVehicleForm.plate}_back`),
                     uploadVehiclePhoto(newVehicleForm.photoLeft!, clientData.id!, `${newVehicleForm.plate}_left`),
-                    uploadVehiclePhoto(newVehicleForm.photoRight!, clientData.id!, `${newVehicleForm.plate}_right`)
+                    uploadVehiclePhoto(newVehicleForm.photoRight!, clientData.id!, `${newVehicleForm.plate}_right`),
+                    uploadVehiclePhoto(newVehicleForm.photoHeadlightsFront!, clientData.id!, `${newVehicleForm.plate}_headlights_front`),
+                    uploadVehiclePhoto(newVehicleForm.photoHeadlightsRear!, clientData.id!, `${newVehicleForm.plate}_headlights_rear`),
+                    uploadVehiclePhoto(newVehicleForm.photoMirrors!, clientData.id!, `${newVehicleForm.plate}_mirrors`),
+                    uploadVehiclePhoto(newVehicleForm.photoInteriorRear!, clientData.id!, `${newVehicleForm.plate}_interior_rear`),
+                    uploadVehiclePhoto(newVehicleForm.photoInteriorFront!, clientData.id!, `${newVehicleForm.plate}_interior_front`),
+                    uploadVehiclePhoto(newVehicleForm.photoDashboard!, clientData.id!, `${newVehicleForm.plate}_dashboard`),
+                    uploadVehiclePhoto(newVehicleForm.photoTrunkOpen!, clientData.id!, `${newVehicleForm.plate}_trunk_open`)
                 ];
 
                 const results = await Promise.all(uploadPromises);
@@ -408,7 +494,11 @@ const ClientDashboard = () => {
                     toast({ title: "Erro ao fazer upload de uma ou mais fotos", variant: "destructive" });
                     return;
                 }
-                photoUrls = { front: results[0]!, back: results[1]!, left: results[2]!, right: results[3]! };
+                photoUrls = { 
+                    front: results[0]!, back: results[1]!, left: results[2]!, right: results[3]!,
+                    headlightsFront: results[4]!, headlightsRear: results[5]!, mirrors: results[6]!,
+                    interiorRear: results[7]!, interiorFront: results[8]!, dashboard: results[9]!, trunkOpen: results[10]!
+                };
             }
 
             const isPrimary = clientVehicles.length === 0;
@@ -426,13 +516,29 @@ const ClientDashboard = () => {
                     photo_back_url: photoUrls.back || null,
                     photo_left_url: photoUrls.left || null,
                     photo_right_url: photoUrls.right || null,
+                    photo_headlights_front_url: photoUrls.headlightsFront || null,
+                    photo_headlights_rear_url: photoUrls.headlightsRear || null,
+                    photo_mirrors_url: photoUrls.mirrors || null,
+                    photo_interior_rear_url: photoUrls.interiorRear || null,
+                    photo_interior_front_url: photoUrls.interiorFront || null,
+                    photo_dashboard_url: photoUrls.dashboard || null,
+                    photo_trunk_open_url: photoUrls.trunkOpen || null,
                     status: skipInspection ? "approved" : "pending"
                 });
 
             if (error) throw error;
 
-            setNewVehicleForm({ vehicle: "", plate: "", photoFront: null, photoBack: null, photoLeft: null, photoRight: null });
-            setPhotoPreviews({ front: "", back: "", left: "", right: "" });
+            setNewVehicleForm({ 
+                vehicle: "", plate: "", 
+                photoFront: null, photoBack: null, photoLeft: null, photoRight: null,
+                photoHeadlightsFront: null, photoHeadlightsRear: null, photoMirrors: null,
+                photoInteriorRear: null, photoInteriorFront: null, photoDashboard: null, photoTrunkOpen: null
+            });
+            setPhotoPreviews({ 
+                front: "", back: "", left: "", right: "",
+                headlightsFront: "", headlightsRear: "", mirrors: "",
+                interiorRear: "", interiorFront: "", dashboard: "", trunkOpen: ""
+            });
             setValidationResult(null);
             setAddVehicleDialogOpen(false);
             fetchClientVehicles(clientData.id!);
@@ -895,260 +1001,346 @@ const ClientDashboard = () => {
                         </p>
                     </div>
 
-                    {/* Plan Status & Promotion */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="md:col-span-2">
-                            <PlanStatusCard
-                                planStatus={clientData?.plan_active ? "active" : "free"}
-                                planEnd={clientData?.plan_end}
-                                onPaymentClick={handlePaymentClick}
-                                isPending={clientData?.profile_status === "pending" || clientVehicles.some(v => v.is_primary && v.status === "pending")}
-                            />
+                    {/* Instructions Section - Highly Visual Journey */}
+                    <div className="glass-card overflow-hidden rounded-3xl border border-primary/20 shadow-2xl">
+                        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-primary/10">
+                            <h3 className="text-3xl font-display font-black text-foreground flex items-center gap-4">
+                                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg glow-primary">
+                                    <Shield className="w-7 h-7 text-primary-foreground" />
+                                </div>
+                                Jornada do Cliente Clube do Vidro
+                            </h3>
                         </div>
-                        <div className="md:col-span-1">
-                            <PlanPromotionCard 
-                                planStatus={clientData?.plan_active ? "active" : "free"} 
-                            />
+                        
+                        <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                            {/* Connecting Line (Desktop) */}
+                            <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent -translate-y-1/2 z-0" />
+
+                            {/* Step 1 */}
+                            <div className="relative z-10 space-y-4 text-center md:text-left group">
+                                <div className="w-20 h-20 mx-auto md:mx-0 bg-background border-4 border-primary rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
+                                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-black text-sm">1</div>
+                                    <Camera className="w-10 h-10 text-primary" />
+                                </div>
+                                <div>
+                                    <h4 className="text-xl font-bold text-foreground">Vistoria</h4>
+                                    <p className="text-lg text-muted-foreground leading-relaxed">
+                                        Envie <strong className="text-primary">11 fotos</strong> do seu carro para nossa equipe validar.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Step 2 */}
+                            <div className="relative z-10 space-y-4 text-center md:text-left group">
+                                <div className="w-20 h-20 mx-auto md:mx-0 bg-background border-4 border-primary rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
+                                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-black text-sm">2</div>
+                                    <CreditCard className="w-10 h-10 text-primary" />
+                                </div>
+                                <div>
+                                    <h4 className="text-xl font-bold text-foreground">Ativação</h4>
+                                    <p className="text-lg text-muted-foreground leading-relaxed">
+                                        Após aprovado, ative a mensalidade de <strong className="text-primary">R$ 19,90</strong> por veículo.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Step 3 */}
+                            <div className="relative z-10 space-y-4 text-center md:text-left group">
+                                <div className="w-20 h-20 mx-auto md:mx-0 bg-background border-4 border-primary rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
+                                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-black text-sm">3</div>
+                                    <CalendarCheck className="w-10 h-10 text-primary" />
+                                </div>
+                                <div>
+                                    <h4 className="text-xl font-bold text-foreground">Serviço</h4>
+                                    <p className="text-lg text-muted-foreground leading-relaxed">
+                                        Agende até <strong className="text-primary">3 trocas gratuitas</strong> por ano com tudo pago!
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Appointments Section */}
+                    {/* 3-Step Workflow Grid */}
+                    <div className="grid grid-cols-1 gap-8">
+                        {/* STEP 1: VISTORIA */}
+                        <div className={`p-8 rounded-2xl border-2 transition-all ${
+                            clientVehicles.some(v => v.status === "approved") 
+                                ? "border-green-500 bg-green-50/50 dark:bg-green-950/10" 
+                                : isPendingApproval 
+                                    ? "border-amber-400 bg-amber-50/50 dark:bg-amber-950/10"
+                                    : "border-border bg-card"
+                        }`}>
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div className="flex items-center gap-6">
+                                    <div className={`w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl ${
+                                        clientVehicles.some(v => v.status === "approved")
+                                            ? "bg-green-500 text-white"
+                                            : "bg-primary text-white"
+                                    }`}>
+                                        {clientVehicles.some(v => v.status === "approved") ? <Check className="w-8 h-8" /> : "1"}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-bold">Passo 1: Vistoria do Veículo</h3>
+                                        <p className="text-base text-muted-foreground">
+                                            {clientVehicles.some(v => v.status === "approved") 
+                                                ? "Você tem veículos aprovados!" 
+                                                : isPendingApproval 
+                                                    ? "Analisando suas fotos..." 
+                                                    : "Envie as fotos do seu veículo."}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Dialog open={addVehicleDialogOpen} onOpenChange={setAddVehicleDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button size="lg" className="gap-2 text-lg px-8">
+                                            <Plus className="w-5 h-5" />
+                                            Nova Vistoria
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="bg-card border-border max-w-2xl">
+                                        <DialogHeader>
+                                            <DialogTitle className="font-display">Enviar para Vistoria</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4">
+                                            {!validationResult ? (
+                                                <>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <Label>Veículo *</Label>
+                                                            <Input
+                                                                value={newVehicleForm.vehicle}
+                                                                onChange={(e) => setNewVehicleForm({ ...newVehicleForm, vehicle: e.target.value })}
+                                                                placeholder="Ex: Honda Civic"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <Label>Placa *</Label>
+                                                            <Input
+                                                                value={newVehicleForm.plate}
+                                                                onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plate: e.target.value })}
+                                                                placeholder="ABC-1234"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {!(clientData as any)?.skip_inspection ? (
+                                                        <div className="space-y-4">
+                                                            <Label className="text-primary font-bold">Fotos Necessárias (Obrigatório)</Label>
+                                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto max-h-[40vh] p-1">
+                                                                {[
+                                                                    { side: "front", label: "Frente" },
+                                                                    { side: "back", label: "Traseira" },
+                                                                    { side: "left", label: "Lado Esquerdo" },
+                                                                    { side: "right", label: "Lado Direito" },
+                                                                    { side: "headlightsFront", label: "Faróis Frontais" },
+                                                                    { side: "headlightsRear", label: "Faróis Traseiros" },
+                                                                    { side: "mirrors", label: "Retrovisores" },
+                                                                    { side: "interiorFront", label: "Interior Frontal" },
+                                                                    { side: "interiorRear", label: "Interior Traseiro" },
+                                                                    { side: "dashboard", label: "Painel" },
+                                                                    { side: "trunkOpen", label: "Mala Aberta" }
+                                                                ].map((photo) => (
+                                                                    <div key={photo.side} className="space-y-1">
+                                                                        <Label className="text-[10px] uppercase text-muted-foreground truncate block">{photo.label}</Label>
+                                                                        <label className={`relative flex flex-col items-center justify-center h-24 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${(photoPreviews as any)[photo.side] ? 'border-success' : 'border-border'}`}>
+                                                                            {(photoPreviews as any)[photo.side] ? (
+                                                                                <img src={(photoPreviews as any)[photo.side]} className="w-full h-full object-cover rounded-lg" alt={photo.label} />
+                                                                            ) : (
+                                                                                <div className="text-center p-1">
+                                                                                    <Image className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
+                                                                                    <span className="text-[8px] font-medium leading-tight block">Upload</span>
+                                                                                </div>
+                                                                            )}
+                                                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange(photo.side, e)} />
+                                                                        </label>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-4 bg-amber-50 rounded-lg"><p>Vistoria desativada.</p></div>
+                                                    )}
+
+                                                    <Button
+                                                        onClick={handleValidateAndAddVehicle}
+                                                        disabled={validatingNewVehicle}
+                                                        className="w-full gradient-primary"
+                                                    >
+                                                        {validatingNewVehicle ? "Processando..." : "Enviar para Vistoria"}
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    <div className="p-4 border-2 border-success bg-success/10 rounded-lg text-center">
+                                                        <Check className="w-10 h-10 text-success mx-auto mb-2" />
+                                                        <p className="font-bold">Veículo Validado!</p>
+                                                        <Button onClick={handleConfirmAddVehicle} className="mt-4 w-full">Confirmar Envio</Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                        </div>
+
+                        {/* STEP 2: PAGAMENTO */}
+                        <div className={`p-8 rounded-2xl border-2 transition-all ${
+                            clientVehicles.some(v => v.plan_active && v.plan_end && new Date(v.plan_end) > new Date()) 
+                                ? "border-green-500 bg-green-50/50 dark:bg-green-950/10" 
+                                : "border-border bg-card"
+                        } ${!clientVehicles.some(v => v.status === "approved") ? "opacity-50 grayscale pointer-events-none" : ""}`}>
+                            <div className="flex items-start gap-6 mb-6">
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl ${
+                                    clientVehicles.some(v => v.plan_active && v.plan_end && new Date(v.plan_end) > new Date())
+                                        ? "bg-green-500 text-white"
+                                        : "bg-primary text-white"
+                                }`}>
+                                    {clientVehicles.some(v => v.plan_active && v.plan_end && new Date(v.plan_end) > new Date()) ? <Check className="w-8 h-8" /> : "2"}
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold">Passo 2: Pagamento por Veículo</h3>
+                                    <p className="text-base text-muted-foreground">
+                                        Cada veículo precisa de uma mensalidade de R$ 19,90 ativa.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {clientVehicles.filter(v => v.status === "approved").map(vehicle => {
+                                    const vPlanEnd = vehicle.plan_end ? new Date(vehicle.plan_end) : null;
+                                    const vExpired = vPlanEnd && new Date() > vPlanEnd;
+                                    const vActive = vehicle.plan_active && !vExpired;
+
+                                    return (
+                                        <div key={vehicle.id} className={`p-4 rounded-xl border-2 flex items-center justify-between ${vActive ? "border-green-200 bg-green-50/30" : vExpired ? "border-red-200 bg-red-50/30" : "border-border bg-muted/20"}`}>
+                                            <div className="min-w-0">
+                                                <p className="font-bold text-sm truncate">{vehicle.vehicle}</p>
+                                                <p className={`text-[10px] font-bold uppercase ${vActive ? "text-green-600" : vExpired ? "text-red-600" : "text-muted-foreground"}`}>
+                                                    {vActive ? "✓ Pago" : vExpired ? "⚠ Expirado" : "○ Pendente"}
+                                                </p>
+                                            </div>
+                                            {!vActive && (
+                                                <Button size="sm" onClick={() => handlePaymentClick(vehicle.id)} className={vExpired ? "bg-red-600" : ""}>
+                                                    <DollarSign className="w-3 h-3 mr-1" /> Pagar
+                                                </Button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* STEP 3: AGENDAMENTO */}
+                        <div className={`p-8 rounded-2xl border-2 transition-all border-blue-500 bg-blue-50/50 dark:bg-blue-950/10 ${
+                            !clientVehicles.some(v => v.plan_active && v.plan_end && new Date(v.plan_end) > new Date()) ? "opacity-50 grayscale pointer-events-none" : ""
+                        }`}>
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-2xl">
+                                        3
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-bold">Passo 3: Agendar Serviço</h3>
+                                        <p className="text-base text-muted-foreground">
+                                            Selecione um veículo com plano ativo para agendar.
+                                        </p>
+                                    </div>
+                                </div>
+                                <Dialog open={appointmentDialogOpen} onOpenChange={setAppointmentDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 gap-2 text-lg px-8">
+                                            <Calendar className="w-5 h-5" />
+                                            Agendar Agora
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="bg-card border-border">
+                                        <DialogHeader>
+                                            <DialogTitle className="font-display">Novo Agendamento</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <Label>Veículo (Apenas pagos e ativos) *</Label>
+                                                <Select value={appointmentForm.vehicle_id} onValueChange={(v) => setAppointmentForm({ ...appointmentForm, vehicle_id: v })}>
+                                                    <SelectTrigger><SelectValue placeholder="Selecione um veículo pago..." /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {clientVehicles.filter(v => v.plan_active && v.plan_end && new Date(v.plan_end) > new Date()).map((vehicle) => (
+                                                            <SelectItem key={vehicle.id} value={vehicle.id}>{vehicle.vehicle} - {vehicle.plate}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div>
+                                                <Label>Serviço *</Label>
+                                                <Select value={appointmentForm.service_type} onValueChange={(v) => setAppointmentForm({ ...appointmentForm, service_type: v })}>
+                                                    <SelectTrigger><SelectValue placeholder="Selecione um serviço..." /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {replacementItems.map((item) => (
+                                                            <SelectItem key={item} value={item}>{item}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label>Data *</Label>
+                                                    <Input type="date" value={appointmentForm.scheduled_date} onChange={(e) => setAppointmentForm({ ...appointmentForm, scheduled_date: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <Label>Hora *</Label>
+                                                    <Input type="time" value={appointmentForm.scheduled_time} onChange={(e) => setAppointmentForm({ ...appointmentForm, scheduled_time: e.target.value })} />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label>Vídeo do Problema *</Label>
+                                                <Input type="file" accept="video/*" onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        setAppointmentForm({ ...appointmentForm, videoFile: file });
+                                                        setAppointmentVideoPreview(URL.createObjectURL(file));
+                                                    }
+                                                }} />
+                                            </div>
+                                            <Button onClick={handleAddAppointment} disabled={submittingAppointment} className="w-full">
+                                                Confirmar Agendamento
+                                            </Button>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Active Appointments List (Histórico rápido) */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.1 }}
                         className="glass-card p-8 rounded-2xl"
                     >
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-display font-bold text-foreground flex items-center gap-2">
-                                <Calendar className="w-5 h-5 text-primary" />
-                                Agendar Serviço
-                            </h3>
-                            <Dialog open={appointmentDialogOpen} onOpenChange={(open) => {
-                                if (open) {
-                                    if (clientData?.profile_status === "pending" || clientVehicles.some(v => v.is_primary && v.status === "pending")) {
-                                        toast({
-                                            title: "Acesso bloqueado",
-                                            description: "Seu cadastro ou veículo está em fase de vistoria. Aguarde a liberação.",
-                                            variant: "destructive"
-                                        });
-                                        return;
-                                    }
-                                    if (!clientData?.plan_active) {
-                                        toast({
-                                            title: "Plano Inativo",
-                                            description: "Você precisa ativar seu plano antes de realizar agendamentos.",
-                                            variant: "destructive"
-                                        });
-                                        return;
-                                    }
-                                }
-                                setAppointmentDialogOpen(open);
-                            }}>
-                                <DialogTrigger asChild>
-                                    <Button 
-                                        className="gap-2"
-                                        disabled={
-                                            clientData?.profile_status === "pending" || 
-                                            clientVehicles.some(v => v.is_primary && v.status === "pending") ||
-                                            !clientData?.plan_active
-                                        }
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        Novo Agendamento
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="bg-card border-border">
-                                    <DialogHeader>
-                                        <DialogTitle className="font-display">Agendar Novo Serviço</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <Label>Serviço *</Label>
-                                            <Select value={appointmentForm.service_type} onValueChange={(v) => setAppointmentForm({ ...appointmentForm, service_type: v })}>
-                                                <SelectTrigger><SelectValue placeholder="Selecione um serviço..." /></SelectTrigger>
-                                                <SelectContent>
-                                                    {replacementItems.map((item) => (
-                                                        <SelectItem key={item} value={item}>{item}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div>
-                                            <Label>Data *</Label>
-                                            <Input
-                                                type="date"
-                                                value={appointmentForm.scheduled_date}
-                                                onChange={(e) => setAppointmentForm({ ...appointmentForm, scheduled_date: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Hora *</Label>
-                                            <Input
-                                                type="time"
-                                                value={appointmentForm.scheduled_time}
-                                                onChange={(e) => setAppointmentForm({ ...appointmentForm, scheduled_time: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Veículo *</Label>
-                                            {clientVehicles.length === 0 ? (
-                                                <p className="text-sm text-red-600 mb-2">Adicione um veículo para continuar</p>
-                                            ) : (
-                                                <Select value={appointmentForm.vehicle_id} onValueChange={(v) => setAppointmentForm({ ...appointmentForm, vehicle_id: v })}>
-                                                    <SelectTrigger><SelectValue placeholder="Selecione um veículo..." /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {clientVehicles.map((vehicle) => (
-                                                            <SelectItem key={vehicle.id} value={vehicle.id}>
-                                                                {vehicle.vehicle} - {vehicle.plate}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <Label>Observações</Label>
-                                            <Input
-                                                value={appointmentForm.notes}
-                                                onChange={(e) => setAppointmentForm({ ...appointmentForm, notes: e.target.value })}
-                                                placeholder="Algo especial que devemos saber?"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Vídeo do Problema *</Label>
-                                            <div className="relative border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-                                                <input
-                                                    type="file"
-                                                    accept="video/*"
-                                                    onChange={(e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (file) {
-                                                            if (file.size > 100 * 1024 * 1024) {
-                                                                toast({ title: "Vídeo muito grande (máx 100MB)", variant: "destructive" });
-                                                                return;
-                                                            }
-                                                            setAppointmentForm({ ...appointmentForm, videoFile: file });
-                                                            const url = URL.createObjectURL(file);
-                                                            setAppointmentVideoPreview(url);
-                                                        }
-                                                    }}
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                />
-                                                {appointmentVideoPreview ? (
-                                                    <div>
-                                                        <p className="text-sm font-medium text-green-600 mb-2">✓ Vídeo selecionado</p>
-                                                        <p className="text-xs text-muted-foreground">{appointmentForm.videoFile?.name}</p>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                setAppointmentForm({ ...appointmentForm, videoFile: null });
-                                                                setAppointmentVideoPreview("");
-                                                            }}
-                                                            className="mt-2"
-                                                        >
-                                                            Remover Vídeo
-                                                        </Button>
-                                                    </div>
-                                                ) : (
-                                                    <div>
-                                                        <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                                                        <p className="text-sm font-medium">Clique ou arraste um vídeo</p>
-                                                        <p className="text-xs text-muted-foreground">Máximo 100MB</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <Button
-                                            onClick={handleAddAppointment}
-                                            disabled={submittingAppointment || uploadingAppointmentVideo}
-                                            className="w-full"
-                                        >
-                                            {submittingAppointment || uploadingAppointmentVideo ? "Agendando..." : "Confirmar Agendamento"}
-                                        </Button>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-
-                        {/* Appointments List */}
+                        <h3 className="text-xl font-display font-bold text-foreground mb-6 flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-primary" />
+                            Meus Agendamentos
+                        </h3>
                         <div className="space-y-3">
                             {appointments.length === 0 ? (
                                 <p className="text-sm text-muted-foreground text-center py-8">Nenhum agendamento realizado ainda</p>
                             ) : (
-                                appointments.map((apt) => {
-                                    const bgColor = apt.status === "pendente" ? "bg-amber-50 dark:bg-amber-950/20" : apt.status === "confirmado" ? "bg-blue-50 dark:bg-blue-950/20" : apt.status === "cancelado" ? "bg-red-50 dark:bg-red-950/20" : "bg-green-50 dark:bg-green-950/20";
-                                    const borderColor = apt.status === "pendente" ? "border-amber-200" : apt.status === "confirmado" ? "border-blue-200" : apt.status === "cancelado" ? "border-red-200" : "border-green-200";
-                                    const canCancel = apt.status !== "concluido" && apt.status !== "cancelado";
-                                    return (
-                                        <div key={apt.id} className={`p-4 ${bgColor} rounded-lg border ${borderColor} border-l-4`}>
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div>
-                                                    <p className="font-medium text-foreground">{apt.service_type}</p>
-                                                    <p className="text-sm text-muted-foreground mt-1">
-                                                        📅 {new Date(apt.scheduled_date).toLocaleDateString("pt-BR")} às {apt.scheduled_time}
-                                                    </p>
-                                                    {apt.time_changed_at && (
-                                                         <div className="mt-2 p-2 bg-orange-100 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 rounded">
-                                                             <p className="text-xs font-semibold text-orange-700 dark:text-orange-300 flex items-center gap-1">
-                                                                 🔔 Horário Alterado
-                                                             </p>
-                                                             <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                                                                 Anterior: {apt.original_scheduled_date} às {apt.original_scheduled_time}
-                                                             </p>
-                                                             {apt.time_change_reason && (
-                                                                 <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                                                                     Motivo: {apt.time_change_reason}
-                                                                 </p>
-                                                             )}
-                                                             {apt.status === "pendente" && (
-                                                                 <div className="flex gap-2 mt-2">
-                                                                     <Button
-                                                                         size="sm"
-                                                                         className="text-xs h-7 flex-1 bg-green-600 hover:bg-green-700"
-                                                                         onClick={() => handleConfirmChangedAppointment(apt.id)}
-                                                                         disabled={confirmingChangedAppointmentId === apt.id}
-                                                                     >
-                                                                         ✅ Aceitar Horário
-                                                                     </Button>
-                                                                 </div>
-                                                             )}
-                                                         </div>
-                                                     )}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.status === "pendente" ? "bg-amber-100 text-amber-700" : apt.status === "confirmado" ? "bg-blue-100 text-blue-700" : apt.status === "cancelado" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-                                                         {apt.status === "pendente" ? "⏳ Aguardando confirmação da loja" : apt.status === "confirmado" ? "⏱️ Confirmado" : apt.status === "cancelado" ? "✕ Cancelado" : "✓ Concluído"}
-                                                     </span>
-                                                     {apt.status !== "cancelado" && apt.status !== "concluído" && (
-                                                         <Button
-                                                             variant="outline"
-                                                             size="sm"
-                                                             onClick={() => openEditAppointmentDialog(apt)}
-                                                             className="text-xs h-7"
-                                                         >
-                                                             ✏️ Alterar
-                                                         </Button>
-                                                     )}
-                                                     {canCancel && (
-                                                         <Button
-                                                             variant="ghost"
-                                                             size="sm"
-                                                             onClick={() => handleCancelAppointment(apt.id)}
-                                                             className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
-                                                         >
-                                                             <Trash2 className="w-4 h-4" />
-                                                         </Button>
-                                                     )}
-                                                 </div>
-                                            </div>
-                                            {apt.notes && <p className="text-sm text-muted-foreground">💬 {apt.notes}</p>}
+                                appointments.slice(0, 3).map((apt) => (
+                                    <div key={apt.id} className="p-4 bg-muted/50 rounded-lg border border-border flex items-center justify-between">
+                                        <div>
+                                            <p className="font-medium">{apt.service_type}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {new Date(apt.scheduled_date).toLocaleDateString("pt-BR")} às {apt.scheduled_time}
+                                            </p>
                                         </div>
-                                    );
-                                })
+                                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                                            apt.status === "confirmado" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                                        }`}>
+                                            {apt.status}
+                                        </span>
+                                    </div>
+                                ))
                             )}
                         </div>
                     </motion.div>
@@ -1202,73 +1394,38 @@ const ClientDashboard = () => {
                                                     <div className="space-y-4">
                                                         <Label className="text-primary font-bold">Fotos Necessárias para Vistoria (Obrigatório)</Label>
                                                         <p className="text-xs text-muted-foreground bg-primary/5 p-2 rounded border border-primary/10">
-                                                            Para sua segurança e aprovação do plano, precisamos de 4 fotos nítidas do veículo.
+                                                            Para sua segurança e aprovação do plano, precisamos de 11 fotos nítidas do veículo.
                                                         </p>
                                                         
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            {/* FRENTE */}
-                                                            <div className="space-y-2">
-                                                                <Label className="text-xs uppercase text-muted-foreground">Frente</Label>
-                                                                <label className={`relative flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${photoPreviews.front ? 'border-success' : 'border-border'}`}>
-                                                                    {photoPreviews.front ? (
-                                                                        <img src={photoPreviews.front} className="w-full h-full object-cover rounded-lg" alt="Front" />
-                                                                    ) : (
-                                                                        <div className="text-center p-2">
-                                                                            <Image className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
-                                                                            <span className="text-[10px] font-medium">Lado Frontal</span>
-                                                                        </div>
-                                                                    )}
-                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange("front", e)} />
-                                                                </label>
-                                                            </div>
-
-                                                            {/* TRASEIRA */}
-                                                            <div className="space-y-2">
-                                                                <Label className="text-xs uppercase text-muted-foreground">Traseira</Label>
-                                                                <label className={`relative flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${photoPreviews.back ? 'border-success' : 'border-border'}`}>
-                                                                    {photoPreviews.back ? (
-                                                                        <img src={photoPreviews.back} className="w-full h-full object-cover rounded-lg" alt="Back" />
-                                                                    ) : (
-                                                                        <div className="text-center p-2">
-                                                                            <Image className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
-                                                                            <span className="text-[10px] font-medium">Lado Traseiro</span>
-                                                                        </div>
-                                                                    )}
-                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange("back", e)} />
-                                                                </label>
-                                                            </div>
-
-                                                            {/* ESQUERDA */}
-                                                            <div className="space-y-2">
-                                                                <Label className="text-xs uppercase text-muted-foreground">Lado Esquerdo</Label>
-                                                                <label className={`relative flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${photoPreviews.left ? 'border-success' : 'border-border'}`}>
-                                                                    {photoPreviews.left ? (
-                                                                        <img src={photoPreviews.left} className="w-full h-full object-cover rounded-lg" alt="Left" />
-                                                                    ) : (
-                                                                        <div className="text-center p-2">
-                                                                            <Image className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
-                                                                            <span className="text-[10px] font-medium">Lado Esquerdo</span>
-                                                                        </div>
-                                                                    )}
-                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange("left", e)} />
-                                                                </label>
-                                                            </div>
-
-                                                            {/* DIREITA */}
-                                                            <div className="space-y-2">
-                                                                <Label className="text-xs uppercase text-muted-foreground">Lado Direito</Label>
-                                                                <label className={`relative flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${photoPreviews.right ? 'border-success' : 'border-border'}`}>
-                                                                    {photoPreviews.right ? (
-                                                                        <img src={photoPreviews.right} className="w-full h-full object-cover rounded-lg" alt="Right" />
-                                                                    ) : (
-                                                                        <div className="text-center p-2">
-                                                                            <Image className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
-                                                                            <span className="text-[10px] font-medium">Lado Direito</span>
-                                                                        </div>
-                                                                    )}
-                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange("right", e)} />
-                                                                </label>
-                                                            </div>
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto max-h-[40vh] p-1">
+                                                            {[
+                                                                { side: "front", label: "Frente" },
+                                                                { side: "back", label: "Traseira" },
+                                                                { side: "left", label: "Lado Esquerdo" },
+                                                                { side: "right", label: "Lado Direito" },
+                                                                { side: "headlightsFront", label: "Faróis Frontais" },
+                                                                { side: "headlightsRear", label: "Faróis Traseiros" },
+                                                                { side: "mirrors", label: "Retrovisores" },
+                                                                { side: "interiorFront", label: "Interior Frontal" },
+                                                                { side: "interiorRear", label: "Interior Traseiro" },
+                                                                { side: "dashboard", label: "Painel" },
+                                                                { side: "trunkOpen", label: "Mala Aberta" }
+                                                            ].map((photo) => (
+                                                                <div key={photo.side} className="space-y-1">
+                                                                    <Label className="text-[10px] uppercase text-muted-foreground truncate block">{photo.label}</Label>
+                                                                    <label className={`relative flex flex-col items-center justify-center h-24 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${(photoPreviews as any)[photo.side] ? 'border-success' : 'border-border'}`}>
+                                                                        {(photoPreviews as any)[photo.side] ? (
+                                                                            <img src={(photoPreviews as any)[photo.side]} className="w-full h-full object-cover rounded-lg" alt={photo.label} />
+                                                                        ) : (
+                                                                            <div className="text-center p-1">
+                                                                                <Image className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
+                                                                                <span className="text-[8px] font-medium leading-tight block">Upload</span>
+                                                                            </div>
+                                                                        )}
+                                                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange(photo.side, e)} />
+                                                                    </label>
+                                                                </div>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 ) : (
@@ -1318,8 +1475,17 @@ const ClientDashboard = () => {
                                                     variant="outline"
                                                     onClick={() => {
                                                         setValidationResult(null);
-                                                        setNewVehicleForm({ vehicle: "", plate: "", photoFile: null });
-                                                        setVehiclePhotoPreview("");
+                                                        setNewVehicleForm({ 
+                                                            vehicle: "", plate: "", 
+                                                            photoFront: null, photoBack: null, photoLeft: null, photoRight: null,
+                                                            photoHeadlightsFront: null, photoHeadlightsRear: null, photoMirrors: null,
+                                                            photoInteriorRear: null, photoInteriorFront: null, photoDashboard: null, photoTrunkOpen: null
+                                                        });
+                                                        setPhotoPreviews({ 
+                                                            front: "", back: "", left: "", right: "",
+                                                            headlightsFront: "", headlightsRear: "", mirrors: "",
+                                                            interiorRear: "", interiorFront: "", dashboard: "", trunkOpen: ""
+                                                        });
                                                     }}
                                                     className="w-full"
                                                 >
