@@ -302,37 +302,104 @@ const ClientDashboard = () => {
                     }
                 }
 
-                if (clientRecord) {
-                    // Fetch profile status
-                    const { data: profileData } = await supabase
-                        .from("profiles")
-                        .select("status, full_name, phone, cpf") // Incluindo full_name, phone e cpf
-                        .eq("id", clientRecord.user_id)
+                let clientRecord: any = null;
+
+                // 1. Tentar buscar registro do cliente na tabela 'clients' por user_id
+                const { data: byUserId } = await supabase
+                    .from("clients")
+                    .select("*")
+                    .eq("user_id", userId)
+                    .maybeSingle();
+
+                if (byUserId) {
+                    clientRecord = byUserId;
+                } else {
+                    // 2. Fallback: buscar por email (para clientes legados sem user_id)
+                    const normalizedEmail = normalizeEmail(userEmail);
+                    const { data: byEmail } = await supabase
+                        .from("clients")
+                        .select("*")
+                        .eq("email", normalizedEmail)
                         .maybeSingle();
 
-                    setClientData({
-                        ...clientRecord,
-                        name: profileData?.full_name || clientRecord.name || "", // Prioriza profile, depois clientRecord
-                        email: clientRecord.email || session.user?.email || "", // Email do cliente ou da sessão
-                        phone: profileData?.phone || clientRecord.phone || "", // Prioriza profile, depois clientRecord
-                        cpf: profileData?.cpf || clientRecord.cpf || "", // Prioriza profile, depois clientRecord
-                        profile_status: profileData?.status || "pending"
-                    });
-                    setFormData({
-                        ...clientRecord,
-                        name: profileData?.full_name || clientRecord.name || "", // Prioriza profile, depois clientRecord
-                        email: clientRecord.email || session.user?.email || "", // Email do cliente ou da sessão
-                        phone: profileData?.phone || clientRecord.phone || "", // Prioriza profile, depois clientRecord
-                        cpf: profileData?.cpf || clientRecord.cpf || "", // Prioriza profile, depois clientRecord
-                        plate: clientRecord.plate || "",
-                        vehicle: clientRecord.vehicle || "",
-                    });
-                    setBulkUploadEnabled(clientRecord.bulk_upload_enabled || false);
-                    fetchAppointments(clientRecord.id);
-                    fetchClientVehicles(clientRecord.id);
-                } else {
-                    setClientData(null);
+                    if (byEmail) {
+                        clientRecord = byEmail;
+                        // Vincula o cadastro legado ao usuário autenticado para evitar
+                        // futuros fallbacks por email e garantir persistência correta.
+                        if (!byEmail.user_id || byEmail.user_id !== userId) {
+                            const { error: linkError } = await supabase
+                                .from("clients")
+                                .update({ user_id: userId })
+                                .eq("id", byEmail.id);
+                            if (!linkError) {
+                                clientRecord = { ...byEmail, user_id: userId };
+                            }
+                        }
+                    } else {
+                        // 3. Se nenhum registro de cliente foi encontrado, criar um novo
+                        // na tabela 'clients' usando os dados da sessão e do perfil.
+                        const { data: profileForNewClient } = await supabase
+                            .from("profiles")
+                            .select("full_name, phone, cpf")
+                            .eq("id", userId)
+                            .maybeSingle();
+
+                        const newClientData = {
+                            user_id: userId,
+                            email: userEmail || "",
+                            name: profileForNewClient?.full_name || "",
+                            phone: profileForNewClient?.phone || "",
+                            cpf: profileForNewClient?.cpf || "",
+                            // Outros campos padrões para um novo cliente se necessário (se existirem na tabela 'clients')
+                            // Ex: plan_active: false, replacements_used: 0, etc.
+                        };
+
+                        const { data: createdClient, error: createClientError } = await supabase
+                            .from("clients")
+                            .insert(newClientData)
+                            .select("*")
+                            .single();
+
+                        if (createClientError) {
+                            console.error("Erro ao criar novo cliente:", createClientError);
+                            // Se houver um erro na criação do cliente, ainda podemos tentar exibir dados do perfil
+                            // mas a funcionalidade de veículos/agendamentos pode ser limitada
+                            throw createClientError; // Lançar erro para ser pego pelo catch externo e setar clientData como null
+                        }
+                        clientRecord = createdClient;
+                        toast({ title: "Bem-vindo!", description: "Seu perfil de cliente foi criado." });
+                    }
                 }
+
+                // A partir deste ponto, clientRecord SEMPRE deve existir para um usuário logado.
+                // Agora, buscar os dados completos do perfil para display (nome, telefone, cpf, status).
+                const { data: profileData } = await supabase
+                    .from("profiles")
+                    .select("status, full_name, phone, cpf")
+                    .eq("id", userId) // Usar userId da sessão para buscar profile, que é a fonte primária dos dados de cadastro.
+                    .maybeSingle();
+
+                setClientData({
+                    ...clientRecord, // Garante que temos o ID do cliente e outros campos de 'clients'
+                    name: profileData?.full_name || clientRecord.name || "", // Prioriza profile, depois clientRecord
+                    email: clientRecord.email || session.user?.email || "", // Prioriza clientRecord, depois session
+                    phone: profileData?.phone || clientRecord.phone || "", // Prioriza profile, depois clientRecord
+                    cpf: profileData?.cpf || clientRecord.cpf || "", // Prioriza profile, depois clientRecord
+                    profile_status: profileData?.status || "pending"
+                });
+                setFormData({
+                    ...clientRecord, // Garante que temos o ID do cliente e outros campos de 'clients'
+                    name: profileData?.full_name || clientRecord.name || "", // Prioriza profile, depois clientRecord
+                    email: clientRecord.email || session.user?.email || "", // Prioriza clientRecord, depois session
+                    phone: profileData?.phone || clientRecord.phone || "", // Prioriza profile, depois clientRecord
+                    cpf: profileData?.cpf || clientRecord.cpf || "", // Prioriza profile, depois clientRecord
+                    plate: clientRecord.plate || "",
+                    vehicle: clientRecord.vehicle || "",
+                });
+                setBulkUploadEnabled(clientRecord.bulk_upload_enabled || false);
+                // Estas chamadas agora são seguras, pois clientRecord.id sempre existirá
+                fetchAppointments(clientRecord.id);
+                fetchClientVehicles(clientRecord.id);
             } catch (err) {
                 setClientData(null);
             } finally {
