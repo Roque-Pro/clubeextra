@@ -265,9 +265,6 @@ const ClientDashboard = () => {
 
                 let clientRecord: any = null;
 
-
-                let clientRecord: any = null;
-
                 // 1. Tentar buscar registro do cliente na tabela 'clients' por user_id
                 const { data: byUserId } = await supabase
                     .from("clients")
