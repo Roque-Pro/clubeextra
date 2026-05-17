@@ -18,6 +18,13 @@ interface PendingVehicle {
   photo_back_url?: string;
   photo_left_url?: string;
   photo_right_url?: string;
+  photo_headlights_front_url?: string;
+  photo_headlights_rear_url?: string;
+  photo_mirrors_url?: string;
+  photo_interior_rear_url?: string;
+  photo_interior_front_url?: string;
+  photo_dashboard_url?: string;
+  photo_trunk_open_url?: string;
   status: string;
   created_at: string;
 }
@@ -52,6 +59,13 @@ export const VistoriaTab = () => {
           photo_back_url,
           photo_left_url,
           photo_right_url,
+          photo_headlights_front_url,
+          photo_headlights_rear_url,
+          photo_mirrors_url,
+          photo_interior_rear_url,
+          photo_interior_front_url,
+          photo_dashboard_url,
+          photo_trunk_open_url,
           status,
           created_at,
           client_id,
@@ -73,11 +87,19 @@ export const VistoriaTab = () => {
         photo_back_url: v.photo_back_url,
         photo_left_url: v.photo_left_url,
         photo_right_url: v.photo_right_url,
+        photo_headlights_front_url: v.photo_headlights_front_url,
+        photo_headlights_rear_url: v.photo_headlights_rear_url,
+        photo_mirrors_url: v.photo_mirrors_url,
+        photo_interior_rear_url: v.photo_interior_rear_url,
+        photo_interior_front_url: v.photo_interior_front_url,
+        photo_dashboard_url: v.photo_dashboard_url,
+        photo_trunk_open_url: v.photo_trunk_open_url,
         status: v.status,
         created_at: v.created_at,
       })) || [];
 
       setPendingVehicles(formattedVehicles);
+// ... rest of fetchData ...
 
       // Fetch pending clients (via profiles)
       // Removed 'email' as it doesn't exist in 'profiles' table according to schema
@@ -224,26 +246,33 @@ export const VistoriaTab = () => {
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="glass-card overflow-hidden flex flex-col"
                 >
-                  <div className="p-2 grid grid-cols-2 gap-1 bg-muted">
+                  <div className="p-2 grid grid-cols-3 gap-1 bg-muted">
                     {[
                       { url: v.photo_front_url || v.vehicle_photo_url, label: "Frente" },
                       { url: v.photo_back_url, label: "Traseira" },
                       { url: v.photo_left_url, label: "Esquerda" },
-                      { url: v.photo_right_url, label: "Direita" }
+                      { url: v.photo_right_url, label: "Direita" },
+                      { url: v.photo_headlights_front_url, label: "Faróis F." },
+                      { url: v.photo_headlights_rear_url, label: "Faróis T." },
+                      { url: v.photo_mirrors_url, label: "Retrovisores" },
+                      { url: v.photo_interior_front_url, label: "Int. Frontal" },
+                      { url: v.photo_interior_rear_url, label: "Int. Traseiro" },
+                      { url: v.photo_dashboard_url, label: "Painel" },
+                      { url: v.photo_trunk_open_url, label: "Mala Aberta" }
                     ].map((img, idx) => (
-                      <div key={idx} className="relative h-24 bg-black/10 rounded overflow-hidden group">
+                      <div key={idx} className="relative h-20 bg-black/10 rounded overflow-hidden group">
                         {img.url ? (
                           <>
                             <img src={img.url} className="w-full h-full object-cover" alt={img.label} />
                             <button
                               onClick={() => setSelectedPhoto(img.url!)}
-                              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px]"
+                              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[8px]"
                             >
                               <Eye className="w-3 h-3 mr-1" /> {img.label}
                             </button>
                           </>
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[8px] text-muted-foreground">
+                          <div className="w-full h-full flex items-center justify-center text-[7px] text-muted-foreground p-1 text-center">
                             Sem {img.label}
                           </div>
                         )}

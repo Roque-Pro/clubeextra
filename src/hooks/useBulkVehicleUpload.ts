@@ -67,12 +67,25 @@ export const useBulkVehicleUpload = () => {
       if (deleteError) throw deleteError;
 
       // Inserir novos veículos
+      // Buscar status skip_inspection do cliente
+      const { data: clientData } = await supabase
+        .from("clients")
+        .select("skip_inspection")
+        .eq("id", clientId)
+        .single();
+      
+      const skipInspection = clientData?.skip_inspection === true;
+
       const vehiclesToInsert = vehicles.map((v, idx) => ({
         client_id: clientId,
         vehicle: v.vehicle,
         plate: v.plate.toUpperCase(),
         is_national: true,
         is_primary: idx === 0, // Primeiro veículo é primário
+        status: skipInspection ? "approved" : "pending",
+        plan_active: skipInspection ? true : false,
+        plan_start: skipInspection ? new Date().toISOString().split('T')[0] : null,
+        plan_end: skipInspection ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] : null
       }));
 
       const { error: insertError, data } = await supabase

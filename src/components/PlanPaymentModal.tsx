@@ -72,22 +72,22 @@ const PlanPaymentModal = ({
                     <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 rounded-2xl p-6 border border-primary/20">
                         <div className="text-center mb-4">
                             <p className="text-sm font-semibold text-muted-foreground mb-2">
-                                PLANO ANUAL
+                                ASSINATURA MENSAL
                             </p>
                             <div className="flex items-baseline justify-center gap-1 mb-2">
                                 <span className="text-4xl font-display font-black text-primary">
-                                    R$ {planPrice}
+                                    R$ {monthlyPrice.toFixed(2).replace('.', ',')}
                                 </span>
-                                <span className="text-lg text-muted-foreground">/ano</span>
+                                <span className="text-lg text-muted-foreground">/mês</span>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Apenas <strong className="text-primary">R$ {monthlyPrice}/mês</strong>
+                                Tenha acesso a <strong className="text-primary">3 trocas por ano</strong>
                             </p>
                         </div>
 
                         <div className="bg-white dark:bg-gray-900 rounded-lg p-3 mt-4">
                             <p className="text-xs text-muted-foreground text-center">
-                                Renovação automática ao final do período
+                                Pagamento recorrente. Cancele quando quiser.
                             </p>
                         </div>
                     </div>

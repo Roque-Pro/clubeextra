@@ -11,6 +11,10 @@ export interface Client {
   replacementsUsed: number;
   maxReplacements: number;
   active: boolean;
+  skip_inspection?: boolean;
+  bulk_upload_enabled?: boolean;
+  planActive?: boolean;
+  vehiclesCount?: number;
 }
 
 export interface Replacement {

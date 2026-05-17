@@ -112,18 +112,17 @@ const PlanStatusCard = ({
                 </div>
             )}
 
-            {planStatus === "expired" && (
+            {planStatus === "expired" && !isPending && (
                 <Button
                     onClick={onRenewClick}
-                    disabled={isPending}
                     className="w-full gap-2 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold"
                 >
                     <DollarSign className="w-4 h-4" />
-                    Renovar Plano - R$ 239/ano
+                    Renovar Plano - R$ 19,90/mês
                 </Button>
             )}
 
-            {planStatus === "free" && (
+            {planStatus === "free" && !isPending && (
                 <div className="space-y-3">
                     <div className="grid grid-cols-3 gap-2 text-xs">
                         <div className="flex items-center gap-1">
@@ -141,11 +140,10 @@ const PlanStatusCard = ({
                     </div>
                     <Button
                         onClick={onPaymentClick}
-                        disabled={isPending}
                         className="w-full gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold"
                     >
                         <DollarSign className="w-4 h-4" />
-                        {isPending ? "Aguardando Vistoria" : "Ativar Plano - R$ 19,90/mês (R$ 239/ano)"}
+                        Ativar Plano - R$ 19,90/mês
                     </Button>
                 </div>
             )}

@@ -560,7 +560,10 @@ const ClientDashboard = () => {
                     photo_interior_front_url: photoUrls.interiorFront || null,
                     photo_dashboard_url: photoUrls.dashboard || null,
                     photo_trunk_open_url: photoUrls.trunkOpen || null,
-                    status: skipInspection ? "approved" : "pending"
+                    status: skipInspection ? "approved" : "pending",
+                    plan_active: skipInspection ? true : false,
+                    plan_start: skipInspection ? new Date().toISOString().split('T')[0] : null,
+                    plan_end: skipInspection ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] : null
                 });
 
             if (error) throw error;

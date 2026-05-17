@@ -72,80 +72,42 @@ const Clients = () => {
 
     // Fetch clients, employees and replacements from Supabase
     useEffect(() => {
-        const fetchData = async () => {
+        const loadAllData = async () => {
+            setLoading(true);
             try {
-                const [clientsRes, employeesRes, vehiclesRes] = await Promise.all([
-                    supabase
-                        .from("clients")
-                        .select("*")
-                        .order("created_at", { ascending: false }),
-                    supabase
-                        .from("employees")
-                        .select("*")
-                        .eq("active", true)
-                        .order("name", { ascending: true }),
-                    supabase
-                        .from("client_vehicles")
-                        .select("*")
-                        .order("is_primary", { ascending: false }),
+                await Promise.all([
+                    fetchClients(),
+                    fetchReplacements(),
+                    (async () => {
+                        const { data } = await supabase
+                            .from("employees")
+                            .select("*")
+                            .eq("active", true)
+                            .order("name", { ascending: true });
+                        if (data) setEmployees(data);
+                    })(),
+                    (async () => {
+                        const { data } = await supabase
+                            .from("client_vehicles")
+                            .select("*")
+                            .order("is_primary", { ascending: false });
+                        if (data) setClientVehicles(data);
+                    })()
                 ]);
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        loadAllData();
+    }, []);
 
-                if (clientsRes.error) throw clientsRes.error;
-                if (employeesRes.error) throw employeesRes.error;
-                if (vehiclesRes.error) throw vehiclesRes.error;
-
-                // Criar map de veículos por client_id para acesso rápido
-                const vehiclesMap = new Map();
-                const vehiclesCountMap = new Map();
-                if (vehiclesRes.data) {
-                    vehiclesRes.data.forEach((vehicle: any) => {
-                        if (!vehiclesMap.has(vehicle.client_id)) {
-                            vehiclesMap.set(vehicle.client_id, vehicle);
-                        }
-                        // Contar veículos por cliente
-                        vehiclesCountMap.set(
-                            vehicle.client_id,
-                            (vehiclesCountMap.get(vehicle.client_id) || 0) + 1
-                        );
-                    });
-                    setClientVehicles(vehiclesRes.data);
-                }
-
-                if (clientsRes.data) {
-                    const mappedClients: Client[] = clientsRes.data.map((client: any) => {
-                        const primaryVehicle = vehiclesMap.get(client.id);
-                        let vehiclesCount = vehiclesCountMap.get(client.id) || 0;
-                        
-                        // Adicionar 1 se o cliente tem um veículo legado (na tabela clients) que não foi migrado
-                        if (client.vehicle && client.plate && vehiclesCount === 0) {
-                            vehiclesCount = 1;
-                        }
-                        
-                        return {
-                            id: client.id,
-                            name: client.name,
-                            phone: client.phone,
-                            email: client.email,
-                            cpf: client.cpf,
-                            vehicle: client.vehicle,
-                            plate: client.plate,
-                            vehicle_photo_url: primaryVehicle?.vehicle_photo_url,
-                            planStart: client.plan_start,
-                            planEnd: client.plan_end,
-                            replacementsUsed: client.replacements_used || 0,
-                            maxReplacements: client.max_replacements || 3,
-                            active: client.active || true,
-                            planActive: client.plan_active !== false,
-                            vehiclesCount: vehiclesCount,
-                            bulk_upload_enabled: client.bulk_upload_enabled || false,
-                            skip_inspection: client.skip_inspection || false
-                        } as any;
-                    });
-// ... later ...
     const toggleSkipInspection = async (client: Client) => {
         setBulkUploadToggling(true);
         try {
-            const newState = !(client as any).skip_inspection;
+            const newState = !client.skip_inspection;
             const { error } = await supabase
                 .from("clients")
                 .update({ skip_inspection: newState })
@@ -167,27 +129,46 @@ const Clients = () => {
             setBulkUploadToggling(false);
         }
     };
-                    setClients(mappedClients);
-                }
 
-                if (employeesRes.data) {
-                    setEmployees(employeesRes.data);
-                }
-            } catch (error: any) {
-                console.error("Erro ao carregar dados:", error);
-                toast({
-                    title: "Erro ao carregar dados",
-                    description: error.message,
-                    variant: "destructive",
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
+    const toggleBulkUpload = async (client: Client) => {
+        setBulkUploadToggling(true);
+        try {
+            const newState = !client.bulk_upload_enabled;
+            const { error } = await supabase
+                .from("clients")
+                .update({ bulk_upload_enabled: newState })
+                .eq("id", client.id);
 
-        fetchData();
-        fetchReplacements();
-    }, []);
+            if (error) throw error;
+
+            // Atualizar lista local
+            setClients(clients.map((c) =>
+                c.id === client.id ? { ...c, bulk_upload_enabled: newState } : c
+            ));
+
+            await logAction(
+                "update",
+                "clients",
+                client.id,
+                client.name,
+                `Liberação em massa ${newState ? "ativada" : "desativada"}`
+            );
+
+            toast({
+                title: "Sucesso",
+                description: `Upload em massa ${newState ? "habilitado" : "desabilitado"} para ${client.name}`,
+            });
+        } catch (error: any) {
+            console.error("Erro ao atualizar permissão:", error);
+            toast({
+                title: "Erro",
+                description: error.message || "Não foi possível atualizar a permissão",
+                variant: "destructive",
+            });
+        } finally {
+            setBulkUploadToggling(false);
+        }
+    };
 
     const [form, setForm] = useState({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "", maxReplacements: 3 });
     const [replForm, setReplForm] = useState({ item: "", employeeId: "", notes: "", value: "" });
@@ -217,7 +198,8 @@ const Clients = () => {
                     maxReplacements: client.max_replacements || 3,
                     active: client.active || true,
                     planActive: client.plan_active !== false,
-                    bulk_upload_enabled: client.bulk_upload_enabled || false
+                    bulk_upload_enabled: client.bulk_upload_enabled || false,
+                    skip_inspection: client.skip_inspection || false
                 }));
                 setClients(mappedClients);
                 return mappedClients;
@@ -253,49 +235,6 @@ const Clients = () => {
             }
         } catch (error: any) {
             console.error("Erro ao buscar trocas:", error);
-        }
-    };
-
-    const toggleBulkUpload = async (client: Client) => {
-        setBulkUploadToggling(true);
-        try {
-            const newState = !(client as any).bulk_upload_enabled;
-            const { error } = await supabase
-                .from("clients")
-                .update({ bulk_upload_enabled: newState })
-                .eq("id", client.id);
-
-            if (error) throw error;
-
-            // Atualizar lista local
-            const updatedClients = clients.map((c) =>
-                c.id === client.id
-                    ? { ...c, bulk_upload_enabled: newState }
-                    : c
-            );
-            setClients(updatedClients);
-
-            await logAction(
-                "update",
-                "clients",
-                client.id,
-                client.name,
-                `Liberação em massa ${newState ? "ativada" : "desativada"}`
-            );
-
-            toast({
-                title: "Sucesso",
-                description: `Upload em massa ${newState ? "habilitado" : "desabilitado"} para ${client.name}`,
-            });
-        } catch (error: any) {
-            console.error("Erro ao atualizar permissão:", error);
-            toast({
-                title: "Erro",
-                description: error.message || "Não foi possível atualizar a permissão",
-                variant: "destructive",
-            });
-        } finally {
-            setBulkUploadToggling(false);
         }
     };
 
@@ -762,7 +701,7 @@ const Clients = () => {
                                              <p className="text-sm text-muted-foreground">{client.vehicle} • {client.plate}</p>
                                              <div className="flex items-center gap-2 mt-1">
                                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">
-                                                     🚗 {(client as any).vehiclesCount || 0} carro{(client as any).vehiclesCount !== 1 ? 's' : ''}
+                                                     🚗 {client.vehiclesCount || 0} carro{client.vehiclesCount !== 1 ? 's' : ''}
                                                  </span>
                                              </div>
                                          </div>
@@ -813,23 +752,22 @@ const Clients = () => {
                                          </Button>
                                          <Button
                                              size="sm"
-                                             variant={(client as any).skip_inspection ? "default" : "outline"}
-                                             className={`gap-1 text-xs md:text-sm flex-1 md:flex-none ${(client as any).skip_inspection ? "bg-amber-600 hover:bg-amber-700" : ""}`}
+                                             variant={client.skip_inspection ? "default" : "outline"}
+                                             className={`gap-1 text-xs md:text-sm flex-1 md:flex-none ${client.skip_inspection ? "bg-amber-600 hover:bg-amber-700" : ""}`}
                                              onClick={() => toggleSkipInspection(client)}
                                              disabled={bulkUploadToggling}
                                          >
-                                             {(client as any).skip_inspection ? "Vistoria: OFF" : "Vistoria: ON"}
+                                             {client.skip_inspection ? "Vistoria: OFF" : "Vistoria: ON"}
                                          </Button>
                                          <Button
                                              size="sm"
-                                             variant={(client as any).bulk_upload_enabled ? "default" : "outline"}
-                                             className={`gap-1 text-xs md:text-sm flex-1 md:flex-none ${(client as any).bulk_upload_enabled ? "bg-primary/80 hover:bg-primary" : ""}`}
+                                             variant={client.bulk_upload_enabled ? "default" : "outline"}
+                                             className={`gap-1 text-xs md:text-sm flex-1 md:flex-none ${client.bulk_upload_enabled ? "bg-primary/80 hover:bg-primary" : ""}`}
                                              onClick={() => toggleBulkUpload(client)}
                                              disabled={bulkUploadToggling}
                                          >
-                                             <Upload className="w-4 h-4" /> {(client as any).bulk_upload_enabled ? "Upload Ativo" : "Liberar Upload"}
-                                         </Button>
-                                         <Button
+                                             <Upload className="w-4 h-4" /> {client.bulk_upload_enabled ? "Upload Ativo" : "Liberar Upload"}
+                                         </Button>                                         <Button
                                              size="sm"
                                              variant="ghost"
                                              className="gap-1 text-xs md:text-sm flex-1 md:flex-none text-blue-600 hover:text-blue-700 hover:bg-blue-50"
