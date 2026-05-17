@@ -320,9 +320,11 @@ const ClientDashboard = () => {
                     });
                     setFormData({
                         ...clientRecord,
+                        name: clientRecord.name || "",
+                        email: clientRecord.email || "",
+                        phone: clientRecord.phone || "",
                         cpf: clientRecord.cpf || "",
                         plate: clientRecord.plate || "",
-                        phone: clientRecord.phone || "",
                         vehicle: clientRecord.vehicle || "",
                     });
                     setBulkUploadEnabled(clientRecord.bulk_upload_enabled || false);
