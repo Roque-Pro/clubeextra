@@ -310,7 +310,14 @@ const ClientDashboard = () => {
                         .eq("id", clientRecord.user_id)
                         .maybeSingle();
 
-                    setClientData({ ...clientRecord, profile_status: profileData?.status || "pending" });
+                    setClientData({
+                        ...clientRecord,
+                        name: clientRecord.name || "",
+                        email: clientRecord.email || "",
+                        phone: clientRecord.phone || "",
+                        cpf: clientRecord.cpf || "",
+                        profile_status: profileData?.status || "pending"
+                    });
                     setFormData({
                         ...clientRecord,
                         cpf: clientRecord.cpf || "",
