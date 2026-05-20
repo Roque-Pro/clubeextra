@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { logAction } from "@/lib/auditLog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface PendingVehicle {
   id: string;
@@ -43,6 +45,10 @@ export const VistoriaTab = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const [rejectingVehicle, setRejectingVehicle] = useState<{id: string, name: string} | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [isSubmittingRejection, setIsSubmittingRejection] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -175,19 +181,35 @@ export const VistoriaTab = () => {
     }
   };
 
-  const handleRejectVehicle = async (vehicleId: string, vehicleName: string) => {
+  const handleRejectVehicle = async () => {
+    if (!rejectingVehicle || !rejectionReason.trim()) {
+      toast({ title: "Por favor, informe o motivo da recusa", variant: "destructive" });
+      return;
+    }
+
+    setIsSubmittingRejection(true);
     try {
       const { error } = await supabase
         .from("client_vehicles")
-        .update({ status: "rejected" })
-        .eq("id", vehicleId);
+        .update({ 
+          status: "rejected",
+          rejection_reason: rejectionReason.trim()
+        })
+        .eq("id", rejectingVehicle.id);
 
       if (error) throw error;
 
-      toast({ title: "Veículo rejeitado", variant: "destructive" });
+      toast({ title: "Veículo rejeitado", description: "O cliente será notificado do motivo." });
+      
+      await logAction("update", "client_vehicles", rejectingVehicle.id, rejectingVehicle.name, `Vistoria rejeitada: ${rejectionReason}`);
+      
+      setRejectingVehicle(null);
+      setRejectionReason("");
       fetchData();
     } catch (error: any) {
       toast({ title: "Erro ao rejeitar", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSubmittingRejection(false);
     }
   };
 
@@ -299,7 +321,7 @@ export const VistoriaTab = () => {
                         size="sm"
                         variant="destructive"
                         className="flex-1 gap-1"
-                        onClick={() => handleRejectVehicle(v.id, v.vehicle)}
+                        onClick={() => setRejectingVehicle({ id: v.id, name: v.vehicle })}
                       >
                         <X className="w-4 h-4" /> Rejeitar
                       </Button>
@@ -364,6 +386,39 @@ export const VistoriaTab = () => {
           </div>
         )}
       </section>
+
+      {/* Rejection Dialog */}
+      <Dialog open={!!rejectingVehicle} onOpenChange={(open) => !open && setRejectingVehicle(null)}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display">Recusar Vistoria</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reason">Motivo da Recusa</Label>
+              <Textarea
+                id="reason"
+                placeholder="Explique o que precisa ser ajustado (ex: Foto frontal embaçada, placa ilegível...)"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectingVehicle(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleRejectVehicle}
+              disabled={isSubmittingRejection || !rejectionReason.trim()}
+            >
+              {isSubmittingRejection ? "Enviando..." : "Confirmar Recusa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Photo View Dialog */}
       <Dialog open={!!selectedPhoto} onOpenChange={(open) => !open && setSelectedPhoto(null)}>

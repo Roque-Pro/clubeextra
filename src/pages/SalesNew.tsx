@@ -396,10 +396,31 @@ const SalesNew = () => {
             }
 
             // Get sale info
-            const sale = sales.find((s) => s.id === saleId);
+            const sale = sales.find((s) => s.id === saleId) as any;
             if (!sale) {
                 toast({ title: "Venda não encontrada", variant: "destructive" });
                 return;
+            }
+
+            // Buscar dados da loja da venda para o PDF ser fiel à origem
+            let saleStoreName = storeName;
+            let saleStoreAddress = "Av Marques Rollo, 1123 - Nova Iguaçu - RJ";
+            let saleStoreContact = "(21) 2697-0825";
+            let saleStoreEmail = "iguassuautocentral@gmail.com";
+
+            if (sale.store_id) {
+                const { data: storeData } = await supabase
+                    .from("stores")
+                    .select("*")
+                    .eq("id", sale.store_id)
+                    .single();
+                
+                if (storeData) {
+                    saleStoreName = storeData.name;
+                    saleStoreAddress = storeData.address || saleStoreAddress;
+                    saleStoreContact = storeData.phone || saleStoreContact;
+                    saleStoreEmail = storeData.email || saleStoreEmail;
+                }
             }
 
             // Build receipt products
@@ -419,10 +440,10 @@ const SalesNew = () => {
 
             const blob = await generateReceipt({
                 saleId: saleId,
-                storeName: storeName,
-                storeContact: "(21) 2697-0825",
-                storeAddress: "Av Marques Rollo, 1123 - Nova Iguaçu - RJ",
-                storeEmail: "iguassuautocentral@gmail.com",
+                storeName: saleStoreName,
+                storeContact: saleStoreContact,
+                storeAddress: saleStoreAddress,
+                storeEmail: saleStoreEmail,
                 products: receiptProducts,
                 totalAmount: sale.amount,
                 paymentMethod: sale.payment_method || "dinheiro",
@@ -602,6 +623,13 @@ const SalesNew = () => {
             if (saleData && saleData.length > 0) {
                 const sale = saleData[0];
                 try {
+                    // Buscar dados da loja selecionada para o cupom inicial
+                    const selectedStore = stores.find(s => s.id === selectedStoreId);
+                    const currentStoreName = selectedStore?.name || storeName;
+                    const currentStoreAddress = selectedStore?.address || "Av Marques Rollo, 1123 - Nova Iguaçu - RJ";
+                    const currentStoreContact = selectedStore?.phone || "(21) 2697-0825";
+                    const currentStoreEmail = selectedStore?.email || "iguassuautocentral@gmail.com";
+
                     // Montar lista de produtos para o cupom
                     const receiptProducts = saleItems.map((item) => {
                         const product = products.find((p) => p.id === item.product_id);
@@ -625,10 +653,10 @@ const SalesNew = () => {
 
                      const blob = await generateReceipt({
                          saleId: sale.id,
-                         storeName: storeName,
-                         storeContact: "(21) 2697-0825",
-                         storeAddress: "Av Marques Rollo, 1123 - Nova Iguaçu - RJ",
-                         storeEmail: "iguassuautocentral@gmail.com",
+                         storeName: currentStoreName,
+                         storeContact: currentStoreContact,
+                         storeAddress: currentStoreAddress,
+                         storeEmail: currentStoreEmail,
                          products: receiptProducts,
                          totalAmount: totalAmount,
                          paymentMethod: paymentMethodDisplay,

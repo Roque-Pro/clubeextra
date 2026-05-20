@@ -467,33 +467,14 @@ const ClientDashboard = () => {
 
         if (!clientData) return;
 
-        // Se o cliente tem skip_inspection, pula a validação de IA e vai direto pro salvamento
-        if (skipInspection) {
-            setValidationResult({ isNational: true, message: "Vistoria desativada para este cliente.", brand: "N/A", model: "N/A", confidence: 1 });
-            return;
-        }
-
-        setValidatingNewVehicle(true);
-        try {
-            const result = await validateVehicle(newVehicleForm.vehicle);
-            if (!result) {
-                toast({ title: "Erro ao validar veículo", variant: "destructive" });
-                return;
-            }
-            if (!result.isNational) {
-                toast({
-                    title: "Veículo importado",
-                    description: "Apenas veículos nacionais podem ser adicionados ao plano",
-                    variant: "destructive",
-                });
-                return;
-            }
-            setValidationResult(result);
-        } catch (err: any) {
-            toast({ title: "Erro ao validar", description: err.message, variant: "destructive" });
-        } finally {
-            setValidatingNewVehicle(false);
-        }
+        // Aceita o veículo diretamente sem validação de IA
+        setValidationResult({ 
+            isNational: true, 
+            message: "Veículo aceito.", 
+            brand: "N/A", 
+            model: "N/A", 
+            confidence: 1 
+        });
     };
 
     const handleConfirmAddVehicle = async () => {
@@ -511,7 +492,7 @@ const ClientDashboard = () => {
             };
 
             if (!skipInspection) {
-                // Upload das 11 fotos
+                // Upload das 11 fotos - Apenas se não for skipInspection
                 const uploadPromises = [
                     uploadVehiclePhoto(newVehicleForm.photoFront!, clientData.id!, `${newVehicleForm.plate}_front`),
                     uploadVehiclePhoto(newVehicleForm.photoBack!, clientData.id!, `${newVehicleForm.plate}_back`),
@@ -548,7 +529,7 @@ const ClientDashboard = () => {
                     plate: newVehicleForm.plate,
                     is_national: true,
                     is_primary: isPrimary,
-                    vehicle_photo_url: photoUrls.front || null, // Usar frontal como principal
+                    vehicle_photo_url: photoUrls.front || null,
                     photo_front_url: photoUrls.front || null,
                     photo_back_url: photoUrls.back || null,
                     photo_left_url: photoUrls.left || null,
@@ -1570,9 +1551,27 @@ const ClientDashboard = () => {
                                              )}
                                              <div className="min-w-0">
                                                  <p className="font-medium text-foreground truncate">{vehicle.vehicle}</p>
-                                                 <p className="text-sm text-muted-foreground">
-                                                     Placa: {vehicle.plate} {vehicle.is_primary && <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Principal</span>}
+                                                 <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                                     Placa: {vehicle.plate} 
+                                                     {vehicle.is_primary && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">Principal</span>}
                                                  </p>
+                                                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                                        vehicle.status === 'approved' ? 'bg-success/10 text-success' : 
+                                                        vehicle.status === 'rejected' ? 'bg-destructive/10 text-destructive' : 
+                                                        'bg-amber-100 text-amber-700'
+                                                    }`}>
+                                                        {vehicle.status === 'approved' ? 'Aprovado' : 
+                                                         vehicle.status === 'rejected' ? 'Recusado' : 'Pendente de Vistoria'}
+                                                    </span>
+                                                    
+                                                    {vehicle.status === 'rejected' && vehicle.rejection_reason && (
+                                                        <div className="w-full mt-1 p-2 bg-destructive/5 border border-destructive/10 rounded text-xs text-destructive">
+                                                            <strong>Motivo da recusa:</strong> {vehicle.rejection_reason}
+                                                            <p className="mt-1 font-medium text-[10px] uppercase">Por favor, exclua este veículo e adicione novamente com as correções solicitadas.</p>
+                                                        </div>
+                                                    )}
+                                                 </div>
                                              </div>
                                          </div>
                                          <Button

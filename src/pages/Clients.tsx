@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, UserCheck, UserX, Repeat, Edit2, Eye, Upload, FileText } from "lucide-react";
+import { Plus, Search, UserCheck, UserX, Repeat, Edit2, Eye, Upload, FileText, Car } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ClientStatusBadge from "@/components/ClientStatusBadge";
@@ -660,6 +660,11 @@ const Clients = () => {
                     {filtered.map((client, i) => {
                         const planEnd = new Date(client.planEnd);
                         const isExpired = planEnd < new Date();
+                        
+                        // Encontrar foto do veículo primário para exibir na miniatura
+                        const primaryVehicle = clientVehicles.find(v => v.client_id === client.id && v.is_primary);
+                        const displayPhotoUrl = primaryVehicle?.vehicle_photo_url || primaryVehicle?.photo_front_url;
+
                         return (
                             <motion.div
                                 key={client.id}
@@ -671,18 +676,18 @@ const Clients = () => {
                             >
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-4">
-                                        {client.vehicle_photo_url ? (
+                                        {displayPhotoUrl ? (
                                             <button
                                                 onClick={() => {
-                                                    setSelectedPhotoUrl(client.vehicle_photo_url || "");
+                                                    setSelectedPhotoUrl(displayPhotoUrl);
                                                     setPhotoModalOpen(true);
                                                 }}
                                                 className="cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
                                             >
                                                 <img
-                                                    src={client.vehicle_photo_url}
+                                                    src={displayPhotoUrl}
                                                     alt={client.vehicle}
-                                                    className="w-10 h-10 object-cover rounded-full"
+                                                    className="w-10 h-10 object-cover rounded-full border border-border"
                                                 />
                                             </button>
                                         ) : (
@@ -701,7 +706,7 @@ const Clients = () => {
                                              <p className="text-sm text-muted-foreground">{client.vehicle} • {client.plate}</p>
                                              <div className="flex items-center gap-2 mt-1">
                                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">
-                                                     🚗 {client.vehiclesCount || 0} carro{client.vehiclesCount !== 1 ? 's' : ''}
+                                                     🚗 {clientVehicles.filter(v => v.client_id === client.id).length} carro{clientVehicles.filter(v => v.client_id === client.id).length !== 1 ? 's' : ''}
                                                  </span>
                                              </div>
                                          </div>
@@ -744,16 +749,24 @@ const Clients = () => {
                                     <div className="flex flex-wrap gap-2 md:gap-3">
                                          <Button
                                              size="sm"
-                                             variant={client.planActive ? "outline" : "destructive"}
-                                             className="gap-1 text-xs md:text-sm flex-1 md:flex-none"
+                                             variant="outline"
+                                             className={`gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium transition-all ${
+                                                client.planActive 
+                                                ? "border-success/50 text-success hover:bg-success/10 hover:border-success" 
+                                                : "border-destructive/50 text-destructive hover:bg-destructive/10 hover:border-destructive"
+                                             }`}
                                              onClick={() => togglePlanActive(client)}
                                          >
-                                             {client.planActive ? "Ativo" : "Inativo"}
+                                             {client.planActive ? "Plano: ON" : "Plano: OFF"}
                                          </Button>
                                          <Button
                                              size="sm"
-                                             variant={client.skip_inspection ? "default" : "outline"}
-                                             className={`gap-1 text-xs md:text-sm flex-1 md:flex-none ${client.skip_inspection ? "bg-amber-600 hover:bg-amber-700" : ""}`}
+                                             variant="outline"
+                                             className={`gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium transition-all ${
+                                                client.skip_inspection 
+                                                ? "border-amber-500/50 text-amber-600 hover:bg-amber-50 hover:border-amber-500" 
+                                                : "border-amber-500/30 text-amber-500/70 hover:bg-amber-50/50"
+                                             }`}
                                              onClick={() => toggleSkipInspection(client)}
                                              disabled={bulkUploadToggling}
                                          >
@@ -761,44 +774,48 @@ const Clients = () => {
                                          </Button>
                                          <Button
                                              size="sm"
-                                             variant={client.bulk_upload_enabled ? "default" : "outline"}
-                                             className={`gap-1 text-xs md:text-sm flex-1 md:flex-none ${client.bulk_upload_enabled ? "bg-primary/80 hover:bg-primary" : ""}`}
+                                             variant="outline"
+                                             className={`gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium transition-all ${
+                                                client.bulk_upload_enabled 
+                                                ? "border-primary/50 text-primary hover:bg-primary/5 hover:border-primary" 
+                                                : "border-primary/30 text-primary/70 hover:bg-primary/5"
+                                             }`}
                                              onClick={() => toggleBulkUpload(client)}
                                              disabled={bulkUploadToggling}
                                          >
-                                             <Upload className="w-4 h-4" /> {client.bulk_upload_enabled ? "Upload Ativo" : "Liberar Upload"}
-                                         </Button>                                         <Button
-                                             size="sm"
-                                             variant="ghost"
-                                             className="gap-1 text-xs md:text-sm flex-1 md:flex-none text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                             onClick={() => { setReportingClient(client); setReportDialogOpen(true); }}
-                                         >
-                                             <FileText className="w-4 h-4" /> Relatório
-                                         </Button>
-                                         <Button
-                                             size="sm"
-                                             variant="ghost"
-                                             className="gap-1 text-xs md:text-sm flex-1 md:flex-none"
-                                             onClick={() => { setViewedClient(client); setViewDialogOpen(true); }}
-                                         >
-                                             <Eye className="w-4 h-4" /> Ver
-                                         </Button>
-                                         <Button
-                                             size="sm"
-                                             variant="ghost"
-                                             className="gap-1 text-xs md:text-sm flex-1 md:flex-none"
-                                             onClick={() => openEditDialog(client)}
-                                         >
-                                             <Edit2 className="w-4 h-4" /> Editar
+                                             <Upload className="w-3.5 h-3.5" /> {client.bulk_upload_enabled ? "Upload: ON" : "Upload: OFF"}
                                          </Button>
                                          <Button
                                              size="sm"
                                              variant="outline"
-                                             className="gap-1 text-xs md:text-sm flex-1 md:flex-none border-primary/30 text-primary hover:bg-primary/10"
+                                             className="gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium border-blue-500/50 text-blue-600 hover:bg-blue-50 hover:border-blue-500 transition-all"
+                                             onClick={() => { setReportingClient(client); setReportDialogOpen(true); }}
+                                         >
+                                             <FileText className="w-3.5 h-3.5" /> Relatório
+                                         </Button>
+                                         <Button
+                                             size="sm"
+                                             variant="outline"
+                                             className="gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium border-border text-muted-foreground hover:bg-accent transition-all"
+                                             onClick={() => { setViewedClient(client); setViewDialogOpen(true); }}
+                                         >
+                                             <Eye className="w-3.5 h-3.5" /> Ver
+                                         </Button>
+                                         <Button
+                                             size="sm"
+                                             variant="outline"
+                                             className="gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium border-border text-muted-foreground hover:bg-accent transition-all"
+                                             onClick={() => openEditDialog(client)}
+                                         >
+                                             <Edit2 className="w-3.5 h-3.5" /> Editar
+                                         </Button>
+                                         <Button
+                                             size="sm"
+                                             className="gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-semibold gradient-primary text-primary-foreground shadow-sm hover:opacity-90 transition-all"
                                              disabled={client.replacementsUsed >= client.maxReplacements || isExpired || !client.planActive}
                                              onClick={() => { setSelectedClient(client); setReplDialogOpen(true); }}
                                          >
-                                             <Repeat className="w-4 h-4" /> Troca
+                                             <Repeat className="w-3.5 h-3.5" /> Troca
                                          </Button>
                                      </div>
                                 </div>
@@ -810,51 +827,121 @@ const Clients = () => {
 
             {/* View Client Dialog */}
             <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-                <DialogContent className="bg-card border-border">
+                <DialogContent className="bg-card border-border max-w-3xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="font-display">{viewedClient?.name}</DialogTitle>
+                        <DialogTitle className="font-display text-2xl">{viewedClient?.name}</DialogTitle>
                     </DialogHeader>
                     {viewedClient && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Nome</Label>
-                                    <p className="font-semibold">{viewedClient.name}</p>
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-lg border-b pb-2">Informações Pessoais</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Nome</Label>
+                                            <p className="font-semibold">{viewedClient.name}</p>
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Telefone</Label>
+                                            <p className="font-semibold">{viewedClient.phone}</p>
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">E-mail</Label>
+                                            <p className="font-semibold break-all">{viewedClient.email || "—"}</p>
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">CPF</Label>
+                                            <p className="font-semibold">{viewedClient.cpf || "—"}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Telefone</Label>
-                                    <p className="font-semibold">{viewedClient.phone}</p>
+
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-lg border-b pb-2">Dados do Plano</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Início</Label>
+                                            <p className="font-semibold">{new Date(viewedClient.planStart).toLocaleDateString("pt-BR")}</p>
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Vencimento</Label>
+                                            <p className="font-semibold">{new Date(viewedClient.planEnd).toLocaleDateString("pt-BR")}</p>
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Status</Label>
+                                            <div className="mt-1">
+                                                <ClientStatusBadge planStatus={getPlanStatus(viewedClient.planActive!, viewedClient.planEnd)} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Trocas Usadas</Label>
+                                            <p className="font-semibold">{viewedClient.replacementsUsed} / {viewedClient.maxReplacements}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">E-mail</Label>
-                                    <p className="font-semibold">{viewedClient.email || "—"}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">CPF</Label>
-                                    <p className="font-semibold">{viewedClient.cpf || "—"}</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Veículo</Label>
-                                    <p className="font-semibold">{viewedClient.vehicle}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Placa</Label>
-                                    <p className="font-semibold">{viewedClient.plate}</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Plano de</Label>
-                                    <p className="font-semibold">{new Date(viewedClient.planStart).toLocaleDateString("pt-BR")}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Plano até</Label>
-                                    <p className="font-semibold">{new Date(viewedClient.planEnd).toLocaleDateString("pt-BR")}</p>
-                                </div>
+
+                            <div className="space-y-4">
+                                <h3 className="font-bold text-lg border-b pb-2 flex items-center gap-2">
+                                    <Car className="w-5 h-5 text-primary" /> Veículos e Vistoria
+                                </h3>
+                                {clientVehicles.filter(v => v.client_id === viewedClient.id).length === 0 ? (
+                                    <p className="text-sm text-muted-foreground italic">Nenhum veículo cadastrado.</p>
+                                ) : (
+                                    <div className="space-y-6">
+                                        {clientVehicles.filter(v => v.client_id === viewedClient.id).map((v) => (
+                                            <div key={v.id} className="bg-muted/30 rounded-lg p-4 border border-border">
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div>
+                                                        <h4 className="font-bold text-foreground">{v.vehicle}</h4>
+                                                        <p className="text-sm text-muted-foreground font-mono">{v.plate}</p>
+                                                    </div>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                                        v.status === 'approved' ? 'bg-success/10 text-success' : 
+                                                        v.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-destructive/10 text-destructive'
+                                                    }`}>
+                                                        {v.status || 'Pendente'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                                                    {[
+                                                        { url: v.photo_front_url || v.vehicle_photo_url, label: "Frente" },
+                                                        { url: v.photo_back_url, label: "Traseira" },
+                                                        { url: v.photo_left_url, label: "Esquerda" },
+                                                        { url: v.photo_right_url, label: "Direita" },
+                                                        { url: v.photo_headlights_front_url, label: "Faróis F." },
+                                                        { url: v.photo_headlights_rear_url, label: "Faróis T." },
+                                                        { url: v.photo_mirrors_url, label: "Retrovisores" },
+                                                        { url: v.photo_interior_front_url, label: "Int. Frontal" },
+                                                        { url: v.photo_interior_rear_url, label: "Int. Traseiro" },
+                                                        { url: v.photo_dashboard_url, label: "Painel" },
+                                                        { url: v.photo_trunk_open_url, label: "Mala Aberta" }
+                                                    ].filter(img => img.url).map((img, idx) => (
+                                                        <div key={idx} className="flex flex-col gap-1">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedPhotoUrl(img.url!);
+                                                                    setPhotoModalOpen(true);
+                                                                }}
+                                                                className="relative aspect-square bg-black/5 rounded overflow-hidden group hover:ring-2 hover:ring-primary transition-all"
+                                                            >
+                                                                <img src={img.url!} className="w-full h-full object-cover" alt={img.label} />
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                    <Eye className="w-4 h-4 text-white" />
+                                                                </div>
+                                                            </button>
+                                                            <span className="text-[8px] text-center text-muted-foreground truncate">{img.label}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {![v.photo_front_url, v.vehicle_photo_url, v.photo_back_url, v.photo_left_url, v.photo_right_url, v.photo_headlights_front_url, v.photo_headlights_rear_url, v.photo_mirrors_url, v.photo_interior_front_url, v.photo_interior_rear_url, v.photo_dashboard_url, v.photo_trunk_open_url].some(url => url) && (
+                                                    <p className="text-xs text-muted-foreground italic text-center py-2">Sem fotos registradas para este veículo.</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
