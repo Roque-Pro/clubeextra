@@ -1,4 +1,4 @@
-import { Calendar, TrendingUp, Users, CheckCircle, Clock, AlertCircle, Plus, Check, X } from "lucide-react";
+import { Calendar, TrendingUp, Users, CheckCircle, Clock, AlertCircle, Plus, Check, X, Edit, Video } from "lucide-react";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ClientStatusBadge from "@/components/ClientStatusBadge";
@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -53,6 +53,18 @@ interface Appointment {
      time_changed_at?: string;
      time_change_reason?: string;
 }
+
+const getPlanStatus = (planActive: boolean, planEnd?: string): "free" | "active" | "expired" => {
+    if (!planActive) return "free";
+
+    if (planEnd) {
+        const endDate = new Date(planEnd);
+        const today = new Date();
+        if (endDate < today) return "expired";
+    }
+
+    return "active";
+};
 
 const Servicos = () => {
     const { session, loading: authLoading } = useAuth();
@@ -121,7 +133,7 @@ const Servicos = () => {
                      vehicle_id,
                      appointment_video_url,
                      client_vehicles(vehicle, plate, vehicle_photo_url),
-                     clients(plan_status)
+                     clients(plan_active, plan_end)
                  `)
                  .order("scheduled_date", { ascending: true });
 
@@ -149,7 +161,10 @@ const Servicos = () => {
                 vehicle: apt.client_vehicles?.vehicle,
                 plate: apt.client_vehicles?.plate,
                 vehicle_photo_url: apt.client_vehicles?.vehicle_photo_url,
-                client_plan_status: apt.clients?.plan_status || "free",
+                client_plan_status: getPlanStatus(
+                    Boolean(apt.clients?.plan_active),
+                    apt.clients?.plan_end
+                ),
             }));
 
             setEmployees(empData.data || []);
@@ -551,144 +566,197 @@ const Servicos = () => {
     }
 
     return (
-        <div>
-            <PageHeader title="Serviços" description="Agendamentos e índices de desempenho" />
+        <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <PageHeader title="Serviços" description="Gerencie agendamentos e acompanhe o desempenho da equipe em tempo real" />
+                <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 px-4 py-2 rounded-xl border border-primary/20 flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <span className="text-sm font-medium text-primary">Sistema Ativo</span>
+                    </div>
+                </div>
+            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                {/* LADO ESQUERDO - AGENDAMENTOS */}
-                <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* LADO ESQUERDO - AGENDAMENTOS (7 Colunas) */}
+                <div className="lg:col-span-7 space-y-6">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0 }}
-                        className="glass-card p-4 md:p-6 rounded-lg border border-border"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="glass-card overflow-hidden rounded-2xl border border-border shadow-lg"
                     >
-                        <h2 className="text-base md:text-lg font-display font-semibold text-foreground mb-4 flex items-center gap-2">
-                            <Calendar className="w-5 h-5 text-primary" />
-                            Serviços
-                        </h2>
-
-                        {/* Abas */}
-                        <div className="flex gap-2 mb-4 border-b border-border">
-                            <button
-                                onClick={() => setActiveTab("pendentes")}
-                                className={`px-3 py-2 font-medium border-b-2 transition-colors text-sm ${activeTab === "pendentes"
-                                    ? "border-primary text-primary"
-                                    : "border-transparent text-muted-foreground hover:text-foreground"
-                                    }`}
-                            >
-                                Agendados
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("concluidos")}
-                                className={`px-3 py-2 font-medium border-b-2 transition-colors text-sm ${activeTab === "concluidos"
-                                    ? "border-primary text-primary"
-                                    : "border-transparent text-muted-foreground hover:text-foreground"
-                                    }`}
-                            >
-                                Concluídos
-                            </button>
+                        <div className="p-6 border-b border-border bg-muted/30 flex items-center justify-between">
+                            <h2 className="text-lg font-display font-bold text-foreground flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-lg">
+                                    <Calendar className="w-5 h-5 text-primary" />
+                                </div>
+                                Gestão de Agendamentos
+                            </h2>
+                            
+                            {/* Abas Estilizadas */}
+                            <div className="flex bg-background/50 p-1 rounded-xl border border-border">
+                                <button
+                                    onClick={() => setActiveTab("pendentes")}
+                                    className={`px-4 py-1.5 rounded-lg font-medium transition-all text-sm ${activeTab === "pendentes"
+                                        ? "bg-primary text-primary-foreground shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                >
+                                    Agendados
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("concluidos")}
+                                    className={`px-4 py-1.5 rounded-lg font-medium transition-all text-sm ${activeTab === "concluidos"
+                                        ? "bg-primary text-primary-foreground shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                >
+                                    Concluídos
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="space-y-3 max-h-96 md:max-h-screen overflow-y-auto">
+                        <div className="p-6 space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar">
                             {activeTab === "pendentes" ? (
-                                // Abas Agendados (pendente + confirmado)
                                 appointments.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum agendamento</p>
+                                    <div className="text-center py-12">
+                                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Calendar className="w-8 h-8 text-muted-foreground" />
+                                        </div>
+                                        <p className="text-muted-foreground">Nenhum agendamento para exibir</p>
+                                    </div>
                                 ) : (
                                     appointments
                                         .filter((apt) => apt.status !== "cancelado" && apt.status !== "concluído")
                                         .sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
                                         .map((apt) => {
-                                            const borderColor = apt.status === "pendente" ? "border-amber-500" : "border-blue-500";
-                                            const bgColor = apt.status === "pendente" ? "bg-amber-50 dark:bg-amber-950/20" : "bg-blue-50 dark:bg-blue-950/20";
+                                            const isPendente = apt.status === "pendente";
                                             return (
-                                                <div key={apt.id} className={`p-2 md:p-3 rounded-lg ${bgColor} hover:opacity-80 transition-all border-l-4 ${borderColor}`}>
-                                                     <div className="flex items-start justify-between gap-2">
-                                                         <div className="flex-1">
-                                                              <div className="text-sm font-medium text-foreground truncate mb-1">
+                                                <div 
+                                                    key={apt.id} 
+                                                    className={`group p-4 rounded-xl border transition-all hover:shadow-md ${
+                                                        isPendente 
+                                                            ? "bg-amber-50/40 border-amber-100 hover:border-amber-300 dark:bg-amber-950/10 dark:border-amber-900/30" 
+                                                            : "bg-blue-50/40 border-blue-100 hover:border-blue-300 dark:bg-blue-950/10 dark:border-blue-900/30"
+                                                    }`}
+                                                >
+                                                     <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                                                         <div className="flex-1 space-y-2">
+                                                              <div className="flex items-center gap-2">
                                                                   <ClientStatusBadge 
                                                                       clientName={apt.client_name} 
                                                                       planStatus={apt.client_plan_status}
                                                                       size="md"
                                                                   />
+                                                                  {apt.time_changed_at && (
+                                                                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 animate-pulse">
+                                                                        <Clock className="w-3 h-3" /> HORÁRIO ALTERADO
+                                                                    </span>
+                                                                  )}
                                                               </div>
-                                                             <p className="text-xs text-muted-foreground">📋 {apt.service_type}</p>
+
+                                                             <div className="flex flex-wrap items-center gap-3 text-sm">
+                                                                <span className="flex items-center gap-1.5 text-foreground font-medium">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                                    {apt.service_type}
+                                                                </span>
+                                                                <span className="text-muted-foreground flex items-center gap-1">
+                                                                    <Calendar className="w-3.5 h-3.5" />
+                                                                    {new Date(apt.scheduled_date).toLocaleDateString("pt-BR")}
+                                                                </span>
+                                                                <span className="text-muted-foreground flex items-center gap-1">
+                                                                    <Clock className="w-3.5 h-3.5" />
+                                                                    {apt.scheduled_time}
+                                                                </span>
+                                                             </div>
+
                                                              {apt.vehicle && (
-                                                                 <div className="flex items-center gap-2 mt-1">
+                                                                 <div className="flex items-center gap-3 p-2 bg-background/50 rounded-lg border border-border/50">
                                                                      {apt.vehicle_photo_url && (
                                                                          <button
                                                                              onClick={() => {
                                                                                  setSelectedPhotoUrl(apt.vehicle_photo_url || "");
                                                                                  setPhotoModalOpen(true);
                                                                              }}
-                                                                             className="cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                                                                             className="relative w-10 h-10 rounded-md overflow-hidden hover:ring-2 ring-primary transition-all"
                                                                          >
                                                                              <img
                                                                                  src={apt.vehicle_photo_url}
                                                                                  alt={apt.vehicle}
-                                                                                 className="w-7 h-7 object-cover rounded"
+                                                                                 className="w-full h-full object-cover"
                                                                              />
                                                                          </button>
                                                                      )}
-                                                                     <p className="text-xs text-muted-foreground">🚗 {apt.vehicle} ({apt.plate})</p>
+                                                                     <div>
+                                                                        <p className="text-xs font-bold text-foreground">{apt.vehicle}</p>
+                                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{apt.plate}</p>
+                                                                     </div>
                                                                  </div>
                                                              )}
-                                                             {apt.notes && <p className="text-xs text-muted-foreground mt-1">💬 {apt.notes}</p>}
+                                                             
+                                                             {apt.notes && (
+                                                                <p className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg italic">
+                                                                    "{apt.notes}"
+                                                                </p>
+                                                             )}
+
                                                              {apt.appointment_video_url && (
-                                                                 <button
+                                                                 <Button
+                                                                     variant="ghost"
+                                                                     size="sm"
                                                                      onClick={() => {
                                                                          setSelectedVideoUrl(apt.appointment_video_url || "");
                                                                          setVideoModalOpen(true);
                                                                      }}
-                                                                     className="text-xs text-blue-600 hover:text-blue-700 mt-1 inline-flex items-center gap-1 hover:underline"
+                                                                     className="h-8 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-2"
                                                                  >
-                                                                     🎥 Ver Vídeo do Problema
-                                                                 </button>
+                                                                     <div className="w-6 h-6 rounded bg-blue-100 flex items-center justify-center">
+                                                                        <Video className="w-4 h-4 text-blue-600" />
+                                                                     </div>
+                                                                     Ver Vídeo do Problema
+                                                                 </Button>
                                                              )}
-                                                             <p className="text-xs text-muted-foreground mt-1">
-                                                                 📅 {new Date(apt.scheduled_date).toLocaleDateString("pt-BR")} ⏰ {apt.scheduled_time}
-                                                             </p>
                                                          </div>
-                                                        <div className="flex flex-col gap-1 flex-shrink-0">
-                                                             <span className={`px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${apt.status === "pendente" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
-                                                                 {apt.status === "pendente" ? "⏳ Pendente" : "⏱️ Confirmado"}
-                                                             </span>
-                                                             {apt.time_changed_at && (
-                                                                 <span className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap bg-orange-100 text-orange-700">
-                                                                     🔔 Horário Alterado
-                                                                 </span>
-                                                             )}
-                                                             <Button
-                                                                 size="sm"
-                                                                 variant="outline"
-                                                                 className="text-xs h-7"
-                                                                 onClick={() => openEditAppointmentDialog(apt)}
-                                                                 disabled={actioningAppointmentId === apt.id}
-                                                             >
-                                                                 ✏️ Alterar Horário
-                                                             </Button>
-                                                             {apt.status === "pendente" && (
-                                                                 <Button
-                                                                     size="sm"
-                                                                     variant="outline"
-                                                                     className="text-xs h-7"
-                                                                     onClick={() => handleConfirmAppointment(apt.id, apt)}
-                                                                     disabled={actioningAppointmentId === apt.id}
-                                                                 >
-                                                                     <Check className="w-3 h-3" /> Confirmar
-                                                                 </Button>
-                                                             )}
-                                                             {apt.status === "confirmado" && (
-                                                                 <Button
-                                                                     size="sm"
-                                                                     className="text-xs h-7 bg-success hover:bg-success/90"
-                                                                     onClick={() => openCompleteAppointmentDialog(apt)}
-                                                                     disabled={actioningAppointmentId === apt.id}
-                                                                 >
-                                                                     <CheckCircle className="w-3 h-3" /> Concluir
-                                                                 </Button>
-                                                             )}
+
+                                                        <div className="flex flex-row md:flex-col gap-2 w-full md:w-auto">
+                                                             <div className={`px-3 py-1 rounded-lg text-xs font-bold text-center flex items-center justify-center gap-1.5 ${
+                                                                isPendente ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                                                             }`}>
+                                                                 {isPendente ? <Clock className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+                                                                 {isPendente ? "Pendente" : "Confirmado"}
+                                                             </div>
+
+                                                             <div className="grid grid-cols-2 md:grid-cols-1 gap-2 flex-1">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-xs h-9 gap-2"
+                                                                    onClick={() => openEditAppointmentDialog(apt)}
+                                                                    disabled={actioningAppointmentId === apt.id}
+                                                                >
+                                                                    <Edit className="w-3 h-3" /> Horário
+                                                                </Button>
+                                                                
+                                                                {isPendente ? (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className="text-xs h-9 gap-2 gradient-primary"
+                                                                        onClick={() => handleConfirmAppointment(apt.id, apt)}
+                                                                        disabled={actioningAppointmentId === apt.id}
+                                                                    >
+                                                                        <Check className="w-3 h-3" /> Confirmar
+                                                                    </Button>
+                                                                ) : (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className="text-xs h-9 gap-2 bg-green-600 hover:bg-green-700 text-white"
+                                                                        onClick={() => openCompleteAppointmentDialog(apt)}
+                                                                        disabled={actioningAppointmentId === apt.id}
+                                                                    >
+                                                                        <CheckCircle className="w-3 h-3" /> Concluir
+                                                                    </Button>
+                                                                )}
+                                                             </div>
                                                          </div>
                                                     </div>
                                                 </div>
@@ -698,64 +766,36 @@ const Servicos = () => {
                             ) : (
                                 // Aba Concluídos
                                 appointments.filter((apt) => apt.status === "concluído").length === 0 ? (
-                                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum serviço concluído</p>
+                                    <div className="text-center py-12">
+                                        <p className="text-muted-foreground">Nenhum serviço concluído</p>
+                                    </div>
                                 ) : (
                                     appointments
                                         .filter((apt) => apt.status === "concluído")
                                         .sort((a, b) => new Date(b.scheduled_date).getTime() - new Date(a.scheduled_date).getTime())
                                         .map((apt) => (
-                                            <div key={apt.id} className="p-2 md:p-3 rounded-lg bg-green-50 dark:bg-green-950/20 hover:opacity-80 transition-all border-l-4 border-green-500">
-                                                 <div className="flex items-start justify-between gap-2">
-                                                     <div className="flex-1">
-                                                          <div className="text-sm font-medium text-foreground truncate mb-1">
-                                                              <ClientStatusBadge 
-                                                                  clientName={apt.client_name} 
-                                                                  planStatus={apt.client_plan_status}
-                                                                  size="md"
-                                                              />
-                                                          </div>
-                                                         <p className="text-xs text-muted-foreground">📋 {apt.service_type}</p>
-                                                         {apt.vehicle && (
-                                                             <div className="flex items-center gap-2 mt-1">
-                                                                 {apt.vehicle_photo_url && (
-                                                                     <button
-                                                                         onClick={() => {
-                                                                             setSelectedPhotoUrl(apt.vehicle_photo_url || "");
-                                                                             setPhotoModalOpen(true);
-                                                                         }}
-                                                                         className="cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
-                                                                     >
-                                                                         <img
-                                                                             src={apt.vehicle_photo_url}
-                                                                             alt={apt.vehicle}
-                                                                             className="w-7 h-7 object-cover rounded"
-                                                                         />
-                                                                     </button>
-                                                                 )}
-                                                                 <p className="text-xs text-muted-foreground">🚗 {apt.vehicle} ({apt.plate})</p>
-                                                             </div>
-                                                         )}
-                                                         {apt.notes && <p className="text-xs text-muted-foreground mt-1">💬 {apt.notes}</p>}
-                                                         {apt.appointment_video_url && (
-                                                             <button
-                                                                 onClick={() => {
-                                                                     setSelectedVideoUrl(apt.appointment_video_url || "");
-                                                                     setVideoModalOpen(true);
-                                                                 }}
-                                                                 className="text-xs text-blue-600 hover:text-blue-700 mt-1 inline-flex items-center gap-1 hover:underline"
-                                                             >
-                                                                 🎥 Ver Vídeo do Problema
-                                                             </button>
-                                                         )}
-                                                         <p className="text-xs text-muted-foreground mt-1">
-                                                             📅 {new Date(apt.scheduled_date).toLocaleDateString("pt-BR")} ⏰ {apt.scheduled_time}
-                                                         </p>
+                                            <div key={apt.id} className="p-4 rounded-xl border border-green-100 bg-green-50/30 dark:border-green-900/30 dark:bg-green-950/10">
+                                                 <div className="flex items-start justify-between gap-4">
+                                                     <div className="flex-1 space-y-2">
+                                                          <ClientStatusBadge 
+                                                              clientName={apt.client_name} 
+                                                              planStatus={apt.client_plan_status}
+                                                              size="md"
+                                                          />
+                                                         <div className="text-sm font-medium text-foreground flex items-center gap-2">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                                            {apt.service_type}
                                                          </div>
-                                                         <div className="flex flex-col gap-1 flex-shrink-0">
-                                                         <span className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap bg-green-100 text-green-700">
-                                                             ✓ Concluído
-                                                         </span>
+                                                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(apt.scheduled_date).toLocaleDateString("pt-BR")}</span>
+                                                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {apt.scheduled_time}</span>
                                                          </div>
+                                                     </div>
+                                                     <div className="flex flex-col items-end gap-2">
+                                                        <span className="px-3 py-1 rounded-lg text-xs font-bold bg-green-100 text-green-700 flex items-center gap-1.5">
+                                                            <CheckCircle className="w-3 h-3" /> Concluído
+                                                        </span>
+                                                     </div>
                                                 </div>
                                             </div>
                                         ))
@@ -765,311 +805,332 @@ const Servicos = () => {
                     </motion.div>
                 </div>
 
-                {/* LADO DIREITO - ÍNDICES DE SERVIÇOS */}
-                <div className="space-y-4 md:space-y-6">
-                    {/* Cards de Resumo */}
-                    <div className="grid grid-cols-2 gap-2 md:gap-3">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="glass-card p-3 md:p-4 rounded-lg border border-border relative"
-                        >
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                    <p className="text-xs text-muted-foreground mb-1">Total de Serviços</p>
-                                    <p className="text-xl md:text-2xl font-bold text-primary">{totalServices}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Hoje - {new Date().toLocaleDateString("pt-BR")}</p>
-                                </div>
-                                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            size="sm"
-                                            className="h-8 w-8 p-0 bg-primary hover:bg-primary/80 flex-shrink-0 ml-2"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="bg-card border-border">
-                                        <DialogHeader>
-                                            <DialogTitle className="font-display">Registrar Novo Serviço</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="space-y-4">
+                {/* LADO DIREITO - ÍNDICES E TOP (5 Colunas) */}
+                <div className="lg:col-span-5 space-y-6">
+                    {/* Card de Registro Rápido */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="glass-card p-6 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+                        
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div>
+                                <p className="text-sm text-muted-foreground">Total de Serviços Realizados</p>
+                                <h3 className="text-4xl font-display font-black text-primary tracking-tight">
+                                    {totalServices}
+                                </h3>
+                                <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest font-bold">Hoje - {new Date().toLocaleDateString("pt-BR")}</p>
+                            </div>
+                            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                                <DialogTrigger asChild>
+                                    <Button className="h-14 w-14 rounded-2xl shadow-lg glow-primary gradient-primary p-0 flex items-center justify-center">
+                                        <Plus className="w-8 h-8 text-white" />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-card border-border max-w-lg">
+                                    <DialogHeader>
+                                        <DialogTitle className="font-display">Registrar Novo Serviço</DialogTitle>
+                                        <DialogDescription>
+                                            Informe os detalhes do serviço realizado para registro no sistema.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <Label>Tipo de Cliente *</Label>
+                                            <Select value={serviceForm.clientType} onValueChange={(v) => setServiceForm({ ...serviceForm, clientType: v as "plano" | "avulso", clientId: "", clientName: "", clientVehicle: "", clientPlate: "" })}>
+                                                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="plano">Cliente de Plano</SelectItem>
+                                                    <SelectItem value="avulso">Cliente Avulso</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        {serviceForm.clientType === "plano" ? (
                                             <div>
-                                                <Label>Tipo de Cliente *</Label>
-                                                <Select value={serviceForm.clientType} onValueChange={(v) => setServiceForm({ ...serviceForm, clientType: v as "plano" | "avulso", clientId: "", clientName: "", clientVehicle: "", clientPlate: "" })}>
+                                                <Label>Cliente *</Label>
+                                                <Select value={serviceForm.clientId} onValueChange={(v) => setServiceForm({ ...serviceForm, clientId: v })}>
                                                     <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="plano">Cliente de Plano</SelectItem>
-                                                        <SelectItem value="avulso">Cliente Avulso</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            {serviceForm.clientType === "plano" ? (
-                                                <div>
-                                                    <Label>Cliente *</Label>
-                                                    <Select value={serviceForm.clientId} onValueChange={(v) => setServiceForm({ ...serviceForm, clientId: v })}>
-                                                        <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                                                        <SelectContent>
-                                                            {clients.map((client) => (
-                                                                <SelectItem key={client.id} value={client.id}>
-                                                                    {client.name} ({client.plate})
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <div>
-                                                        <Label>Nome do Cliente *</Label>
-                                                        <Input
-                                                            value={serviceForm.clientName}
-                                                            onChange={(e) => setServiceForm({ ...serviceForm, clientName: e.target.value })}
-                                                            placeholder="Nome completo"
-                                                        />
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        <div>
-                                                            <Label>Veículo</Label>
-                                                            <Input
-                                                                value={serviceForm.clientVehicle}
-                                                                onChange={(e) => setServiceForm({ ...serviceForm, clientVehicle: e.target.value })}
-                                                                placeholder="Modelo"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <Label>Placa *</Label>
-                                                            <Input
-                                                                value={serviceForm.clientPlate}
-                                                                onChange={(e) => setServiceForm({ ...serviceForm, clientPlate: e.target.value })}
-                                                                placeholder="ABC-1234"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </>
-                                            )}
-
-                                            <div>
-                                                <Label>Tipo de Serviço *</Label>
-                                                <Input
-                                                    value={serviceForm.serviceType}
-                                                    onChange={(e) => setServiceForm({ ...serviceForm, serviceType: e.target.value })}
-                                                    placeholder="Ex: Instalação, Polimento, etc"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label>O que foi feito</Label>
-                                                <Input
-                                                    value={serviceForm.description}
-                                                    onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-                                                    placeholder="Descrição detalhada do serviço"
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <Label>Valor (R$)</Label>
-                                                    <Input
-                                                        type="number"
-                                                        step="0.01"
-                                                        value={serviceForm.value}
-                                                        onChange={(e) => setServiceForm({ ...serviceForm, value: e.target.value })}
-                                                        placeholder="0.00"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label>Instalações</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={serviceForm.installations}
-                                                        onChange={(e) => setServiceForm({ ...serviceForm, installations: e.target.value })}
-                                                        placeholder="0"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <Label>Funcionário *</Label>
-                                                <Select value={serviceForm.employeeId} onValueChange={(v) => setServiceForm({ ...serviceForm, employeeId: v })}>
-                                                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {employees.filter((e) => e).map((emp) => (
-                                                            <SelectItem key={emp.id} value={emp.id}>
-                                                                {emp.name}
+                                                        {clients.map((client) => (
+                                                            <SelectItem key={client.id} value={client.id}>
+                                                                {client.name} ({client.plate})
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            <Button
-                                                onClick={handleAddService}
-                                                disabled={submitting}
-                                                className="w-full gradient-primary text-primary-foreground font-semibold"
-                                            >
-                                                {submitting ? "Registrando..." : "Registrar Serviço"}
-                                            </Button>
-                                        </div>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-                        </motion.div>
-
-                        {/* Dialog para Concluir Agendamento */}
-                         <Dialog open={completeAppointmentDialogOpen} onOpenChange={setCompleteAppointmentDialogOpen}>
-                             <DialogContent className="bg-card border-border">
-                                 <DialogHeader>
-                                     <DialogTitle className="font-display">Concluir Agendamento</DialogTitle>
-                                 </DialogHeader>
-                                 {appointmentToComplete && (
-                                     <div className="space-y-4">
-                                         <div className="p-3 bg-muted/50 rounded-lg">
-                                             <p className="text-sm text-muted-foreground mb-1">Cliente</p>
-                                             <p className="font-semibold text-foreground">{appointmentToComplete.client_name}</p>
-                                             <p className="text-sm text-muted-foreground mt-2">Serviço: {appointmentToComplete.service_type}</p>
-                                         </div>
-                                         <div>
-                                             <Label>Funcionário Responsável *</Label>
-                                             <Select value={selectedEmployeeForCompletion} onValueChange={setSelectedEmployeeForCompletion}>
-                                                 <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                                                 <SelectContent>
-                                                     {employees.map((emp) => (
-                                                         <SelectItem key={emp.id} value={emp.id}>
-                                                             {emp.name}
-                                                         </SelectItem>
-                                                     ))}
-                                                 </SelectContent>
-                                             </Select>
-                                         </div>
-                                         <Button
-                                             onClick={handleCompleteAppointment}
-                                             disabled={actioningAppointmentId !== null}
-                                             className="w-full gradient-primary text-primary-foreground font-semibold"
-                                         >
-                                             {actioningAppointmentId ? "Processando..." : "Concluir Serviço"}
-                                         </Button>
-                                     </div>
-                                 )}
-                             </DialogContent>
-                         </Dialog>
-
-                         {/* Dialog para Editar Horário de Agendamento */}
-                         <Dialog open={editAppointmentDialogOpen} onOpenChange={setEditAppointmentDialogOpen}>
-                             <DialogContent className="bg-card border-border">
-                                 <DialogHeader>
-                                     <DialogTitle className="font-display">Alterar Horário do Agendamento</DialogTitle>
-                                 </DialogHeader>
-                                 {appointmentToEdit && (
-                                     <div className="space-y-4">
-                                         <div className="p-3 bg-muted/50 rounded-lg">
-                                             <p className="text-sm text-muted-foreground mb-1">Cliente</p>
-                                             <p className="font-semibold text-foreground">{appointmentToEdit.client_name}</p>
-                                             <p className="text-sm text-muted-foreground mt-2">Serviço: {appointmentToEdit.service_type}</p>
-                                             <p className="text-xs text-muted-foreground mt-1">
-                                                 Horário anterior: {appointmentToEdit.scheduled_date} às {appointmentToEdit.scheduled_time}
-                                             </p>
-                                         </div>
-                                         <div>
-                                             <Label>Nova Data *</Label>
-                                             <Input
-                                                 type="date"
-                                                 value={editAppointmentForm.scheduled_date}
-                                                 onChange={(e) => setEditAppointmentForm({ ...editAppointmentForm, scheduled_date: e.target.value })}
-                                             />
-                                         </div>
-                                         <div>
-                                             <Label>Novo Horário *</Label>
-                                             <Input
-                                                 type="time"
-                                                 value={editAppointmentForm.scheduled_time}
-                                                 onChange={(e) => setEditAppointmentForm({ ...editAppointmentForm, scheduled_time: e.target.value })}
-                                             />
-                                         </div>
-                                         <div>
-                                             <Label>Motivo da Alteração</Label>
-                                             <Input
-                                                 placeholder="Ex: Indisponibilidade do técnico, cliente solicitou..."
-                                                 value={editAppointmentForm.reason}
-                                                 onChange={(e) => setEditAppointmentForm({ ...editAppointmentForm, reason: e.target.value })}
-                                             />
-                                         </div>
-                                         <Button
-                                             onClick={handleEditAppointment}
-                                             disabled={actioningAppointmentId !== null}
-                                             className="w-full gradient-primary text-primary-foreground font-semibold"
-                                         >
-                                             {actioningAppointmentId ? "Processando..." : "Confirmar Alteração"}
-                                         </Button>
-                                     </div>
-                                 )}
-                             </DialogContent>
-                         </Dialog>
-
-                        {/* Top 3 de Hoje */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="glass-card p-3 md:p-4 rounded-lg border border-border"
-                        >
-                            <h3 className="text-base md:text-lg font-display font-semibold text-foreground mb-3">🏆 Top</h3>
-                            <div className="space-y-2">
-                                {top3EmployeesToday.length === 0 ? (
-                                    <p className="text-xs text-muted-foreground text-center py-2">Nenhum serviço hoje</p>
-                                ) : (
-                                    top3EmployeesToday.map((employee, idx) => (
-                                        <div key={idx} className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                                            <div className="flex items-center justify-between">
+                                        ) : (
+                                            <>
                                                 <div>
-                                                    <p className="text-xs text-muted-foreground mb-1">#{idx + 1}</p>
-                                                    <p className="text-xs font-semibold text-foreground">{employee.name}</p>
+                                                    <Label>Nome do Cliente *</Label>
+                                                    <Input
+                                                        value={serviceForm.clientName}
+                                                        onChange={(e) => setServiceForm({ ...serviceForm, clientName: e.target.value })}
+                                                        placeholder="Nome completo"
+                                                    />
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-lg font-bold text-primary">{employee.count}</p>
-                                                    <p className="text-xs text-muted-foreground">serviços</p>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <Label>Veículo</Label>
+                                                        <Input
+                                                            value={serviceForm.clientVehicle}
+                                                            onChange={(e) => setServiceForm({ ...serviceForm, clientVehicle: e.target.value })}
+                                                            placeholder="Modelo"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Placa *</Label>
+                                                        <Input
+                                                            value={serviceForm.clientPlate}
+                                                            onChange={(e) => setServiceForm({ ...serviceForm, clientPlate: e.target.value })}
+                                                            placeholder="ABC-1234"
+                                                        />
+                                                    </div>
                                                 </div>
+                                            </>
+                                        )}
+
+                                        <div>
+                                            <Label>Tipo de Serviço *</Label>
+                                            <Input
+                                                value={serviceForm.serviceType}
+                                                onChange={(e) => setServiceForm({ ...serviceForm, serviceType: e.target.value })}
+                                                placeholder="Ex: Instalação, Polimento, etc"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>O que foi feito</Label>
+                                            <Input
+                                                value={serviceForm.description}
+                                                onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+                                                placeholder="Descrição detalhada do serviço"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <Label>Valor (R$)</Label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={serviceForm.value}
+                                                    onChange={(e) => setServiceForm({ ...serviceForm, value: e.target.value })}
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label>Instalações</Label>
+                                                <Input
+                                                    type="number"
+                                                    value={serviceForm.installations}
+                                                    onChange={(e) => setServiceForm({ ...serviceForm, installations: e.target.value })}
+                                                    placeholder="0"
+                                                />
                                             </div>
                                         </div>
-                                    ))
-                                )}
-                            </div>
-                        </motion.div>
-                    </div>
+                                        <div>
+                                            <Label>Funcionário *</Label>
+                                            <Select value={serviceForm.employeeId} onValueChange={(v) => setServiceForm({ ...serviceForm, employeeId: v })}>
+                                                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                                                <SelectContent>
+                                                    {employees.filter((e) => e).map((emp) => (
+                                                        <SelectItem key={emp.id} value={emp.id}>
+                                                            {emp.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <Button
+                                            onClick={handleAddService}
+                                            disabled={submitting}
+                                            className="w-full gradient-primary text-primary-foreground font-semibold h-12 rounded-xl shadow-lg glow-primary"
+                                        >
+                                            {submitting ? "Registrando..." : "Registrar Serviço Realizado"}
+                                        </Button>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </motion.div>
 
-                    {/* Top Performers */}
+                    {/* Top 3 de Hoje */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="glass-card p-6 rounded-2xl border border-border"
+                    >
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+                                <Plus className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-lg font-display font-bold text-foreground">Destaques de Hoje</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-3">
+                            {top3EmployeesToday.length === 0 ? (
+                                <div className="text-center py-6 border-2 border-dashed border-border rounded-xl">
+                                    <p className="text-sm text-muted-foreground italic">Nenhum serviço registrado hoje</p>
+                                </div>
+                            ) : (
+                                top3EmployeesToday.map((employee, idx) => (
+                                    <div key={idx} className="p-4 rounded-xl bg-muted/30 border border-border flex items-center justify-between group hover:bg-muted/50 transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs border border-primary/20">
+                                                {idx + 1}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-foreground">{employee.name}</p>
+                                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Performance Hoje</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-2xl font-black text-primary tracking-tight leading-none">{employee.count}</p>
+                                            <p className="text-[10px] text-muted-foreground font-bold">SERVIÇOS</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </motion.div>
+
+                    {/* Top Performers Geral */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="glass-card p-3 md:p-6 rounded-lg border border-border"
+                        className="glass-card p-6 rounded-2xl border border-border bg-muted/10"
                     >
-                        <h3 className="text-base md:text-lg font-display font-semibold text-foreground mb-3 md:mb-4">🏆 Geral</h3>
+                        <div className="flex items-center gap-2 mb-6">
+                            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                                <Plus className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-lg font-display font-bold text-foreground">Ranking Geral</h3>
+                        </div>
 
                         <div className="space-y-3">
                             {top3Employees.map((employee, idx) => (
-                                <div key={idx} className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                                    <div className="flex items-center justify-between">
+                                <div key={idx} className="p-4 rounded-xl bg-background border border-border flex items-center justify-between relative overflow-hidden group hover:border-primary/50 transition-all">
+                                    {idx === 0 && <div className="absolute top-0 right-0 w-12 h-12 bg-amber-500/10 rounded-full -mr-6 -mt-6 blur-xl group-hover:bg-amber-500/20 transition-all" />}
+                                    
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
+                                            idx === 0 ? "bg-amber-100 text-amber-600 border border-amber-200" :
+                                            idx === 1 ? "bg-slate-100 text-slate-600 border border-slate-200" :
+                                            "bg-orange-100 text-orange-600 border border-orange-200"
+                                        }`}>
+                                            {idx + 1}
+                                        </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground mb-1">#{idx + 1}</p>
-                                            <p className="text-sm font-semibold text-foreground">{employee.name}</p>
+                                            <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{employee.name}</p>
+                                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Líder de Execução</p>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-xl font-bold text-primary">{employee.count}</p>
-                                            <p className="text-xs text-muted-foreground">serviços</p>
-                                        </div>
+                                    </div>
+                                    <div className="text-right z-10">
+                                        <p className="text-2xl font-black text-foreground group-hover:text-primary transition-colors tracking-tight leading-none">{employee.count}</p>
+                                        <p className="text-[10px] text-muted-foreground font-bold italic">TOTAL</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </motion.div>
-
                 </div>
             </div>
+
+            {/* Modal para Concluir Agendamento */}
+            <Dialog open={completeAppointmentDialogOpen} onOpenChange={setCompleteAppointmentDialogOpen}>
+                <DialogContent className="bg-card border-border">
+                    <DialogHeader>
+                        <DialogTitle>Concluir Agendamento</DialogTitle>
+                        <DialogDescription>
+                            Confirme a conclusão do serviço e selecione o funcionário responsável.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                            <Label>Funcionário Responsável *</Label>
+                            <Select value={selectedEmployeeForCompletion} onValueChange={setSelectedEmployeeForCompletion}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o funcionário" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {employees.map((emp) => (
+                                        <SelectItem key={emp.id} value={emp.id}>
+                                            {emp.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button 
+                            onClick={handleCompleteAppointment} 
+                            className="w-full gradient-primary"
+                            disabled={actioningAppointmentId !== null}
+                        >
+                            {actioningAppointmentId ? "Processando..." : "Confirmar Conclusão"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal para Editar Horário */}
+            <Dialog open={editAppointmentDialogOpen} onOpenChange={setEditAppointmentDialogOpen}>
+                <DialogContent className="bg-card border-border">
+                    <DialogHeader>
+                        <DialogTitle>Alterar Horário</DialogTitle>
+                        <DialogDescription>
+                            Selecione a nova data e hora para o agendamento.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Nova Data</Label>
+                                <Input 
+                                    type="date" 
+                                    value={editAppointmentForm.scheduled_date}
+                                    onChange={(e) => setEditAppointmentForm({...editAppointmentForm, scheduled_date: e.target.value})}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Nova Hora</Label>
+                                <Input 
+                                    type="time" 
+                                    value={editAppointmentForm.scheduled_time}
+                                    onChange={(e) => setEditAppointmentForm({...editAppointmentForm, scheduled_time: e.target.value})}
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Motivo da Alteração</Label>
+                            <Input 
+                                placeholder="Ex: Mudança de disponibilidade"
+                                value={editAppointmentForm.reason}
+                                onChange={(e) => setEditAppointmentForm({...editAppointmentForm, reason: e.target.value})}
+                            />
+                        </div>
+                        <Button 
+                            onClick={handleEditAppointment} 
+                            className="w-full gradient-primary"
+                            disabled={actioningAppointmentId !== null}
+                        >
+                            {actioningAppointmentId ? "Salvando..." : "Salvar Alterações"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Modal para Visualizar Vídeo do Agendamento */}
             <Dialog open={videoModalOpen} onOpenChange={setVideoModalOpen}>
                 <DialogContent className="bg-card border-border max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="font-display">Vídeo do Problema</DialogTitle>
+                        <DialogDescription>
+                            Assista ao vídeo enviado pelo cliente para entender melhor a solicitação.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex justify-center items-center bg-black rounded-lg overflow-hidden">
@@ -1110,6 +1171,9 @@ const Servicos = () => {
                 <DialogContent className="bg-card border-border max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="font-display">Foto do Veículo</DialogTitle>
+                        <DialogDescription>
+                            Visualização da foto do veículo enviada pelo cliente.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="flex justify-center items-center">
                         <img

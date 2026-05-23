@@ -158,13 +158,21 @@ const ClientDashboard = () => {
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [isProcessingPayment, setIsProcessingPayment] = useState(false);
     const [selectedVehicleForPayment, setSelectedVehicleForPayment] = useState<string | null>(null);
+    const [syncingPlanState, setSyncingPlanState] = useState(false);
 
     // ... inside ClientDashboard ...
     const now = new Date();
-    const planEndDate = clientData?.plan_end ? new Date(clientData.plan_end) : null;
-    const isPlanExpired = planEndDate && now > planEndDate;
-    const calculatedPlanStatus: "free" | "active" | "expired" = clientData?.plan_active 
-        ? (isPlanExpired ? "expired" : "active") 
+    const activeVehiclePlans = clientVehicles
+        .filter((vehicle) => vehicle.plan_active && vehicle.plan_end && new Date(vehicle.plan_end) > new Date())
+        .sort((a, b) => (b.plan_end || "").localeCompare(a.plan_end || ""));
+    const latestActiveVehiclePlan = activeVehiclePlans[0];
+    const hasActiveVehiclePlan = activeVehiclePlans.length > 0;
+    const effectivePlanActive = hasActiveVehiclePlan;
+    const effectivePlanEnd = latestActiveVehiclePlan?.plan_end || clientData?.plan_end || null;
+    const planEndDate = effectivePlanEnd ? new Date(effectivePlanEnd) : null;
+    const isPlanExpired = effectivePlanActive && planEndDate ? now > planEndDate : false;
+    const calculatedPlanStatus: "free" | "active" | "expired" = effectivePlanActive
+        ? (isPlanExpired ? "expired" : "active")
         : "free";
 
     const isPendingApproval = clientData?.profile_status === "pending" || 
@@ -179,38 +187,25 @@ const ClientDashboard = () => {
         if (!clientData?.id || !selectedVehicleForPayment) return;
         setIsProcessingPayment(true);
         try {
-            // Simular sucesso do pagamento
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            const today = new Date();
-            const nextMonth = new Date(today);
-            nextMonth.setMonth(nextMonth.getMonth() + 1);
-            
-            const { error } = await supabase
-                .from("client_vehicles")
-                .update({ 
-                    plan_active: true,
-                    plan_paid_at: today.toISOString(),
-                    plan_start: today.toISOString().split("T")[0],
-                    plan_end: nextMonth.toISOString().split("T")[0]
-                })
-                .eq("id", selectedVehicleForPayment);
+            const { data, error } = await supabase.functions.invoke("create-stripe-checkout", {
+                body: {
+                    vehicleId: selectedVehicleForPayment,
+                    priceId: "price_1TZw4KCkbAa7AW2GcnaQzU0O",
+                    successUrl: window.location.origin + "/client-dashboard?payment=success",
+                    cancelUrl: window.location.origin + "/client-dashboard?payment=cancel",
+                },
+            });
 
             if (error) throw error;
-
-            toast({ 
-                title: "Pagamento processado!", 
-                description: "O plano para este veículo foi ativado com sucesso por 1 mês." 
-            });
-            setPaymentModalOpen(false);
-            
-            // Recarregar veículos
-            fetchClientVehicles(clientData.id);
+            if (data?.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error("Não foi possível gerar o link de pagamento.");
+            }
         } catch (error: any) {
             toast({ title: "Erro no pagamento", description: error.message, variant: "destructive" });
         } finally {
             setIsProcessingPayment(false);
-            setSelectedVehicleForPayment(null);
         }
     };
 
@@ -249,6 +244,26 @@ const ClientDashboard = () => {
             console.error("Erro ao carregar agendamentos:", err);
         }
     }, []);
+
+    // Handle Stripe redirect notifications
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("payment") === "success") {
+            toast({
+                title: "Pagamento em processamento!",
+                description: "Seu plano será ativado em instantes. Aguarde a confirmação.",
+            });
+            // Limpar os parâmetros da URL sem recarregar a página
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (params.get("payment") === "cancel") {
+            toast({
+                title: "Pagamento cancelado",
+                description: "Você pode tentar novamente quando quiser.",
+                variant: "destructive",
+            });
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, [toast]);
 
     // Fetch client profile data and appointments
     useEffect(() => {
@@ -340,22 +355,32 @@ const ClientDashboard = () => {
                     .eq("id", userId) // Usar userId da sessão para buscar profile, que é a fonte primária dos dados de cadastro.
                     .maybeSingle();
 
+                const userMeta = session.user?.user_metadata || {};
+                const resolvedName = profileData?.full_name || clientRecord.name || userMeta.full_name || "";
+                const resolvedEmail = clientRecord.email || session.user?.email || "";
+                const resolvedPhone = profileData?.phone || clientRecord.phone || userMeta.phone || "";
+                const resolvedCpf = profileData?.cpf || clientRecord.cpf || userMeta.cpf || "";
+                const resolvedVehicle = clientRecord.vehicle || userMeta.vehicle || "";
+                const resolvedPlate = clientRecord.plate || userMeta.plate || "";
+
                 setClientData({
                     ...clientRecord, // Garante que temos o ID do cliente e outros campos de 'clients'
-                    name: profileData?.full_name || clientRecord.name || "", // Prioriza profile, depois clientRecord
-                    email: clientRecord.email || session.user?.email || "", // Prioriza clientRecord, depois session
-                    phone: profileData?.phone || clientRecord.phone || "", // Prioriza profile, depois clientRecord
-                    cpf: profileData?.cpf || clientRecord.cpf || "", // Prioriza profile, depois clientRecord
+                    name: resolvedName,
+                    email: resolvedEmail,
+                    phone: resolvedPhone,
+                    cpf: resolvedCpf,
+                    vehicle: resolvedVehicle,
+                    plate: resolvedPlate,
                     profile_status: profileData?.status || "pending"
                 });
                 setFormData({
                     ...clientRecord, // Garante que temos o ID do cliente e outros campos de 'clients'
-                    name: profileData?.full_name || clientRecord.name || "", // Prioriza profile, depois clientRecord
-                    email: clientRecord.email || session.user?.email || "", // Prioriza clientRecord, depois session
-                    phone: profileData?.phone || clientRecord.phone || "", // Prioriza profile, depois clientRecord
-                    cpf: profileData?.cpf || clientRecord.cpf || "", // Prioriza profile, depois clientRecord
-                    plate: clientRecord.plate || "",
-                    vehicle: clientRecord.vehicle || "",
+                    name: resolvedName,
+                    email: resolvedEmail,
+                    phone: resolvedPhone,
+                    cpf: resolvedCpf,
+                    plate: resolvedPlate,
+                    vehicle: resolvedVehicle,
                 });
                 setBulkUploadEnabled(clientRecord.bulk_upload_enabled || false);
                 // Estas chamadas agora são seguras, pois clientRecord.id sempre existirá
@@ -387,6 +412,70 @@ const ClientDashboard = () => {
 
         return () => clearInterval(interval);
     }, [clientData?.id, fetchAppointments]);
+
+    useEffect(() => {
+        const syncClientPlanState = async () => {
+            if (!clientData?.id || syncingPlanState) {
+                return;
+            }
+
+            const currentPlanEnd = clientData.plan_end || null;
+            const latestVehiclePlan = activeVehiclePlans[0];
+            const nextPlanActive = activeVehiclePlans.length > 0;
+            const nextPlanEnd = latestVehiclePlan?.plan_end || currentPlanEnd;
+            const nextPlanStart = latestVehiclePlan?.plan_start || clientData.plan_start || null;
+            const nextPlanPaidAt = latestVehiclePlan?.plan_paid_at || clientData.plan_paid_at || null;
+
+            const shouldUpdate =
+                clientData.plan_active !== nextPlanActive ||
+                (nextPlanActive && currentPlanEnd !== nextPlanEnd);
+
+            if (!shouldUpdate) {
+                return;
+            }
+
+            setSyncingPlanState(true);
+
+            try {
+                const updatePayload: Record<string, string | boolean | null> = {
+                    plan_active: nextPlanActive,
+                };
+
+                if (nextPlanActive) {
+                    updatePayload.plan_start = nextPlanStart;
+                    updatePayload.plan_end = nextPlanEnd;
+                    updatePayload.plan_paid_at = nextPlanPaidAt;
+                } else {
+                    updatePayload.plan_paid_at = null;
+                }
+
+                const { error } = await supabase
+                    .from("clients")
+                    .update(updatePayload)
+                    .eq("id", clientData.id);
+
+                if (error) throw error;
+
+                setClientData((prev) =>
+                    prev
+                        ? {
+                              ...prev,
+                              plan_active: nextPlanActive,
+                              plan_start: nextPlanActive ? (nextPlanStart || prev.plan_start) : prev.plan_start,
+                              plan_end: nextPlanActive ? (nextPlanEnd || prev.plan_end) : prev.plan_end,
+                              plan_paid_at: nextPlanActive ? (nextPlanPaidAt || prev.plan_paid_at) : prev.plan_paid_at,
+                          }
+                        : prev
+                );
+            } catch (error) {
+                console.error("Erro ao sincronizar status do plano do cliente:", error);
+            } finally {
+                setSyncingPlanState(false);
+            }
+        };
+
+        syncClientPlanState();
+    }, [activeVehiclePlans, clientData, syncingPlanState]);
 
     const uploadVehiclePhoto = async (file: File, clientId: string, side: string) => {
         try {

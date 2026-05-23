@@ -34,6 +34,17 @@ interface Employee {
   attendance_count?: number;
   installations_count?: number;
 }
+
+const employeeRoles = [
+  "Administrador",
+  "Gerente",
+  "Vendedor",
+  "Atendente",
+  "Instalador",
+  "Financeiro",
+  "Estoquista",
+  "Auxiliar",
+];
 // ... rest of interfaces ...
 const AdminPanel = () => {
      const [employees, setEmployees] = useState<Employee[]>([]);

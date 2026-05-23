@@ -4,20 +4,20 @@ import { Shield, Mail, Lock, User, Check, ArrowLeft as ArrowLeftIcon, Loader } f
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useVehicleValidation } from "@/hooks/useVehicleValidation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { VehicleValidationModal } from "@/components/VehicleValidationModal";
+
+const normalizeEmail = (value: string) => value.trim().toLowerCase();
+const normalizeCpf = (value: string) => value.trim();
+const normalizePlate = (value: string) => value.trim().toUpperCase();
 
 const PlanAuth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { session, loading } = useAuth();
   const { toast } = useToast();
-  const { validateVehicle, loading: validatingVehicle } =
-    useVehicleValidation();
 
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -37,16 +37,6 @@ const PlanAuth = () => {
     }
   }, [location]);
 
-  // Vehicle validation state
-  const [vehicleValidation, setVehicleValidation] = useState<{
-    isNational: boolean;
-    brand: string;
-    model: string;
-    year: string;
-  } | null>(null);
-  const [showVehicleModal, setShowVehicleModal] = useState(false);
-  const [vehicleValidated, setVehicleValidated] = useState(false);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -61,76 +51,44 @@ const PlanAuth = () => {
     return <Navigate to="/client-dashboard" replace />;
   }
 
-  const handleValidateVehicle = async () => {
-    if (!vehicle.trim()) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira o nome do veículo",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const result = await validateVehicle(vehicle);
-
-    if (result) {
-      setVehicleValidation({
-        isNational: result.isNational,
-        brand: result.brand,
-        model: result.model,
-        year: result.year,
-      });
-      setShowVehicleModal(true);
-
-      if (result.isNational) {
-        setVehicleValidated(true);
-      }
-    } else {
-      toast({
-        title: "Erro na validação",
-        description: "Não foi possível validar o veículo. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Se é signup, valida o veículo primeiro
-    if (!isLogin && !vehicleValidated) {
-      toast({
-        title: "Validação necessária",
-        description: "Por favor, valide seu veículo antes de continuar",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setSubmitting(true);
 
     try {
-      if (isLogin) {
-         const { error } = await supabase.auth.signInWithPassword({ email, password });
-         if (error) throw error;
+      const normalizedEmail = normalizeEmail(email);
+      const sanitizedName = fullName.trim();
+      const sanitizedPhone = phone.trim();
+      const sanitizedCpf = normalizeCpf(cpf);
+      const sanitizedVehicle = vehicle.trim();
+      const sanitizedPlate = normalizePlate(plate);
 
-         // user_id será vinculado no dashboard se necessário
+      if (isLogin) {
+         const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+         if (error) throw error;
 
          toast({ title: "Bem-vindo de volta!", description: "Login realizado com sucesso." });
          setTimeout(() => navigate("/client-dashboard"), 1500);
        } else {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
+       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: normalizedEmail,
           password,
           options: {
-            data: { full_name: fullName },
+            data: {
+              full_name: sanitizedName,
+              phone: sanitizedPhone,
+              cpf: sanitizedCpf,
+              vehicle: sanitizedVehicle,
+              plate: sanitizedPlate,
+            },
             emailRedirectTo: window.location.origin,
           },
         });
         if (signUpError) throw signUpError;
 
         // Auto-login after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
         if (signInError) throw signInError;
 
         // Get the user ID from session
@@ -138,11 +96,24 @@ const PlanAuth = () => {
         const userId = sessionData?.session?.user?.id;
 
         if (userId) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .upsert({
+              id: userId,
+              full_name: sanitizedName,
+              phone: sanitizedPhone || null,
+              cpf: sanitizedCpf || null,
+            });
+
+          if (profileError) {
+            console.error("Profile upsert error:", profileError);
+          }
+
           // Check if client already exists (by email)
           const { data: existingClients, error: queryError } = await supabase
             .from("clients")
             .select("id")
-            .eq("email", email);
+            .eq("email", normalizedEmail);
 
           if (queryError) {
             console.error("Error checking client:", queryError);
@@ -154,12 +125,12 @@ const PlanAuth = () => {
               .from("clients")
               .insert({
                 user_id: userId,
-                email: email,
-                name: fullName,
-                phone: phone || "",
-                cpf: cpf ? cpf : null,
-                vehicle: vehicle || "",
-                plate: plate ? plate : null,
+                email: normalizedEmail,
+                name: sanitizedName,
+                phone: sanitizedPhone || "",
+                cpf: sanitizedCpf || null,
+                vehicle: sanitizedVehicle || "",
+                plate: sanitizedPlate || null,
                 plan_start: new Date().toISOString().split("T")[0],
                 plan_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
                 replacements_used: 0,
@@ -177,6 +148,23 @@ const PlanAuth = () => {
               });
             } else {
               console.log("Cliente criado com sucesso:", insertResult);
+            }
+          } else {
+            const { error: updateClientError } = await supabase
+              .from("clients")
+              .update({
+                user_id: userId,
+                email: normalizedEmail,
+                name: sanitizedName,
+                phone: sanitizedPhone || "",
+                cpf: sanitizedCpf || null,
+                vehicle: sanitizedVehicle || "",
+                plate: sanitizedPlate || null,
+              })
+              .eq("id", existingClients[0].id);
+
+            if (updateClientError) {
+              console.error("Client update error:", updateClientError);
             }
           }
         }
@@ -320,38 +308,13 @@ const PlanAuth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="vehicle">Veículo *</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="vehicle"
-                        placeholder="Honda Civic 2022"
-                        value={vehicle}
-                        onChange={(e) => {
-                          setVehicle(e.target.value);
-                          setVehicleValidated(false);
-                        }}
-                        required
-                        disabled={vehicleValidated}
-                        className={
-                          vehicleValidated ? "opacity-50" : ""
-                       }
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleValidateVehicle}
-                        disabled={validatingVehicle || !vehicle.trim()}
-                        className="px-4 whitespace-nowrap"
-                        variant={vehicleValidated ? "default" : "outline"}
-                      >
-                        {validatingVehicle ? (
-                          <Loader className="w-4 h-4 animate-spin" />
-                        ) : vehicleValidated ? (
-                          "✓ Validado"
-                        ) : (
-                          "Validar"
-                        )}
-                      </Button>
-                    </div>
+                    <Label htmlFor="vehicle">Veículo</Label>
+                    <Input
+                      id="vehicle"
+                      placeholder="Honda Civic 2022"
+                      value={vehicle}
+                      onChange={(e) => setVehicle(e.target.value)}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -412,7 +375,7 @@ const PlanAuth = () => {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={submitting || (!isLogin && !vehicleValidated)}
+                disabled={submitting}
               >
                 {submitting ? "Aguarde..." : isLogin ? "Entrar no plano" : "Criar minha conta"}
               </Button>
@@ -428,26 +391,6 @@ const PlanAuth = () => {
               </button>
             </div>
           </motion.div>
-        )}
-
-        {/* Vehicle Validation Modal */}
-        {vehicleValidation && (
-          <VehicleValidationModal
-            isOpen={showVehicleModal}
-            isNational={vehicleValidation.isNational}
-            vehicleInfo={{
-              brand: vehicleValidation.brand,
-              model: vehicleValidation.model,
-              year: vehicleValidation.year,
-            }}
-            onClose={() => {
-              setShowVehicleModal(false);
-              if (!vehicleValidation.isNational) {
-                setVehicleValidated(false);
-              }
-            }}
-            isLoading={validatingVehicle}
-          />
         )}
       </motion.div>
     </div>

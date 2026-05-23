@@ -176,15 +176,39 @@ const Clients = () => {
 
     const fetchClients = async (): Promise<Client[]> => {
         try {
-            const { data, error } = await supabase
-                .from("clients")
-                .select("*")
-                .order("created_at", { ascending: false });
+            const [{ data, error }, { data: vehiclesData, error: vehiclesError }] = await Promise.all([
+                supabase
+                    .from("clients")
+                    .select("*")
+                    .order("created_at", { ascending: false }),
+                supabase
+                    .from("client_vehicles")
+                    .select("client_id, plan_active, plan_start, plan_end, plan_paid_at")
+            ]);
 
             if (error) throw error;
+            if (vehiclesError) throw vehiclesError;
 
             if (data) {
-                const mappedClients: Client[] = data.map((client: any) => ({
+                const today = new Date().toISOString().split("T")[0];
+                const vehiclesByClient = new Map<string, any[]>();
+
+                (vehiclesData || []).forEach((vehicle: any) => {
+                    const currentVehicles = vehiclesByClient.get(vehicle.client_id) || [];
+                    currentVehicles.push(vehicle);
+                    vehiclesByClient.set(vehicle.client_id, currentVehicles);
+                });
+
+                const mappedClients: Client[] = data.map((client: any) => {
+                    const clientVehicles = vehiclesByClient.get(client.id) || [];
+                    const activeVehicles = clientVehicles.filter(
+                        (vehicle: any) => vehicle.plan_active && vehicle.plan_end && vehicle.plan_end >= today
+                    );
+                    const latestVehiclePlan = [...activeVehicles].sort((a: any, b: any) =>
+                        (b.plan_end || "").localeCompare(a.plan_end || "")
+                    )[0];
+
+                    return {
                     id: client.id,
                     name: client.name,
                     phone: client.phone,
@@ -192,15 +216,15 @@ const Clients = () => {
                     cpf: client.cpf,
                     vehicle: client.vehicle,
                     plate: client.plate,
-                    planStart: client.plan_start,
-                    planEnd: client.plan_end,
+                    planStart: latestVehiclePlan?.plan_start || client.plan_start,
+                    planEnd: latestVehiclePlan?.plan_end || client.plan_end,
                     replacementsUsed: client.replacements_used || 0,
                     maxReplacements: client.max_replacements || 3,
                     active: client.active || true,
-                    planActive: client.plan_active !== false,
+                    planActive: activeVehicles.length > 0,
                     bulk_upload_enabled: client.bulk_upload_enabled || false,
                     skip_inspection: client.skip_inspection || false
-                }));
+                }});
                 setClients(mappedClients);
                 return mappedClients;
             }

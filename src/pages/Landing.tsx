@@ -18,6 +18,7 @@ import {
     Heart,
     Award,
     MapPin,
+    Lock,
     ChevronLeft,
     ChevronRight,
     X,
@@ -189,13 +190,22 @@ const Landing = () => {
                             Ajuda
                         </Button>
                         <Button
+                            onClick={() => navigate("/plan-auth", { state: { skipPlanInfo: true } })}
+                            size="sm"
+                            className="border border-slate-900 bg-slate-900 !text-white hover:bg-slate-800 hover:!text-white"
+                        >
+                            <span className="hidden sm:inline">Login do Cliente</span>
+                            <span className="sm:hidden">Cliente</span>
+                        </Button>
+                        <Button
                             onClick={() => navigate("/auth")}
                             variant="outline"
                             size="sm"
-                            className="border-gray-300 text-white hover:border-blue-400 hover:text-white"
+                            className="border-gray-300 !text-white hover:border-blue-400 hover:!text-white"
                         >
-                            <span className="hidden sm:inline">Acesso</span>
-                            <span className="sm:hidden">Login</span>
+                            <Lock className="h-4 w-4 !text-white" />
+                            <span className="hidden sm:inline">Acesso Restrito</span>
+                            <span className="sm:hidden">Restrito</span>
                         </Button>
                     </div>
                 </div>
