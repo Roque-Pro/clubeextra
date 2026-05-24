@@ -42,7 +42,7 @@ const CanaisIguacu = () => {
       title: "Conheça nossa história",
       description: "Assista ao vídeo e saiba mais sobre nós",
       icon: <PlayCircle className="w-6 h-6" />,
-      url: "https://www.youtube.com/watch?v=PoNBRFUj-Z0"
+      url: "https://youtu.be/PoNBRFUj-Z0?si=_vlfdFIgYMi8cYZS"
     }
   ];
 
@@ -60,97 +60,113 @@ const CanaisIguacu = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center py-12 px-4 sm:px-6">
-      {/* Mini Hero / Header */}
-      <div className="w-full max-w-md bg-blue-900 rounded-3xl p-8 mb-8 text-center shadow-xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex justify-center mb-6"
-        >
-          <img 
-            src="/img/iguacu_vidros_white.png" 
-            alt="Iguaçu Auto Vidros" 
-            className="h-20 object-contain"
-          />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <h1 className="text-white text-2xl font-display font-bold mb-2">
-            Iguaçu Auto Vidros
-          </h1>
-          <p className="text-blue-100 text-sm leading-relaxed">
-            Especialistas em vidraçaria automotiva há mais de 20 anos. Qualidade, segurança e os melhores canais para você chegar até nós.
-          </p>
-        </motion.div>
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center">
+      {/* Header / Top Bar - Width 100% */}
+      <div className="w-full bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 py-12 px-4 shadow-2xl relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+          <div className="absolute -top-24 -left-24 w-64 h-64 bg-white rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-400 rounded-full blur-3xl" />
+        </div>
+
+        <div className="max-w-md mx-auto relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, type: "spring" }}
+            className="flex justify-center mb-6"
+          >
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+              <img 
+                src="/img/iguacu_vidros_white.png" 
+                alt="Iguaçu Auto Vidros" 
+                className="relative h-24 object-contain drop-shadow-2xl"
+              />
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <h1 className="text-white text-3xl font-display font-black tracking-tight mb-3">
+              Iguaçu Auto Vidros
+            </h1>
+            <div className="h-1 w-12 bg-blue-400 mx-auto rounded-full mb-4" />
+            <p className="text-blue-100/90 text-sm font-medium leading-relaxed max-w-xs mx-auto">
+              Especialistas em segurança e confiança automotiva. Conecte-se com nossas unidades e conheça nossos serviços.
+            </p>
+          </motion.div>
+        </div>
       </div>
 
       {/* Links List */}
-      <div className="w-full max-w-md space-y-4">
+      <div className="w-full max-w-md px-4 -mt-8 pb-12 space-y-4 relative z-20">
         {links.map((link, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 * index + 0.3, duration: 0.5 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 * index + 0.4, duration: 0.5 }}
           >
             <button
               onClick={() => handleLinkClick(link.url)}
-              className={`w-full group relative flex items-center p-4 rounded-2xl border-2 transition-all duration-300 text-left ${
+              className={`w-full group relative flex items-center p-5 rounded-2xl border transition-all duration-300 text-left ${
                 link.primary 
-                  ? "bg-blue-600 border-blue-600 text-white hover:bg-blue-700 hover:scale-[1.02] shadow-lg shadow-blue-600/20" 
-                  : "bg-white border-gray-100 text-gray-900 hover:border-blue-400 hover:bg-blue-50/50 hover:scale-[1.02] shadow-sm"
+                  ? "bg-blue-600 border-blue-500 text-white hover:bg-blue-700 hover:scale-[1.03] shadow-xl shadow-blue-600/30" 
+                  : "bg-white border-slate-200 text-slate-900 hover:border-blue-300 hover:bg-white hover:scale-[1.03] shadow-lg shadow-slate-200/50"
               }`}
             >
-              <div className={`p-3 rounded-xl mr-4 ${
-                link.primary ? "bg-white/20" : "bg-blue-100 text-blue-600"
+              <div className={`p-4 rounded-xl mr-4 transition-transform group-hover:scale-110 ${
+                link.primary ? "bg-white/10" : "bg-blue-50 text-blue-600"
               }`}>
                 {link.icon}
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-base">{link.title}</h3>
-                <p className={`text-sm ${link.primary ? "text-blue-100" : "text-gray-500"}`}>
+                <h3 className="font-bold text-lg tracking-tight">{link.title}</h3>
+                <p className={`text-sm mt-0.5 ${link.primary ? "text-blue-100" : "text-slate-500"}`}>
                   {link.description}
                 </p>
                 {link.phone && (
                   <button
                     onClick={(e) => handlePhoneClick(e, link.phone!)}
-                    className={`mt-2 flex items-center text-xs font-semibold py-1 px-3 rounded-full transition-colors ${
+                    className={`mt-3 flex items-center text-xs font-bold py-1.5 px-4 rounded-full transition-all ${
                       link.primary 
                         ? "bg-white/20 text-white hover:bg-white/30" 
-                        : "bg-green-100 text-green-700 hover:bg-green-200"
+                        : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100"
                     }`}
                   >
-                    <Phone className="w-3 h-3 mr-1" />
-                    WhatsApp: {link.phone}
+                    <Phone className="w-3.5 h-3.5 mr-2" />
+                    Chamar no WhatsApp
                   </button>
                 )}
               </div>
-              <ExternalLink className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity ${
-                link.primary ? "text-white" : "text-blue-400"
-              }`} />
+              <div className={`p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 ${
+                link.primary ? "bg-white/10" : "bg-blue-50"
+              }`}>
+                <ExternalLink className={`w-4 h-4 ${
+                  link.primary ? "text-white" : "text-blue-500"
+                }`} />
+              </div>
             </button>
           </motion.div>
         ))}
       </div>
 
       {/* Footer / Signature */}
-      <footer className="mt-auto pt-12 text-center">
-        <p className="text-gray-400 text-xs mb-2">
-          © 2024 Iguaçu Auto Vidros. Todos os direitos reservados.
-        </p>
+      <footer className="mt-auto py-10 w-full text-center bg-white border-t border-slate-100">
         <a 
           href="https://www.technexos.com.br/diagnostico-gratuito" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center text-gray-500 hover:text-blue-600 transition-colors text-sm font-medium"
+          className="group inline-flex flex-col items-center gap-2"
         >
-          Desenvolvido por <span className="font-bold ml-1">TechNexos</span>
-          <ExternalLink className="w-3 h-3 ml-1" />
+          <span className="text-slate-400 text-xs font-medium uppercase tracking-widest">Powered by</span>
+          <div className="flex items-center text-slate-600 group-hover:text-blue-600 transition-colors">
+            <span className="font-black text-lg tracking-tighter">TECH<span className="text-blue-600 group-hover:text-blue-500">NEXOS</span></span>
+            <ExternalLink className="w-3 h-3 ml-2 opacity-50" />
+          </div>
         </a>
       </footer>
     </div>
