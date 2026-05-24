@@ -897,52 +897,6 @@ const Clients = () => {
                                              <Repeat className="w-3.5 h-3.5" /> {client.is_cooperative ? "Cooperativa: SIM" : "Cooperativa: NÃO"}
                                          </Button>
 
-                                         {client.is_cooperative && (
-                                            <>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className={`gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium transition-all ${
-                                                        client.skip_inspection 
-                                                        ? "border-amber-500/50 text-amber-600 hover:bg-amber-50 hover:border-amber-500" 
-                                                        : "border-amber-500/30 text-amber-500/70 hover:bg-amber-50/50"
-                                                    }`}
-                                                    onClick={() => toggleSkipInspection(client)}
-                                                    disabled={bulkUploadToggling}
-                                                >
-                                                    {client.skip_inspection ? "Vistoria: OFF" : "Vistoria: ON"}
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className={`gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium transition-all ${
-                                                        client.bulk_upload_enabled 
-                                                        ? "border-primary/50 text-primary hover:bg-primary/5 hover:border-primary" 
-                                                        : "border-primary/30 text-primary/70 hover:bg-primary/5"
-                                                    }`}
-                                                    onClick={() => toggleBulkUpload(client)}
-                                                    disabled={bulkUploadToggling}
-                                                >
-                                                    <Upload className="w-3.5 h-3.5" /> {client.bulk_upload_enabled ? "Upload: ON" : "Upload: OFF"}
-                                                </Button>
-                                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-md px-3 py-1">
-                                                    <span className="text-[10px] font-bold text-slate-500 whitespace-nowrap">R$ / Carro:</span>
-                                                    <input 
-                                                        type="number" 
-                                                        step="0.01"
-                                                        defaultValue={client.value_per_car}
-                                                        onBlur={(e) => {
-                                                            const val = parseFloat(e.target.value) || 0;
-                                                            if (val !== client.value_per_car) {
-                                                                updateValuePerCar(client, val);
-                                                            }
-                                                        }}
-                                                        className="w-16 bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-blue-600"
-                                                    />
-                                                </div>
-                                            </>
-                                         )}
-
                                          <Button
                                              size="sm"
                                              variant="outline"
@@ -951,6 +905,7 @@ const Clients = () => {
                                          >
                                              <FileText className="w-3.5 h-3.5" /> Relatório
                                          </Button>
+
                                          <Button
                                              size="sm"
                                              variant="outline"
@@ -959,6 +914,7 @@ const Clients = () => {
                                          >
                                              <Eye className="w-3.5 h-3.5" /> Ver
                                          </Button>
+
                                          <Button
                                              size="sm"
                                              variant="outline"
@@ -967,6 +923,7 @@ const Clients = () => {
                                          >
                                              <Edit2 className="w-3.5 h-3.5" /> Editar
                                          </Button>
+
                                          <Button
                                              size="sm"
                                              className="gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-semibold gradient-primary text-primary-foreground shadow-sm hover:opacity-90 transition-all"
@@ -975,8 +932,71 @@ const Clients = () => {
                                          >
                                              <Repeat className="w-3.5 h-3.5" /> Troca
                                          </Button>
-                                     </div>
-                                </div>
+                                         </div>
+
+                                         {/* Cooperative Management Bar - Highlighted */}
+                                         {client.is_cooperative && (
+                                         <motion.div 
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: "auto" }}
+                                            className="bg-[#2c3493] rounded-xl p-4 flex flex-wrap items-center gap-4 border border-white/10 shadow-lg shadow-blue-900/20"
+                                         >
+                                            <div className="flex items-center gap-2 border-r border-white/20 pr-4 mr-2">
+                                                <Shield className="w-4 h-4 text-primary" />
+                                                <span className="text-white text-[10px] font-black uppercase tracking-wider">Gestão Cooperativa</span>
+                                            </div>
+
+                                            <div className="flex flex-wrap items-center gap-3 flex-1">
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className={`gap-1.5 text-xs font-bold transition-all ${
+                                                        client.skip_inspection 
+                                                        ? "bg-amber-500 text-white hover:bg-amber-600" 
+                                                        : "bg-white/10 text-white hover:bg-white/20"
+                                                    }`}
+                                                    onClick={() => toggleSkipInspection(client)}
+                                                    disabled={bulkUploadToggling}
+                                                >
+                                                    {client.skip_inspection ? "Vistoria: OFF" : "Vistoria: ON"}
+                                                </Button>
+
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className={`gap-1.5 text-xs font-bold transition-all ${
+                                                        client.bulk_upload_enabled 
+                                                        ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                                                        : "bg-white/10 text-white hover:bg-white/20"
+                                                    }`}
+                                                    onClick={() => toggleBulkUpload(client)}
+                                                    disabled={bulkUploadToggling}
+                                                >
+                                                    <Upload className="w-3.5 h-3.5" /> {client.bulk_upload_enabled ? "Upload: ON" : "Upload: OFF"}
+                                                </Button>
+
+                                                <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-lg px-4 py-2 ml-auto">
+                                                    <span className="text-[10px] font-bold text-blue-200 uppercase tracking-tight">Valor por Carro:</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-white text-xs font-bold">R$</span>
+                                                        <input 
+                                                            type="number" 
+                                                            step="0.01"
+                                                            defaultValue={client.value_per_car}
+                                                            onBlur={(e) => {
+                                                                const val = parseFloat(e.target.value) || 0;
+                                                                if (val !== client.value_per_car) {
+                                                                    updateValuePerCar(client, val);
+                                                                }
+                                                            }}
+                                                            className="w-16 bg-transparent border-none text-xs font-black focus:ring-0 p-0 text-primary placeholder:text-blue-300"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                         </motion.div>
+                                         )}
+                                         </div>
                             </motion.div>
                         );
                     })}
