@@ -170,7 +170,74 @@ const Clients = () => {
         }
     };
 
-    const [form, setForm] = useState({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "", maxReplacements: 3 });
+    const toggleCooperative = async (client: Client) => {
+        setBulkUploadToggling(true);
+        try {
+            const newState = !client.is_cooperative;
+            const { error } = await supabase
+                .from("clients")
+                .update({ is_cooperative: newState })
+                .eq("id", client.id);
+
+            if (error) throw error;
+
+            setClients(clients.map((c) =>
+                c.id === client.id ? { ...c, is_cooperative: newState } : c
+            ));
+
+            await logAction(
+                "update",
+                "clients",
+                client.id,
+                client.name,
+                `Status de cooperativa ${newState ? "ativado" : "desativado"}`
+            );
+
+            toast({
+                title: newState ? "Cooperativa Ativada" : "Cooperativa Desativada",
+                description: `${client.name} agora é tratada como ${newState ? "uma cooperativa" : "um cliente comum"}`,
+            });
+        } catch (error: any) {
+            toast({ title: "Erro", description: error.message, variant: "destructive" });
+        } finally {
+            setBulkUploadToggling(false);
+        }
+    };
+
+    const updateValuePerCar = async (client: Client, value: number) => {
+        try {
+            const { error } = await supabase
+                .from("clients")
+                .update({ value_per_car: value })
+                .eq("id", client.id);
+
+            if (error) throw error;
+
+            setClients(clients.map((c) =>
+                c.id === client.id ? { ...c, value_per_car: value } : c
+            ));
+
+            toast({
+                title: "Valor atualizado",
+                description: `O valor por carro para ${client.name} foi definido para R$ ${value.toFixed(2)}`,
+            });
+        } catch (error: any) {
+            toast({ title: "Erro", description: error.message, variant: "destructive" });
+        }
+    };
+
+    const [form, setForm] = useState({ 
+        name: "", 
+        phone: "", 
+        email: "", 
+        cpf: "", 
+        vehicle: "", 
+        plate: "", 
+        password: "", 
+        maxReplacements: 3,
+        is_cooperative: false,
+        value_per_car: 0
+    });
     const [replForm, setReplForm] = useState({ item: "", employeeId: "", notes: "", value: "" });
     const [submitting, setSubmitting] = useState(false);
 
@@ -223,7 +290,9 @@ const Clients = () => {
                     active: client.active || true,
                     planActive: activeVehicles.length > 0,
                     bulk_upload_enabled: client.bulk_upload_enabled || false,
-                    skip_inspection: client.skip_inspection || false
+                    skip_inspection: client.skip_inspection || false,
+                    is_cooperative: client.is_cooperative || false,
+                    value_per_car: client.value_per_car || 0
                 }});
                 setClients(mappedClients);
                 return mappedClients;
@@ -348,6 +417,8 @@ const Clients = () => {
                     replacements_used: 0,
                     max_replacements: 3,
                     active: true,
+                    is_cooperative: form.is_cooperative,
+                    value_per_car: form.value_per_car
                 })
                 .select();
 
@@ -371,7 +442,18 @@ const Clients = () => {
                 setClients([newClient, ...clients]);
             }
 
-            setForm({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "", maxReplacements: 3 });
+            setForm({ 
+                name: "", 
+                phone: "", 
+                email: "", 
+                cpf: "", 
+                vehicle: "", 
+                plate: "", 
+                password: "", 
+                maxReplacements: 3,
+                is_cooperative: false,
+                value_per_car: 0
+            });
             setDialogOpen(false);
 
             if (data && data[0]) {
@@ -410,6 +492,8 @@ const Clients = () => {
                      vehicle: form.vehicle,
                      plate: form.plate,
                      max_replacements: form.maxReplacements,
+                     is_cooperative: form.is_cooperative,
+                     value_per_car: form.value_per_car
                  })
                  .eq("id", editingClient.id);
 
@@ -463,11 +547,24 @@ const Clients = () => {
                         vehicle: form.vehicle,
                         plate: form.plate,
                         maxReplacements: form.maxReplacements,
+                        is_cooperative: form.is_cooperative,
+                        value_per_car: form.value_per_car
                     }
                     : c
             );
             setClients(updatedClients);
-            setForm({ name: "", phone: "", email: "", cpf: "", vehicle: "", plate: "", password: "", maxReplacements: 3 });
+            setForm({ 
+                name: "", 
+                phone: "", 
+                email: "", 
+                cpf: "", 
+                vehicle: "", 
+                plate: "", 
+                password: "", 
+                maxReplacements: 3,
+                is_cooperative: false,
+                value_per_car: 0
+            });
             setEditingClient(null);
             setEditDialogOpen(false);
 
@@ -496,6 +593,8 @@ const Clients = () => {
             plate: client.plate || "",
             password: "",
             maxReplacements: client.maxReplacements,
+            is_cooperative: client.is_cooperative || false,
+            value_per_car: client.value_per_car || 0
         });
         setEditDialogOpen(true);
     };
@@ -783,32 +882,67 @@ const Clients = () => {
                                          >
                                              {client.planActive ? "Plano: ON" : "Plano: OFF"}
                                          </Button>
+
                                          <Button
                                              size="sm"
                                              variant="outline"
                                              className={`gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium transition-all ${
-                                                client.skip_inspection 
-                                                ? "border-amber-500/50 text-amber-600 hover:bg-amber-50 hover:border-amber-500" 
-                                                : "border-amber-500/30 text-amber-500/70 hover:bg-amber-50/50"
+                                                client.is_cooperative 
+                                                ? "border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100" 
+                                                : "border-slate-200 text-slate-500 hover:bg-slate-50"
                                              }`}
-                                             onClick={() => toggleSkipInspection(client)}
+                                             onClick={() => toggleCooperative(client)}
                                              disabled={bulkUploadToggling}
                                          >
-                                             {client.skip_inspection ? "Vistoria: OFF" : "Vistoria: ON"}
+                                             <Repeat className="w-3.5 h-3.5" /> {client.is_cooperative ? "Cooperativa: SIM" : "Cooperativa: NÃO"}
                                          </Button>
-                                         <Button
-                                             size="sm"
-                                             variant="outline"
-                                             className={`gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium transition-all ${
-                                                client.bulk_upload_enabled 
-                                                ? "border-primary/50 text-primary hover:bg-primary/5 hover:border-primary" 
-                                                : "border-primary/30 text-primary/70 hover:bg-primary/5"
-                                             }`}
-                                             onClick={() => toggleBulkUpload(client)}
-                                             disabled={bulkUploadToggling}
-                                         >
-                                             <Upload className="w-3.5 h-3.5" /> {client.bulk_upload_enabled ? "Upload: ON" : "Upload: OFF"}
-                                         </Button>
+
+                                         {client.is_cooperative && (
+                                            <>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className={`gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium transition-all ${
+                                                        client.skip_inspection 
+                                                        ? "border-amber-500/50 text-amber-600 hover:bg-amber-50 hover:border-amber-500" 
+                                                        : "border-amber-500/30 text-amber-500/70 hover:bg-amber-50/50"
+                                                    }`}
+                                                    onClick={() => toggleSkipInspection(client)}
+                                                    disabled={bulkUploadToggling}
+                                                >
+                                                    {client.skip_inspection ? "Vistoria: OFF" : "Vistoria: ON"}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className={`gap-1.5 text-xs md:text-sm flex-1 md:flex-none font-medium transition-all ${
+                                                        client.bulk_upload_enabled 
+                                                        ? "border-primary/50 text-primary hover:bg-primary/5 hover:border-primary" 
+                                                        : "border-primary/30 text-primary/70 hover:bg-primary/5"
+                                                    }`}
+                                                    onClick={() => toggleBulkUpload(client)}
+                                                    disabled={bulkUploadToggling}
+                                                >
+                                                    <Upload className="w-3.5 h-3.5" /> {client.bulk_upload_enabled ? "Upload: ON" : "Upload: OFF"}
+                                                </Button>
+                                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-md px-3 py-1">
+                                                    <span className="text-[10px] font-bold text-slate-500 whitespace-nowrap">R$ / Carro:</span>
+                                                    <input 
+                                                        type="number" 
+                                                        step="0.01"
+                                                        defaultValue={client.value_per_car}
+                                                        onBlur={(e) => {
+                                                            const val = parseFloat(e.target.value) || 0;
+                                                            if (val !== client.value_per_car) {
+                                                                updateValuePerCar(client, val);
+                                                            }
+                                                        }}
+                                                        className="w-16 bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-blue-600"
+                                                    />
+                                                </div>
+                                            </>
+                                         )}
+
                                          <Button
                                              size="sm"
                                              variant="outline"

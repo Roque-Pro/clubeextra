@@ -13,6 +13,8 @@ export interface Client {
   active: boolean;
   skip_inspection?: boolean;
   bulk_upload_enabled?: boolean;
+  is_cooperative?: boolean;
+  value_per_car?: number;
   planActive?: boolean;
   vehiclesCount?: number;
 }

@@ -15,13 +15,20 @@ export const generateClientReport = async (data: ClientReportData) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  // 1. Fetch Client Vehicles
+  // 1. Fetch Client Data (for cooperative info)
+  const { data: client } = await supabase
+    .from("clients")
+    .select("is_cooperative, value_per_car")
+    .eq("id", data.clientId)
+    .single();
+
+  // 2. Fetch Client Vehicles
   const { data: vehicles } = await supabase
     .from("client_vehicles")
     .select("*")
     .eq("client_id", data.clientId);
 
-  // 2. Fetch Services for the client
+  // 3. Fetch Services for the client
   let query = supabase
     .from("services")
     .select("*")
@@ -123,6 +130,27 @@ export const generateClientReport = async (data: ClientReportData) => {
     body: serviceRows,
     headStyles: { fillColor: [75, 85, 99] },
   });
+
+  // Cooperative Billing Section (Conditional)
+  if (client?.is_cooperative) {
+    const tableFinalY = (doc as any).lastAutoTable.finalY || finalY + 20;
+    doc.setFontSize(14);
+    doc.setTextColor(31, 41, 55);
+    doc.text("Faturamento Cooperativa", 14, tableFinalY + 20);
+    
+    const valuePerCar = Number(client.value_per_car) || 0;
+    const totalBilling = vehiclesCount * valuePerCar;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total de Veículos: ${vehiclesCount}`, 14, tableFinalY + 28);
+    doc.text(`Valor por Veículo: R$ ${valuePerCar.toFixed(2)}`, 14, tableFinalY + 34);
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Total a Faturar: R$ ${totalBilling.toFixed(2)}`, 14, tableFinalY + 42);
+    doc.setFont("helvetica", "normal");
+  }
 
   // Footer
   const pageCount = doc.internal.getNumberOfPages();
