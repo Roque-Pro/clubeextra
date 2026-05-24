@@ -1,14 +1,18 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Globe, 
   MapPin, 
   Phone, 
   PlayCircle, 
-  ExternalLink 
+  ExternalLink,
+  Sun,
+  Moon
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const CanaisIguacu = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
   const links = [
     {
       title: "Clube do Vidro",
@@ -59,13 +63,58 @@ const CanaisIguacu = () => {
     window.open(`https://wa.me/55${phone}`, "_blank");
   };
 
+  const themeClasses = isDarkMode 
+    ? {
+        bg: "bg-slate-950",
+        header: "from-slate-900 via-blue-950 to-slate-900",
+        card: "bg-slate-900 border-slate-800 text-white",
+        cardHover: "hover:border-blue-500/50 hover:bg-slate-800",
+        textPrimary: "text-white",
+        textSecondary: "text-slate-400",
+        iconBg: "bg-slate-800 text-blue-400",
+        footer: "bg-slate-950 border-slate-900",
+        footerText: "text-slate-600",
+        footerHover: "hover:text-slate-400"
+      }
+    : {
+        bg: "bg-slate-50",
+        header: "from-blue-900 via-blue-800 to-blue-900",
+        card: "bg-white border-slate-200 text-slate-900",
+        cardHover: "hover:border-blue-300 hover:bg-white",
+        textPrimary: "text-slate-900",
+        textSecondary: "text-slate-500",
+        iconBg: "bg-blue-50 text-blue-600",
+        footer: "bg-white border-slate-100",
+        footerText: "text-slate-400",
+        footerHover: "hover:text-slate-600"
+      };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center">
-      {/* Header / Top Bar - Width 100% */}
-      <div className="w-full bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 py-12 px-4 shadow-2xl relative overflow-hidden">
+    <div className={`min-h-screen ${themeClasses.bg} flex flex-col items-center transition-colors duration-500`}>
+      {/* Header / Top Bar */}
+      <div className={`w-full bg-gradient-to-r ${themeClasses.header} py-12 px-4 shadow-2xl relative overflow-hidden transition-colors duration-500`}>
+        {/* Theme Toggle Button */}
+        <button
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="absolute top-6 right-6 z-30 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all duration-300 shadow-lg"
+          aria-label="Toggle theme"
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isDarkMode ? "dark" : "light"}
+              initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
+              animate={{ opacity: 1, rotate: 0, scale: 1 }}
+              exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
+              transition={{ duration: 0.3 }}
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </motion.div>
+          </AnimatePresence>
+        </button>
+
         {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <div className="absolute -top-24 -left-24 w-64 h-64 bg-white rounded-full blur-3xl" />
+          <div className={`absolute -top-24 -left-24 w-64 h-64 ${isDarkMode ? "bg-blue-900" : "bg-white"} rounded-full blur-3xl`} />
           <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-400 rounded-full blur-3xl" />
         </div>
 
@@ -115,17 +164,17 @@ const CanaisIguacu = () => {
               className={`w-full group relative flex items-center p-5 rounded-2xl border transition-all duration-300 text-left ${
                 link.primary 
                   ? "bg-blue-600 border-blue-500 text-white hover:bg-blue-700 hover:scale-[1.03] shadow-xl shadow-blue-600/30" 
-                  : "bg-white border-slate-200 text-slate-900 hover:border-blue-300 hover:bg-white hover:scale-[1.03] shadow-lg shadow-slate-200/50"
+                  : `${themeClasses.card} ${themeClasses.cardHover} hover:scale-[1.03] shadow-lg`
               }`}
             >
               <div className={`p-4 rounded-xl mr-4 transition-transform group-hover:scale-110 ${
-                link.primary ? "bg-white/10" : "bg-blue-50 text-blue-600"
+                link.primary ? "bg-white/10" : themeClasses.iconBg
               }`}>
                 {link.icon}
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-lg tracking-tight">{link.title}</h3>
-                <p className={`text-sm mt-0.5 ${link.primary ? "text-blue-100" : "text-slate-500"}`}>
+                <p className={`text-sm mt-0.5 ${link.primary ? "text-blue-100" : themeClasses.textSecondary}`}>
                   {link.description}
                 </p>
                 {link.phone && (
@@ -134,7 +183,9 @@ const CanaisIguacu = () => {
                     className={`mt-3 flex items-center text-xs font-bold py-1.5 px-4 rounded-full transition-all ${
                       link.primary 
                         ? "bg-white/20 text-white hover:bg-white/30" 
-                        : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100"
+                        : isDarkMode
+                          ? "bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50 border border-emerald-800/50"
+                          : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100"
                     }`}
                   >
                     <Phone className="w-3.5 h-3.5 mr-2" />
@@ -143,7 +194,7 @@ const CanaisIguacu = () => {
                 )}
               </div>
               <div className={`p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 ${
-                link.primary ? "bg-white/10" : "bg-blue-50"
+                link.primary ? "bg-white/10" : isDarkMode ? "bg-slate-800" : "bg-blue-50"
               }`}>
                 <ExternalLink className={`w-4 h-4 ${
                   link.primary ? "text-white" : "text-blue-500"
@@ -155,18 +206,16 @@ const CanaisIguacu = () => {
       </div>
 
       {/* Footer / Signature */}
-      <footer className="mt-auto py-10 w-full text-center bg-white border-t border-slate-100">
+      <footer className={`mt-auto py-8 w-full text-center ${themeClasses.footer} border-t transition-colors duration-500`}>
         <a 
           href="https://www.technexos.com.br/diagnostico-gratuito" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="group inline-flex flex-col items-center gap-2"
+          className={`group inline-flex items-center gap-1.5 transition-colors ${themeClasses.footerText} ${themeClasses.footerHover}`}
         >
-          <span className="text-slate-400 text-xs font-medium uppercase tracking-widest">Powered by</span>
-          <div className="flex items-center text-slate-600 group-hover:text-blue-600 transition-colors">
-            <span className="font-black text-lg tracking-tighter">TECH<span className="text-blue-600 group-hover:text-blue-500">NEXOS</span></span>
-            <ExternalLink className="w-3 h-3 ml-2 opacity-50" />
-          </div>
+          <span className="text-[10px] uppercase tracking-[0.2em] font-semibold opacity-60">Desenvolvido por</span>
+          <span className="font-black text-sm tracking-tighter uppercase">Technexos</span>
+          <ExternalLink className="w-2.5 h-2.5 opacity-40" />
         </a>
       </footer>
     </div>
