@@ -26,7 +26,7 @@ const Help = () => {
     },
     {
       question: "O que fazer se esquecer minha senha?",
-      answer: "Sua segurança é nossa prioridade. Por isso, não temos opção de 'recuperar senha' automática. Para resetar sua senha, você deve entrar em contato com a Iguaçu Auto Vidros via WhatsApp (45) 99901-0000. Leve sua documentação (RG e CPF) para comprovar sua identidade. Nossa equipe irá verificar seus dados e enviar uma nova senha segura. Isso protege sua conta de acessos não autorizados.",
+      answer: "Sua segurança é nossa prioridade. Por isso, não temos opção de 'recuperar senha' automática. Para resetar sua senha, você deve entrar em contato com a Iguaçu Auto Vidros via WhatsApp (45) 99901-0000. Leve sua documentação (RG e CPF / CNPJ) para comprovar sua identidade. Nossa equipe irá verificar seus dados e enviar uma nova senha segura. Isso protege sua conta de acessos não autorizados.",
     },
     {
       question: "Posso agendar mais de um vidro na mesma data?",
@@ -115,7 +115,7 @@ const Help = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground mb-2">Crie Sua Conta</h3>
-                  <p className="text-muted-foreground">Acesse a página de Login, clique em "Criar minha conta" e preencha seus dados (nome, email, telefone, CPF, veículo e placa). Sua conta estará ativa imediatamente.</p>
+                  <p className="text-muted-foreground">Acesse a página de Login, clique em "Criar minha conta" e preencha seus dados (nome, email, telefone e CPF / CNPJ). Sua conta estará ativa imediatamente.</p>
                 </div>
               </div>
 
@@ -239,7 +239,7 @@ const Help = () => {
                   </li>
                   <li className="flex gap-3">
                     <span className="font-bold text-primary flex-shrink-0">3.</span>
-                    <span>Dirija-se à loja com sua <strong>documentação original</strong> (RG e CPF)</span>
+                    <span>Dirija-se à loja com sua <strong>documentação original</strong> (RG e CPF / CNPJ)</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="font-bold text-primary flex-shrink-0">4.</span>

@@ -22,7 +22,7 @@ const CanaisIguacu = () => {
       primary: true
     },
     {
-      title: "Loja 01 - Jardim Imperial",
+      title: "Loja 01 - Jardim Imperial - Nova Iguaçu",
       description: "Av: Carlos Marques Rollo, 1123",
       phone: "21974636253",
       icon: <MapPin className="w-6 h-6" />,

@@ -19,6 +19,7 @@ interface PlanPaymentModalProps {
     onPaymentClick: () => void;
     isLoading?: boolean;
     clientName?: string;
+    valuePerCar?: number;
 }
 
 const PlanPaymentModal = ({
@@ -27,9 +28,11 @@ const PlanPaymentModal = ({
     onPaymentClick,
     isLoading = false,
     clientName,
+    valuePerCar
 }: PlanPaymentModalProps) => {
-    const planPrice = 239;
-    const monthlyPrice = 19.9;
+    const monthlyPrice = valuePerCar && valuePerCar > 0 ? valuePerCar : 19.9;
+    const yearlyPrice = monthlyPrice * 12;
+
 
     const benefits = [
         {

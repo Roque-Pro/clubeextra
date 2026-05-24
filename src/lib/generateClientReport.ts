@@ -74,7 +74,7 @@ export const generateClientReport = async (data: ClientReportData) => {
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
   doc.text(`Nome: ${data.clientName}`, 14, 48);
-  doc.text(`CPF: ${data.clientCpf || "N/A"}`, 14, 54);
+  doc.text(`CPF / CNPJ: ${data.clientCpf || "N/A"}`, 14, 54);
   doc.text(`Telefone: ${data.clientPhone}`, 14, 60);
   doc.text(`E-mail: ${data.clientEmail || "N/A"}`, 14, 66);
   

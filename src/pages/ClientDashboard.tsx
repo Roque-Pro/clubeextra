@@ -32,6 +32,10 @@ interface ClientProfile {
      plan_start?: string;
      plan_end?: string;
      profile_status?: string;
+     is_cooperative?: boolean;
+     skip_inspection?: boolean;
+     bulk_upload_enabled?: boolean;
+     value_per_car?: number;
 }
 
 interface ClientVehicle {
@@ -870,7 +874,7 @@ const ClientDashboard = () => {
                     .maybeSingle();
 
                 if (cpfConflict) {
-                    throw new Error("Este CPF já está cadastrado para outro cliente.");
+                    throw new Error("Este documento já está cadastrado para outro cliente.");
                 }
             }
 
@@ -1149,7 +1153,7 @@ const ClientDashboard = () => {
                                 <div>
                                     <h4 className="text-xl font-bold text-foreground">Ativação</h4>
                                     <p className="text-lg text-muted-foreground leading-relaxed">
-                                        Após aprovado, ative a mensalidade de <strong className="text-primary">R$ 19,90</strong> por veículo.
+                                        Após aprovado, ative a mensalidade de <strong className="text-primary">R$ {(clientData?.value_per_car && clientData.value_per_car > 0) ? clientData.value_per_car.toFixed(2).replace('.', ',') : '19,90'}</strong> por veículo.
                                     </p>
                                 </div>
                             </div>
@@ -1311,7 +1315,7 @@ const ClientDashboard = () => {
                                 <div>
                                     <h3 className="text-2xl font-bold">Passo 2: Pagamento por Veículo</h3>
                                     <p className="text-base text-muted-foreground">
-                                        Cada veículo precisa de uma mensalidade de R$ 19,90 ativa.
+                                        Cada veículo precisa de uma mensalidade de R$ {(clientData?.value_per_car && clientData.value_per_car > 0) ? clientData.value_per_car.toFixed(2).replace('.', ',') : '19,90'} ativa.
                                     </p>
                                 </div>
                             </div>
@@ -1678,7 +1682,7 @@ const ClientDashboard = () => {
                     </motion.div>
 
                     {/* Bulk Upload Section */}
-                    {clientData && (
+                    {clientData && bulkUploadEnabled && (
                         <BulkVehicleUpload
                             clientId={clientData.id!}
                             isEnabled={bulkUploadEnabled}
@@ -1745,12 +1749,12 @@ const ClientDashboard = () => {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="cpf">CPF</Label>
+                                    <Label htmlFor="cpf">CPF / CNPJ</Label>
                                     <Input
                                         id="cpf"
                                         value={formData.cpf}
                                         onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                                        placeholder="000.000.000-00"
+                                        placeholder="Digite seu documento"
                                     />
                                 </div>
 
@@ -1788,7 +1792,7 @@ const ClientDashboard = () => {
                                     <p className="text-foreground font-medium">{clientData?.phone}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground mb-1">CPF</p>
+                                    <p className="text-xs text-muted-foreground mb-1">CPF / CNPJ</p>
                                     <p className="text-foreground font-medium">{clientData?.cpf}</p>
                                 </div>
                             </div>
@@ -1981,6 +1985,7 @@ const ClientDashboard = () => {
                         onPaymentClick={handleConfirmPayment}
                         isLoading={isProcessingPayment}
                         clientName={clientData?.name}
+                        valuePerCar={clientData?.value_per_car}
                     />
                 </motion.div>
             </main>

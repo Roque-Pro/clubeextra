@@ -371,8 +371,8 @@ const Clients = () => {
 
             if (cpfCheck.data) {
                 toast({
-                    title: "CPF já cadastrado",
-                    description: `O CPF "${form.cpf}" já está associado a outro cliente.`,
+                    title: "CPF / CNPJ já cadastrado",
+                    description: `O documento "${form.cpf}" já está associado a outro cliente.`,
                     variant: "destructive",
                 });
                 setSubmitting(false);
@@ -750,7 +750,7 @@ const Clients = () => {
                                     <div><Label>Senha</Label><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Deixar vazio para gerar automaticamente" /></div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div><Label>CPF</Label><Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" /></div>
+                                    <div><Label>CPF / CNPJ</Label><Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="Digite o documento" /></div>
                                     <div><Label>Veículo *</Label><Input value={form.vehicle} onChange={(e) => setForm({ ...form, vehicle: e.target.value })} placeholder="Honda Civic 2022" /></div>
                                 </div>
                                 <div>
@@ -1028,7 +1028,7 @@ const Clients = () => {
                                             <p className="font-semibold break-all">{viewedClient.email || "—"}</p>
                                         </div>
                                         <div>
-                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">CPF</Label>
+                                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">CPF / CNPJ</Label>
                                             <p className="font-semibold">{viewedClient.cpf || "—"}</p>
                                         </div>
                                     </div>
@@ -1139,7 +1139,7 @@ const Clients = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div><Label>E-mail</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com" /></div>
-                            <div><Label>CPF</Label><Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" /></div>
+                            <div><Label>CPF / CNPJ</Label><Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="Digite o documento" /></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div><Label>Veículo *</Label><Input value={form.vehicle} onChange={(e) => setForm({ ...form, vehicle: e.target.value })} placeholder="Honda Civic 2022" /></div>

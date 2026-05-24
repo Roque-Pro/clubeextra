@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 
 const normalizeEmail = (value: string) => value.trim().toLowerCase();
 const normalizeCpf = (value: string) => value.trim();
-const normalizePlate = (value: string) => value.trim().toUpperCase();
 
 const PlanAuth = () => {
   const navigate = useNavigate();
@@ -25,8 +24,6 @@ const PlanAuth = () => {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
-  const [vehicle, setVehicle] = useState("");
-  const [plate, setPlate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPlanInfo, setShowPlanInfo] = useState(false);
 
@@ -61,8 +58,6 @@ const PlanAuth = () => {
       const sanitizedName = fullName.trim();
       const sanitizedPhone = phone.trim();
       const sanitizedCpf = normalizeCpf(cpf);
-      const sanitizedVehicle = vehicle.trim();
-      const sanitizedPlate = normalizePlate(plate);
 
       if (isLogin) {
          const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
@@ -79,8 +74,6 @@ const PlanAuth = () => {
               full_name: sanitizedName,
               phone: sanitizedPhone,
               cpf: sanitizedCpf,
-              vehicle: sanitizedVehicle,
-              plate: sanitizedPlate,
             },
             emailRedirectTo: window.location.origin,
           },
@@ -129,8 +122,8 @@ const PlanAuth = () => {
                 name: sanitizedName,
                 phone: sanitizedPhone || "",
                 cpf: sanitizedCpf || null,
-                vehicle: sanitizedVehicle || "",
-                plate: sanitizedPlate || null,
+                vehicle: "",
+                plate: null,
                 plan_start: new Date().toISOString().split("T")[0],
                 plan_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
                 replacements_used: 0,
@@ -158,8 +151,6 @@ const PlanAuth = () => {
                 name: sanitizedName,
                 phone: sanitizedPhone || "",
                 cpf: sanitizedCpf || null,
-                vehicle: sanitizedVehicle || "",
-                plate: sanitizedPlate || null,
               })
               .eq("id", existingClients[0].id);
 
@@ -308,30 +299,10 @@ const PlanAuth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="vehicle">Veículo</Label>
-                    <Input
-                      id="vehicle"
-                      placeholder="Honda Civic 2022"
-                      value={vehicle}
-                      onChange={(e) => setVehicle(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="plate">Placa</Label>
-                    <Input
-                      id="plate"
-                      placeholder="ABC-1D23"
-                      value={plate}
-                      onChange={(e) => setPlate(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="cpf">CPF</Label>
+                    <Label htmlFor="cpf">CPF / CNPJ</Label>
                     <Input
                       id="cpf"
-                      placeholder="000.000.000-00"
+                      placeholder="Digite seu documento"
                       value={cpf}
                       onChange={(e) => setCpf(e.target.value)}
                     />
