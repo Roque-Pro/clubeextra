@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, UserCheck, UserX, Repeat, Edit2, Eye, Upload, FileText, Car } from "lucide-react";
+import { Plus, Search, UserCheck, UserX, Repeat, Edit2, Eye, Upload, FileText, Car, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ClientStatusBadge from "@/components/ClientStatusBadge";
