@@ -19,6 +19,7 @@ import Auth from "./pages/Auth";
 import PlanAuth from "./pages/PlanAuth";
 import ClientDashboard from "./pages/ClientDashboard";
 import Landing from "./pages/Landing";
+import CanaisIguacu from "./pages/CanaisIguacu";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 import FloatingChat from "./components/FloatingChat";
@@ -34,6 +35,7 @@ const AppContent = () => {
       {showFloatingChat && <FloatingChat />}
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/canais-iguacu" element={<CanaisIguacu />} />
         <Route path="/ajuda" element={<Help />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/plan-auth" element={<PlanAuth />} />
