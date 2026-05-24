@@ -7,7 +7,8 @@ import {
   PlayCircle, 
   ExternalLink,
   Sun,
-  Moon
+  Moon,
+  Truck
 } from "lucide-react";
 
 const CanaisIguacu = () => {
@@ -20,6 +21,13 @@ const CanaisIguacu = () => {
       icon: <Globe className="w-6 h-6" />,
       url: "/",
       primary: true
+    },
+    {
+      title: "Solicitação de Reboque!",
+      description: "Chamar guincho agora (24h)",
+      icon: <Truck className="w-6 h-6" />,
+      url: "https://wa.me/5521974636253",
+      isEmergency: true
     },
     {
       title: "Loja 01 - Jardim Imperial - Nova Iguaçu",
@@ -164,17 +172,19 @@ const CanaisIguacu = () => {
               className={`w-full group relative flex items-center p-5 rounded-2xl border transition-all duration-300 text-left ${
                 link.primary 
                   ? "bg-blue-600 border-blue-500 text-white hover:bg-blue-700 hover:scale-[1.03] shadow-xl shadow-blue-600/30" 
-                  : `${themeClasses.card} ${themeClasses.cardHover} hover:scale-[1.03] shadow-lg`
+                  : (link as any).isEmergency
+                    ? "bg-amber-500 border-amber-400 text-white hover:bg-amber-600 hover:scale-[1.03] shadow-xl shadow-amber-500/30 animate-pulse"
+                    : `${themeClasses.card} ${themeClasses.cardHover} hover:scale-[1.03] shadow-lg`
               }`}
             >
               <div className={`p-4 rounded-xl mr-4 transition-transform group-hover:scale-110 ${
-                link.primary ? "bg-white/10" : themeClasses.iconBg
+                link.primary || (link as any).isEmergency ? "bg-white/10" : themeClasses.iconBg
               }`}>
                 {link.icon}
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-lg tracking-tight">{link.title}</h3>
-                <p className={`text-sm mt-0.5 ${link.primary ? "text-blue-100" : themeClasses.textSecondary}`}>
+                <p className={`text-sm mt-0.5 ${link.primary || (link as any).isEmergency ? "text-white/90" : themeClasses.textSecondary}`}>
                   {link.description}
                 </p>
                 {link.phone && (
