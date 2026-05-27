@@ -174,15 +174,22 @@ const Clients = () => {
         setBulkUploadToggling(true);
         try {
             const newState = !client.is_cooperative;
+            // Sincroniza tudo: se é cooperativa, liga Vistoria OFF e Upload. Se não é, desliga ambos.
+            const updatePayload = { 
+                is_cooperative: newState,
+                skip_inspection: newState,
+                bulk_upload_enabled: newState
+            };
+
             const { error } = await supabase
                 .from("clients")
-                .update({ is_cooperative: newState })
+                .update(updatePayload)
                 .eq("id", client.id);
 
             if (error) throw error;
 
             setClients(clients.map((c) =>
-                c.id === client.id ? { ...c, is_cooperative: newState } : c
+                c.id === client.id ? { ...c, ...updatePayload } : c
             ));
 
             await logAction(
@@ -195,10 +202,17 @@ const Clients = () => {
 
             toast({
                 title: newState ? "Cooperativa Ativada" : "Cooperativa Desativada",
-                description: `${client.name} agora é tratada como ${newState ? "uma cooperativa" : "um cliente comum"}`,
+                description: newState 
+                    ? `${client.name} agora é cooperativa. Vistoria OFF e Upload em massa foram ativados.`
+                    : `${client.name} agora é um cliente comum. Vistoria e Upload voltaram ao padrão.`,
             });
         } catch (error: any) {
-            toast({ title: "Erro", description: error.message, variant: "destructive" });
+            console.error("Erro ao atualizar status de cooperativa:", error);
+            toast({
+                title: "Erro",
+                description: error.message || "Não foi possível atualizar o status",
+                variant: "destructive",
+            });
         } finally {
             setBulkUploadToggling(false);
         }
@@ -951,12 +965,13 @@ const Clients = () => {
                                                     size="sm"
                                                     variant="ghost"
                                                     className={`gap-1.5 text-xs font-bold transition-all ${
-                                                        client.skip_inspection 
-                                                        ? "bg-amber-500 text-white hover:bg-amber-600" 
+                                                        client.skip_inspection
+                                                        ? "bg-amber-500 text-white hover:bg-amber-600"
                                                         : "bg-white/10 text-white hover:bg-white/20"
-                                                    }`}
-                                                    onClick={() => toggleSkipInspection(client)}
-                                                    disabled={bulkUploadToggling}
+                                                    } ${client.is_cooperative ? "opacity-70 cursor-not-allowed" : ""}`}
+                                                    onClick={() => !client.is_cooperative && toggleSkipInspection(client)}
+                                                    disabled={bulkUploadToggling || client.is_cooperative}
+                                                    title={client.is_cooperative ? "Gerenciado pelo status de Cooperativa" : ""}
                                                 >
                                                     {client.skip_inspection ? "Vistoria: OFF" : "Vistoria: ON"}
                                                 </Button>
@@ -965,14 +980,16 @@ const Clients = () => {
                                                     size="sm"
                                                     variant="ghost"
                                                     className={`gap-1.5 text-xs font-bold transition-all ${
-                                                        client.bulk_upload_enabled 
-                                                        ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                                                        client.bulk_upload_enabled
+                                                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
                                                         : "bg-white/10 text-white hover:bg-white/20"
-                                                    }`}
-                                                    onClick={() => toggleBulkUpload(client)}
-                                                    disabled={bulkUploadToggling}
+                                                    } ${client.is_cooperative ? "opacity-70 cursor-not-allowed" : ""}`}
+                                                    onClick={() => !client.is_cooperative && toggleBulkUpload(client)}
+                                                    disabled={bulkUploadToggling || client.is_cooperative}
+                                                    title={client.is_cooperative ? "Gerenciado pelo status de Cooperativa" : ""}
                                                 >
-                                                    <Upload className="w-3.5 h-3.5" /> {client.bulk_upload_enabled ? "Upload: ON" : "Upload: OFF"}
+                                                    <Upload className="w-3.5 h-3.5" />
+                                                    {client.bulk_upload_enabled ? "Upload: ON" : "Upload: OFF"}
                                                 </Button>
 
                                                 <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-lg px-4 py-2 ml-auto">

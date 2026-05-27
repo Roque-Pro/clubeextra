@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Shield, Edit, Save, X, Mail, Phone, User, Car, LogOut, Calendar, Plus, Trash2, Check, AlertCircle, Upload, Image, DollarSign, Eye, Clock, Camera, CreditCard, CalendarCheck } from "lucide-react";
+import { Shield, Edit, Save, X, Mail, Phone, User, Car, LogOut, Calendar, Plus, Trash2, Check, AlertCircle, Upload, Image, DollarSign, Eye, Clock, Camera, CreditCard, CalendarCheck, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BulkVehicleUpload } from "@/components/BulkVehicleUpload";
 import PlanStatusCard from "@/components/PlanStatusCard";
@@ -180,7 +191,7 @@ const ClientDashboard = () => {
         : "free";
 
     const isPendingApproval = clientData?.profile_status === "pending" || 
-                             clientVehicles.some(v => v.is_primary && v.status === "pending");
+                             clientVehicles.some(v => v.status === "pending");
 
     const handlePaymentClick = (vehicleId: string) => {
         setSelectedVehicleForPayment(vehicleId);
@@ -194,7 +205,7 @@ const ClientDashboard = () => {
             const { data, error } = await supabase.functions.invoke("create-stripe-checkout", {
                 body: {
                     vehicleId: selectedVehicleForPayment,
-                    priceId: "price_1TZw4KCkbAa7AW2GcnaQzU0O",
+                    priceId: "price_1TbhkbCp1m3M8sfCTljCIWBS",
                     successUrl: window.location.origin + "/client-dashboard?payment=success",
                     cancelUrl: window.location.origin + "/client-dashboard?payment=cancel",
                 },
@@ -387,9 +398,35 @@ const ClientDashboard = () => {
                     vehicle: resolvedVehicle,
                 });
                 setBulkUploadEnabled(clientRecord.bulk_upload_enabled || false);
+
+                // Configurar Realtime para sincronizar permissões do admin
+                const channel = supabase
+                    .channel(`client-sync-${clientRecord.id}`)
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: 'UPDATE',
+                            schema: 'public',
+                            table: 'clients',
+                            filter: `id=eq.${clientRecord.id}`
+                        },
+                        (payload) => {
+                            console.log('🔄 Sincronizando dados do cliente via Realtime:', payload.new);
+                            setClientData(prev => prev ? ({ ...prev, ...payload.new }) : null);
+                            if (payload.new.bulk_upload_enabled !== undefined) {
+                                setBulkUploadEnabled(payload.new.bulk_upload_enabled);
+                            }
+                        }
+                    )
+                    .subscribe();
+
                 // Estas chamadas agora são seguras, pois clientRecord.id sempre existirá
                 fetchAppointments(clientRecord.id);
                 fetchClientVehicles(clientRecord.id);
+
+                return () => {
+                    supabase.removeChannel(channel);
+                };
             } catch (err) {
                 setClientData(null);
             } finally {
@@ -571,9 +608,15 @@ const ClientDashboard = () => {
     };
 
     const handleConfirmAddVehicle = async () => {
-        if (!clientData || !validationResult) return;
-
+        if (!clientData) return;
+        
         const skipInspection = (clientData as any)?.skip_inspection === true;
+        
+        // Se não for skipInspection, precisa de validação (mesmo que mockada)
+        if (!skipInspection && !validationResult) {
+            handleValidateAndAddVehicle();
+            return;
+        }
 
         try {
             setUploadingVehiclePhoto(true);
@@ -585,7 +628,7 @@ const ClientDashboard = () => {
             };
 
             if (!skipInspection) {
-                // Upload das 11 fotos - Apenas se não for skipInspection
+                // ... (upload logic for photos)
                 const uploadPromises = [
                     uploadVehiclePhoto(newVehicleForm.photoFront!, clientData.id!, `${newVehicleForm.plate}_front`),
                     uploadVehiclePhoto(newVehicleForm.photoBack!, clientData.id!, `${newVehicleForm.plate}_back`),
@@ -656,7 +699,7 @@ const ClientDashboard = () => {
             setValidationResult(null);
             setAddVehicleDialogOpen(false);
             fetchClientVehicles(clientData.id!);
-            toast({ title: skipInspection ? "Veículo adicionado e liberado!" : "Veículo enviado para vistoria!" });
+            toast({ title: skipInspection ? "Veículo adicionado e liberado para agendamento!" : "Veículo enviado para vistoria!" });
         } catch (err: any) {
             toast({ title: "Erro ao adicionar veículo", description: err.message, variant: "destructive" });
         } finally {
@@ -1196,11 +1239,11 @@ const ClientDashboard = () => {
                                     <div>
                                         <h3 className="text-2xl font-bold">Passo 1: Vistoria do Veículo</h3>
                                         <p className="text-base text-muted-foreground">
-                                            {clientVehicles.some(v => v.status === "approved") 
-                                                ? "Você tem veículos aprovados!" 
-                                                : isPendingApproval 
-                                                    ? "Analisando suas fotos..." 
-                                                    : "Envie as fotos do seu veículo."}
+                                            {clientVehicles.length === 0 
+                                                ? "Comece enviando as fotos do seu primeiro veículo."
+                                                : clientVehicles.some(v => v.status === "pending")
+                                                    ? "Temos veículos em análise. Aguarde o OK da empresa."
+                                                    : "Envie a vistoria de um novo veículo."}
                                         </p>
                                     </div>
                                 </div>
@@ -1211,87 +1254,117 @@ const ClientDashboard = () => {
                                             Nova Vistoria
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="bg-card border-border max-w-2xl">
+                                    <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
                                         <DialogHeader>
-                                            <DialogTitle className="font-display">Enviar para Vistoria</DialogTitle>
+                                            <DialogTitle className="font-display text-2xl">Nova Vistoria de Veículo</DialogTitle>
                                         </DialogHeader>
-                                        <div className="space-y-4">
-                                            {!validationResult ? (
-                                                <>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div>
-                                                            <Label>Veículo *</Label>
-                                                            <Input
-                                                                value={newVehicleForm.vehicle}
-                                                                onChange={(e) => setNewVehicleForm({ ...newVehicleForm, vehicle: e.target.value })}
-                                                                placeholder="Ex: Honda Civic"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <Label>Placa *</Label>
-                                                            <Input
-                                                                value={newVehicleForm.plate}
-                                                                onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plate: e.target.value })}
-                                                                placeholder="ABC-1234"
-                                                            />
-                                                        </div>
-                                                    </div>
+                                        
+                                        <div className="space-y-6 py-4">
+                                            {/* Vehicle Info */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="new-vehicle" className="text-sm font-bold">Veículo *</Label>
+                                                    <Input
+                                                        id="new-vehicle"
+                                                        value={newVehicleForm.vehicle}
+                                                        onChange={(e) => setNewVehicleForm({ ...newVehicleForm, vehicle: e.target.value })}
+                                                        placeholder="Ex: Honda Civic"
+                                                        className="h-12"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="new-plate" className="text-sm font-bold">Placa *</Label>
+                                                    <Input
+                                                        id="new-plate"
+                                                        value={newVehicleForm.plate}
+                                                        onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plate: e.target.value })}
+                                                        placeholder="ABC-1234"
+                                                        className="h-12"
+                                                    />
+                                                </div>
+                                            </div>
 
-                                                    {!(clientData as any)?.skip_inspection ? (
-                                                        <div className="space-y-4">
-                                                            <Label className="text-primary font-bold">Fotos Necessárias (Obrigatório)</Label>
-                                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto max-h-[40vh] p-1">
-                                                                {[
-                                                                    { side: "front", label: "Frente" },
-                                                                    { side: "back", label: "Traseira" },
-                                                                    { side: "left", label: "Lado Esquerdo" },
-                                                                    { side: "right", label: "Lado Direito" },
-                                                                    { side: "headlightsFront", label: "Faróis Frontais" },
-                                                                    { side: "headlightsRear", label: "Faróis Traseiros" },
-                                                                    { side: "mirrors", label: "Retrovisores" },
-                                                                    { side: "interiorFront", label: "Interior Frontal" },
-                                                                    { side: "interiorRear", label: "Interior Traseiro" },
-                                                                    { side: "dashboard", label: "Painel" },
-                                                                    { side: "trunkOpen", label: "Mala Aberta" }
-                                                                ].map((photo) => (
-                                                                    <div key={photo.side} className="space-y-1">
-                                                                        <Label className="text-[10px] uppercase text-muted-foreground truncate block">{photo.label}</Label>
-                                                                        <label className={`relative flex flex-col items-center justify-center h-24 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${(photoPreviews as any)[photo.side] ? 'border-success' : 'border-border'}`}>
-                                                                            {(photoPreviews as any)[photo.side] ? (
-                                                                                <img src={(photoPreviews as any)[photo.side]} className="w-full h-full object-cover rounded-lg" alt={photo.label} />
-                                                                            ) : (
-                                                                                <div className="text-center p-1">
-                                                                                    <Image className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
-                                                                                    <span className="text-[8px] font-medium leading-tight block">Upload</span>
-                                                                                </div>
-                                                                            )}
-                                                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange(photo.side, e)} />
-                                                                        </label>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="p-4 bg-amber-50 rounded-lg"><p>Vistoria desativada.</p></div>
-                                                    )}
-
-                                                    <Button
-                                                        onClick={handleValidateAndAddVehicle}
-                                                        disabled={validatingNewVehicle}
-                                                        className="w-full gradient-primary"
-                                                    >
-                                                        {validatingNewVehicle ? "Processando..." : "Enviar para Vistoria"}
-                                                    </Button>
-                                                </>
-                                            ) : (
+                                            {/* Photos Grid */}
+                                            {!(clientData as any)?.skip_inspection ? (
                                                 <div className="space-y-4">
-                                                    <div className="p-4 border-2 border-success bg-success/10 rounded-lg text-center">
-                                                        <Check className="w-10 h-10 text-success mx-auto mb-2" />
-                                                        <p className="font-bold">Veículo Validado!</p>
-                                                        <Button onClick={handleConfirmAddVehicle} className="mt-4 w-full">Confirmar Envio</Button>
+                                                    <div className="flex items-center justify-between">
+                                                        <Label className="text-primary font-black text-base uppercase tracking-wider">
+                                                            Fotos Obrigatórias (11 total)
+                                                        </Label>
+                                                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                                                            {Object.values(newVehicleForm).filter(v => v instanceof File).length} / 11 enviadas
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                                        {[
+                                                            { side: "front", label: "Frente" },
+                                                            { side: "back", label: "Traseira" },
+                                                            { side: "left", label: "Lado Esquerdo" },
+                                                            { side: "right", label: "Lado Direito" },
+                                                            { side: "headlightsFront", label: "Faróis Frontais" },
+                                                            { side: "headlightsRear", label: "Faróis Traseiros" },
+                                                            { side: "mirrors", label: "Retrovisores" },
+                                                            { side: "interiorFront", label: "Interior Frontal" },
+                                                            { side: "interiorRear", label: "Interior Traseiro" },
+                                                            { side: "dashboard", label: "Painel" },
+                                                            { side: "trunkOpen", label: "Porta-Malas Aberto" }
+                                                        ].map((photo) => (
+                                                            <div key={photo.side} className="space-y-1.5">
+                                                                <Label className="text-[11px] font-bold uppercase text-muted-foreground truncate block">
+                                                                    {photo.label}
+                                                                </Label>
+                                                                <label className={`relative flex flex-col items-center justify-center aspect-square border-2 border-dashed rounded-xl cursor-pointer transition-all hover:bg-primary/5 group ${
+                                                                    (photoPreviews as any)[photo.side] ? 'border-green-500 bg-green-50/10' : 'border-border'
+                                                                }`}>
+                                                                    {(photoPreviews as any)[photo.side] ? (
+                                                                        <div className="relative w-full h-full">
+                                                                            <img 
+                                                                                src={(photoPreviews as any)[photo.side]} 
+                                                                                className="w-full h-full object-cover rounded-lg" 
+                                                                                alt={photo.label} 
+                                                                            />
+                                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                                                                                <Camera className="w-6 h-6 text-white" />
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="text-center p-2">
+                                                                            <Camera className="w-6 h-6 mx-auto mb-1 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                                            <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary transition-colors">Tirar Foto</span>
+                                                                        </div>
+                                                                    )}
+                                                                    <input 
+                                                                        type="file" 
+                                                                        accept="image/*" 
+                                                                        capture="environment"
+                                                                        className="hidden" 
+                                                                        onChange={(e) => handlePhotoChange(photo.side, e)} 
+                                                                    />
+                                                                </label>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
+                                            ) : (
+                                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+                                                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                                                    <p className="text-sm text-amber-800 font-medium">Vistoria simplificada habilitada para seu perfil.</p>
+                                                </div>
                                             )}
+
+                                            <Button
+                                                onClick={handleConfirmAddVehicle}
+                                                disabled={uploadingVehiclePhoto}
+                                                className="w-full h-14 text-lg font-bold gradient-primary shadow-lg shadow-primary/20"
+                                            >
+                                                {uploadingVehiclePhoto ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                        Enviando Vistoria...
+                                                    </div>
+                                                ) : "Finalizar e Enviar para Vistoria"}
+                                            </Button>
                                         </div>
                                     </DialogContent>
                                 </Dialog>
@@ -1315,7 +1388,7 @@ const ClientDashboard = () => {
                                 <div>
                                     <h3 className="text-2xl font-bold">Passo 2: Pagamento por Veículo</h3>
                                     <p className="text-base text-muted-foreground">
-                                        Cada veículo precisa de uma mensalidade de R$ {(clientData?.value_per_car && clientData.value_per_car > 0) ? clientData.value_per_car.toFixed(2).replace('.', ',') : '19,90'} ativa.
+                                        Após o "OK" da empresa, pague a mensalidade para liberar o agendamento.
                                     </p>
                                 </div>
                             </div>
@@ -1405,15 +1478,45 @@ const ClientDashboard = () => {
                                                     <Input type="time" value={appointmentForm.scheduled_time} onChange={(e) => setAppointmentForm({ ...appointmentForm, scheduled_time: e.target.value })} />
                                                 </div>
                                             </div>
-                                            <div>
-                                                <Label>Vídeo do Problema *</Label>
-                                                <Input type="file" accept="video/*" onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        setAppointmentForm({ ...appointmentForm, videoFile: file });
-                                                        setAppointmentVideoPreview(URL.createObjectURL(file));
-                                                    }
-                                                }} />
+                                            <div className="space-y-3">
+                                                <Label className="text-sm font-bold flex items-center gap-2">
+                                                    <Camera className="w-4 h-4 text-primary" />
+                                                    Vídeo do Problema *
+                                                </Label>
+                                                <div className="space-y-3">
+                                                    <label className={`relative flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all hover:bg-primary/5 ${appointmentVideoPreview ? 'border-green-500 bg-green-50/10' : 'border-border'}`}>
+                                                        {appointmentVideoPreview ? (
+                                                            <video 
+                                                                src={appointmentVideoPreview} 
+                                                                className="w-full h-full object-cover rounded-lg" 
+                                                            />
+                                                        ) : (
+                                                            <div className="text-center px-4">
+                                                                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                                                                <span className="text-sm font-bold text-muted-foreground">Gravar ou Escolher Vídeo</span>
+                                                                <p className="text-[10px] text-muted-foreground mt-1">Mostre o dano para acelerar seu atendimento</p>
+                                                            </div>
+                                                        )}
+                                                        <input 
+                                                            type="file" 
+                                                            accept="video/*" 
+                                                            capture="environment"
+                                                            className="hidden" 
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    setAppointmentForm({ ...appointmentForm, videoFile: file });
+                                                                    setAppointmentVideoPreview(URL.createObjectURL(file));
+                                                                }
+                                                            }} 
+                                                        />
+                                                    </label>
+                                                    {appointmentVideoPreview && (
+                                                        <p className="text-[10px] text-green-600 font-bold flex items-center gap-1">
+                                                            <Check className="w-3 h-3" /> Vídeo selecionado com sucesso!
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
                                             <Button onClick={handleAddAppointment} disabled={submittingAppointment} className="w-full">
                                                 Confirmar Agendamento
@@ -1471,145 +1574,6 @@ const ClientDashboard = () => {
                                 <Car className="w-5 h-5 text-primary" />
                                 Meus Veículos
                             </h3>
-                            <Dialog open={addVehicleDialogOpen} onOpenChange={setAddVehicleDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button className="gap-2">
-                                        <Plus className="w-4 h-4" />
-                                        Adicionar Veículo
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="bg-card border-border">
-                                    <DialogHeader>
-                                        <DialogTitle className="font-display">Adicionar Novo Veículo</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="space-y-4">
-                                        {!validationResult ? (
-                                            <>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <Label>Veículo *</Label>
-                                                        <Input
-                                                            value={newVehicleForm.vehicle}
-                                                            onChange={(e) => setNewVehicleForm({ ...newVehicleForm, vehicle: e.target.value })}
-                                                            placeholder="Ex: Honda Civic"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <Label>Placa *</Label>
-                                                        <Input
-                                                            value={newVehicleForm.plate}
-                                                            onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plate: e.target.value })}
-                                                            placeholder="ABC-1234"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {!(clientData as any)?.skip_inspection ? (
-                                                    <div className="space-y-4">
-                                                        <Label className="text-primary font-bold">Fotos Necessárias para Vistoria (Obrigatório)</Label>
-                                                        <p className="text-xs text-muted-foreground bg-primary/5 p-2 rounded border border-primary/10">
-                                                            Para sua segurança e aprovação do plano, precisamos de 11 fotos nítidas do veículo.
-                                                        </p>
-                                                        
-                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto max-h-[40vh] p-1">
-                                                            {[
-                                                                { side: "front", label: "Frente" },
-                                                                { side: "back", label: "Traseira" },
-                                                                { side: "left", label: "Lado Esquerdo" },
-                                                                { side: "right", label: "Lado Direito" },
-                                                                { side: "headlightsFront", label: "Faróis Frontais" },
-                                                                { side: "headlightsRear", label: "Faróis Traseiros" },
-                                                                { side: "mirrors", label: "Retrovisores" },
-                                                                { side: "interiorFront", label: "Interior Frontal" },
-                                                                { side: "interiorRear", label: "Interior Traseiro" },
-                                                                { side: "dashboard", label: "Painel" },
-                                                                { side: "trunkOpen", label: "Mala Aberta" }
-                                                            ].map((photo) => (
-                                                                <div key={photo.side} className="space-y-1">
-                                                                    <Label className="text-[10px] uppercase text-muted-foreground truncate block">{photo.label}</Label>
-                                                                    <label className={`relative flex flex-col items-center justify-center h-24 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:bg-primary/5 ${(photoPreviews as any)[photo.side] ? 'border-success' : 'border-border'}`}>
-                                                                        {(photoPreviews as any)[photo.side] ? (
-                                                                            <img src={(photoPreviews as any)[photo.side]} className="w-full h-full object-cover rounded-lg" alt={photo.label} />
-                                                                        ) : (
-                                                                            <div className="text-center p-1">
-                                                                                <Image className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
-                                                                                <span className="text-[8px] font-medium leading-tight block">Upload</span>
-                                                                            </div>
-                                                                        )}
-                                                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoChange(photo.side, e)} />
-                                                                    </label>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-lg">
-                                                        <p className="text-sm text-amber-800 dark:text-amber-200">
-                                                            🌟 Cliente Especial: Vistoria e fotos desativadas. O veículo será aprovado automaticamente.
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                <Button
-                                                    onClick={handleValidateAndAddVehicle}
-                                                    disabled={validatingNewVehicle}
-                                                    className="w-full gradient-primary"
-                                                >
-                                                    {(clientData as any)?.skip_inspection ? "Adicionar Veículo" : (validatingNewVehicle ? "Processando..." : "Enviar para Vistoria")}
-                                                </Button>
-                                            </>
-                                        ) : (
-                                            <div className="space-y-4">
-                                                <div className={`p-4 rounded-lg border-2 ${validationResult.isNational ? "border-success bg-success/10" : "border-destructive bg-destructive/10"}`}>
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        {validationResult.isNational ? (
-                                                            <Check className="w-5 h-5 text-success" />
-                                                        ) : (
-                                                            <AlertCircle className="w-5 h-5 text-destructive" />
-                                                        )}
-                                                        <p className="font-semibold">
-                                                            {validationResult.isNational ? "Veículo Nacional ✓" : "Veículo Importado"}
-                                                        </p>
-                                                    </div>
-                                                    <p className="text-sm">{validationResult.message}</p>
-                                                    <p className="text-xs text-muted-foreground mt-2">
-                                                        Marca: {validationResult.brand} | Modelo: {validationResult.model} | Confiança: {Math.round(validationResult.confidence * 100)}%
-                                                    </p>
-                                                </div>
-                                                {validationResult.isNational && (
-                                                    <Button
-                                                        onClick={handleConfirmAddVehicle}
-                                                        className="w-full gap-2"
-                                                    >
-                                                        <Check className="w-4 h-4" />
-                                                        Confirmar e Adicionar
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        setValidationResult(null);
-                                                        setNewVehicleForm({ 
-                                                            vehicle: "", plate: "", 
-                                                            photoFront: null, photoBack: null, photoLeft: null, photoRight: null,
-                                                            photoHeadlightsFront: null, photoHeadlightsRear: null, photoMirrors: null,
-                                                            photoInteriorRear: null, photoInteriorFront: null, photoDashboard: null, photoTrunkOpen: null
-                                                        });
-                                                        setPhotoPreviews({ 
-                                                            front: "", back: "", left: "", right: "",
-                                                            headlightsFront: "", headlightsRear: "", mirrors: "",
-                                                            interiorRear: "", interiorFront: "", dashboard: "", trunkOpen: ""
-                                                        });
-                                                    }}
-                                                    className="w-full"
-                                                >
-                                                    Voltar
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
                         </div>
 
                         {/* Vehicles List */}
@@ -1667,14 +1631,40 @@ const ClientDashboard = () => {
                                                  </div>
                                              </div>
                                          </div>
-                                         <Button
-                                             variant="ghost"
-                                             size="sm"
-                                             onClick={() => handleDeleteVehicle(vehicle.id)}
-                                             className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 flex-shrink-0"
-                                         >
-                                             <Trash2 className="w-4 h-4" />
-                                         </Button>
+                                         <AlertDialog>
+                                             <AlertDialogTrigger asChild>
+                                                 <Button
+                                                     variant="ghost"
+                                                     size="sm"
+                                                     className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 flex-shrink-0"
+                                                 >
+                                                     <Trash2 className="w-4 h-4" />
+                                                 </Button>
+                                             </AlertDialogTrigger>
+                                             <AlertDialogContent>
+                                                 <AlertDialogHeader>
+                                                     <AlertDialogTitle className="flex items-center gap-2">
+                                                         <AlertTriangle className="w-5 h-5 text-red-600" />
+                                                         Confirmar Exclusão
+                                                     </AlertDialogTitle>
+                                                     <AlertDialogDescription className="space-y-3">
+                                                         <p>Você tem certeza que deseja excluir o veículo <strong>{vehicle.vehicle} ({vehicle.plate})</strong>?</p>
+                                                         <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-red-800 text-sm">
+                                                             <strong>Atenção:</strong> Se você decidir adicionar este veículo novamente no futuro, ele precisará passar por uma <strong>nova vistoria completa</strong> e aprovação da equipe.
+                                                         </div>
+                                                     </AlertDialogDescription>
+                                                 </AlertDialogHeader>
+                                                 <AlertDialogFooter>
+                                                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                     <AlertDialogAction 
+                                                         onClick={() => handleDeleteVehicle(vehicle.id)}
+                                                         className="bg-red-600 hover:bg-red-700 text-white"
+                                                     >
+                                                         Excluir Veículo
+                                                     </AlertDialogAction>
+                                                 </AlertDialogFooter>
+                                             </AlertDialogContent>
+                                         </AlertDialog>
                                      </div>
                                  ))
                              )}
@@ -1985,7 +1975,7 @@ const ClientDashboard = () => {
                         onPaymentClick={handleConfirmPayment}
                         isLoading={isProcessingPayment}
                         clientName={clientData?.name}
-                        valuePerCar={clientData?.value_per_car}
+                        valuePerCar={19.90}
                     />
                 </motion.div>
             </main>
