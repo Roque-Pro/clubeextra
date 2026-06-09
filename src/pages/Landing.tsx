@@ -391,6 +391,15 @@ const Landing = () => {
                                     />
                                 </div>
                             </div>
+                            <div className="flex flex-col items-center">
+                                <div className="h-28 w-64 mb-2 flex items-center justify-center">
+                                    <img 
+                                        src="/img/wb.png" 
+                                        alt="WindowBlue" 
+                                        className="h-full w-full object-contain"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </motion.div>
 
@@ -555,6 +564,52 @@ const Landing = () => {
                 </div>
             </section>
 
+            {/* Success Story Section */}
+            <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-white">
+                <div className="max-w-6xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        viewport={{ once: true }}
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+                    >
+                        {/* Video */}
+                        <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+                            <iframe
+                                width="100%"
+                                height="400"
+                                src="https://www.youtube.com/embed/PoNBRFUj-Z0"
+                                title="Nossa História de Sucesso"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="rounded-2xl"
+                            />
+                        </div>
+
+                        {/* Text Content */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                            viewport={{ once: true }}
+                            className="space-y-6"
+                        >
+                            <h2 className="text-4xl sm:text-5xl font-display font-black text-gray-900">
+                                Nossa História de Sucesso
+                            </h2>
+                            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
+                                Com mais de 20 anos de excelência, a Iguaçu Auto Vidros consolidou-se como referência no mercado de vidraçaria automotiva. Nossa jornada é marcada pela dedicação à qualidade, inovação constante e, principalmente, pela confiança de milhares de clientes satisfeitos.
+                            </p>
+                            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
+                                Investimos continuamente em tecnologia, treinamento de nossa equipe e na expansão de nossos serviços para sempre oferecer o melhor atendimento. Somos mais que um serviço, somos parceiros da sua segurança na estrada.
+                            </p>
+                        </motion.div>
+                    </motion.div>
+                </div>
+            </section>
+
             {/* FAQ Section */}
             <section id="faq" className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-blue-50">
                 <div className="max-w-4xl mx-auto">
@@ -714,52 +769,6 @@ const Landing = () => {
                         >
                             Entrar em Contato <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* Success Story Section */}
-            <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-white">
-                <div className="max-w-6xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        viewport={{ once: true }}
-                        className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
-                    >
-                        {/* Video */}
-                        <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                            <iframe
-                                width="100%"
-                                height="400"
-                                src="https://www.youtube.com/embed/PoNBRFUj-Z0"
-                                title="Nossa História de Sucesso"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="rounded-2xl"
-                            />
-                        </div>
-
-                        {/* Text Content */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 30 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
-                            viewport={{ once: true }}
-                            className="space-y-6"
-                        >
-                            <h2 className="text-4xl sm:text-5xl font-display font-black text-gray-900">
-                                Nossa História de Sucesso
-                            </h2>
-                            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
-                                Com mais de 20 anos de excelência, a Iguaçu Auto Vidros consolidou-se como referência no mercado de vidraçaria automotiva. Nossa jornada é marcada pela dedicação à qualidade, inovação constante e, principalmente, pela confiança de milhares de clientes satisfeitos.
-                            </p>
-                            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
-                                Investimos continuamente em tecnologia, treinamento de nossa equipe e na expansão de nossos serviços para sempre oferecer o melhor atendimento. Somos mais que um serviço, somos parceiros da sua segurança na estrada.
-                            </p>
-                        </motion.div>
                     </motion.div>
                 </div>
             </section>

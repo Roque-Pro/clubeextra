@@ -31,12 +31,12 @@ const FreeTrocasCard = ({
                     <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-lg font-display font-bold text-foreground">
-                    Trocas Grátis Disponíveis
+                    Trocas Inclusas Disponíveis
                 </h3>
             </div>
 
             <p className="text-sm text-muted-foreground mb-6">
-                Você tem {remaining} {remaining === 1 ? "troca gratuita" : "trocas gratuitas"} restantes este ano
+                Você tem {remaining} {remaining === 1 ? "troca inclusa" : "trocas inclusas"} restantes este ano
             </p>
 
             {/* Visual Representation */}
@@ -85,16 +85,16 @@ const FreeTrocasCard = ({
                 {remaining === 0 ? (
                     <p className="text-sm text-center text-orange-700 dark:text-orange-300 font-medium flex items-center justify-center gap-2">
                         <AlertCircle className="w-4 h-4" />
-                        Você atingiu o limite de trocas gratuitas este ano
+                        Você atingiu o limite de trocas inclusas este ano
                     </p>
                 ) : remaining === 1 ? (
                     <p className="text-sm text-center text-amber-700 dark:text-amber-300 font-medium flex items-center justify-center gap-2">
                         <TrendingUp className="w-4 h-4" />
-                        Última troca gratuita disponível!
+                        Última troca inclusa disponível!
                     </p>
                 ) : (
                     <p className="text-sm text-center text-amber-700 dark:text-amber-300 font-medium">
-                        ✨ Você ainda tem trocas gratuitas disponíveis
+                        ✨ Você ainda tem trocas inclusas disponíveis
                     </p>
                 )}
             </div>

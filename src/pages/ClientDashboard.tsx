@@ -1210,7 +1210,7 @@ const ClientDashboard = () => {
                                 <div>
                                     <h4 className="text-xl font-bold text-foreground">Serviço</h4>
                                     <p className="text-lg text-muted-foreground leading-relaxed">
-                                        Agende até <strong className="text-primary">3 trocas gratuitas</strong> por ano com tudo pago!
+                                        Realize até <strong className="text-primary">3 trocas anuais</strong> inclusas na sua proteção!
                                     </p>
                                 </div>
                             </div>

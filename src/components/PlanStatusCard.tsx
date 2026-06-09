@@ -54,7 +54,7 @@ const PlanStatusCard = ({
             default:
                 return {
                     title: "Sem Plano Ativo",
-                    description: "Ative seu plano para obter 3 trocas gratuitas",
+                    description: "Ative seu plano para garantir suas 3 trocas anuais",
                     icon: Zap,
                     color: "from-blue-500 to-purple-600",
                     bgColor: "bg-blue-50 dark:bg-blue-950/20",
