@@ -205,7 +205,7 @@ const ClientDashboard = () => {
             const { data, error } = await supabase.functions.invoke("create-stripe-checkout", {
                 body: {
                     vehicleId: selectedVehicleForPayment,
-                    priceId: "price_1TbhkbCp1m3M8sfCTljCIWBS",
+                    priceId: "price_1TgAzbCnvLpXfmPcAj0OIXUH",
                     successUrl: window.location.origin + "/client-dashboard?payment=success",
                     cancelUrl: window.location.origin + "/client-dashboard?payment=cancel",
                 },
