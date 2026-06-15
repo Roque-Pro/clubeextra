@@ -159,7 +159,7 @@ const Landing = () => {
                             />
                         </motion.div>
                         <div className="flex flex-col">
-                            <h1 className="text-base sm:text-xl font-display font-bold text-gray-900 leading-tight">
+                            <h1 className="text-base sm:text-xl font-display font-bold text-gray-900 leading-tight tracking-tight">
                                 Iguaçu Auto Vidros
                             </h1>
                             <p className="text-[10px] sm:text-sm text-gray-600 hidden sm:block">
