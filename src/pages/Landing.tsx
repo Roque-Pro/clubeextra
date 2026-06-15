@@ -145,31 +145,31 @@ const Landing = () => {
 
             {/* Header */}
             <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-blue-200/30 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 flex items-center justify-between">
                     {/* Logo */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                         <motion.div
                             whileHover={{ scale: 1.1 }}
-                            className="h-12 flex items-center"
+                            className="h-10 sm:h-12 hidden sm:flex items-center"
                         >
                             <img 
                                 src="/img/logo.png" 
                                 alt="Iguaçu Auto Vidros" 
-                                className="h-12 object-contain"
+                                className="h-full object-contain"
                             />
                         </motion.div>
-                        <div>
-                            <h1 className="text-lg sm:text-xl font-display font-bold text-gray-900">
+                        <div className="flex flex-col">
+                            <h1 className="text-base sm:text-xl font-display font-bold text-gray-900 leading-tight">
                                 Iguaçu Auto Vidros
                             </h1>
-                            <p className="text-xs sm:text-sm text-gray-600">
+                            <p className="text-[10px] sm:text-sm text-gray-600 hidden sm:block">
                                 Serviços Automotivos
                             </p>
                         </div>
                     </div>
 
                     {/* Navigation */}
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-1 sm:gap-3">
                         <Button
                             onClick={() => {
                                 const element = document.getElementById("faq");
