@@ -147,7 +147,7 @@ const Landing = () => {
             <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-blue-200/30 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 flex items-center justify-between">
                     {/* Logo */}
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
                         <motion.div
                             whileHover={{ scale: 1.1 }}
                             className="flex items-center"
@@ -155,11 +155,11 @@ const Landing = () => {
                             <img 
                                 src="/img/logo.png" 
                                 alt="Iguaçu Auto Vidros" 
-                                className="h-8 sm:h-12 object-contain"
+                                className="h-7 sm:h-12 object-contain"
                             />
                         </motion.div>
                         <div className="flex flex-col">
-                            <h1 className="text-base sm:text-xl font-display font-bold text-gray-900 leading-tight tracking-tight">
+                            <h1 className="text-sm sm:text-xl font-display font-bold text-gray-900 leading-tight tracking-tight">
                                 Iguaçu Auto Vidros
                             </h1>
                             <p className="text-[10px] sm:text-sm text-gray-600 hidden sm:block">
@@ -177,7 +177,7 @@ const Landing = () => {
                             }}
                             variant="ghost"
                             size="sm"
-                            className="hidden sm:inline-flex text-gray-700 hover:text-blue-600"
+                            className="hidden md:inline-flex text-gray-700 hover:text-blue-600"
                         >
                             FAQ
                         </Button>
@@ -185,23 +185,23 @@ const Landing = () => {
                             onClick={() => navigate("/ajuda")}
                             variant="ghost"
                             size="sm"
-                            className="text-gray-700 hover:text-blue-600"
+                            className="text-gray-700 hover:text-blue-600 h-8 px-2 sm:px-3 text-xs sm:text-sm"
                         >
                             Ajuda
                         </Button>
                         <Button
                             onClick={() => navigate("/plan-auth", { state: { skipPlanInfo: true } })}
                             size="sm"
-                            className="border border-slate-900 bg-slate-900 !text-white hover:bg-slate-800 hover:!text-white"
+                            className="border border-slate-900 bg-slate-900 !text-white hover:bg-slate-800 hover:!text-white h-8 px-2 sm:px-4 text-xs sm:text-sm"
                         >
                             <span className="hidden sm:inline">Login do Cliente</span>
-                            <span className="sm:hidden">Cliente</span>
+                            <span className="sm:hidden">Login</span>
                         </Button>
                         <Button
                             onClick={() => navigate("/auth")}
                             variant="outline"
                             size="sm"
-                            className="border-gray-300 !text-white hover:border-blue-400 hover:!text-white"
+                            className="hidden sm:flex border-gray-300 !text-white hover:border-blue-400 hover:!text-white h-8 px-2 sm:px-4"
                         >
                             <Lock className="h-4 w-4 !text-white" />
                             <span className="hidden sm:inline">Acesso Restrito</span>
