@@ -150,12 +150,12 @@ const Landing = () => {
                     <div className="flex items-center gap-2 sm:gap-3">
                         <motion.div
                             whileHover={{ scale: 1.1 }}
-                            className="h-10 sm:h-12 hidden sm:flex items-center"
+                            className="flex items-center"
                         >
                             <img 
                                 src="/img/logo.png" 
                                 alt="Iguaçu Auto Vidros" 
-                                className="h-full object-contain"
+                                className="h-8 sm:h-12 object-contain"
                             />
                         </motion.div>
                         <div className="flex flex-col">
