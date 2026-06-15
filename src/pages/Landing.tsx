@@ -185,27 +185,27 @@ const Landing = () => {
                             onClick={() => navigate("/ajuda")}
                             variant="ghost"
                             size="sm"
-                            className="text-gray-700 hover:text-blue-600 h-8 px-2 sm:px-3 text-xs sm:text-sm"
+                            className="hidden sm:inline-flex text-gray-700 hover:text-blue-600 h-8 px-2 sm:px-3 text-xs sm:text-sm"
                         >
                             Ajuda
                         </Button>
                         <Button
                             onClick={() => navigate("/plan-auth", { state: { skipPlanInfo: true } })}
                             size="sm"
-                            className="border border-slate-900 bg-slate-900 !text-white hover:bg-slate-800 hover:!text-white h-8 px-2 sm:px-4 text-xs sm:text-sm"
+                            className="border border-slate-900 bg-slate-900 !text-white hover:bg-slate-800 hover:!text-white h-8 px-2 sm:px-4 text-[10px] sm:text-sm font-bold"
                         >
                             <span className="hidden sm:inline">Login do Cliente</span>
-                            <span className="sm:hidden">Login</span>
+                            <span className="sm:hidden">Cliente</span>
                         </Button>
                         <Button
                             onClick={() => navigate("/auth")}
                             variant="outline"
                             size="sm"
-                            className="hidden sm:flex border-gray-300 !text-white hover:border-blue-400 hover:!text-white h-8 px-2 sm:px-4"
+                            className="flex border-gray-300 !text-white hover:border-blue-400 hover:!text-white h-8 px-2 sm:px-4 text-[10px] sm:text-sm"
                         >
-                            <Lock className="h-4 w-4 !text-white" />
-                            <span className="hidden sm:inline">Acesso Restrito</span>
-                            <span className="sm:hidden">Restrito</span>
+                            <Lock className="h-3 w-3 sm:h-4 sm:w-4 !text-white" />
+                            <span className="hidden sm:inline ml-1">Acesso Restrito</span>
+                            <span className="sm:hidden ml-1">Restrito</span>
                         </Button>
                     </div>
                 </div>
