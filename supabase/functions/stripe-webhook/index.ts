@@ -84,19 +84,38 @@ serve(async (req) => {
       subscription = object as Stripe.Subscription;
       vehicleId = vehicleId || subscription.metadata?.vehicle_id || null;
     } else if (object.subscription) {
-      subscription = await stripe.subscriptions.retrieve(object.subscription);
-      vehicleId = vehicleId || subscription.metadata?.vehicle_id || null;
+      try {
+        subscription = await stripe.subscriptions.retrieve(object.subscription);
+        vehicleId = vehicleId || subscription.metadata?.vehicle_id || null;
+      } catch (err) {
+        console.error(`Error retrieving subscription ${object.subscription}:`, err.message);
+      }
     }
 
     if (!vehicleId) {
+      console.log("No vehicleId found in metadata, skipping.");
       return new Response(JSON.stringify({ received: true, skipped: true }), {
         status: 200,
       });
     }
 
+    // Determine if the payment is confirmed
+    let isPaid = false;
+    if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+      isPaid = object.payment_status === "paid";
+      console.log(`Checkout session status: ${object.payment_status}, isPaid: ${isPaid}`);
+    } else if (event.type === "invoice.paid") {
+      isPaid = true;
+      console.log("Invoice paid, isPaid: true");
+    }
+
+    // A subscription is active if its status is 'active' or 'trialing'
+    // For non-subscription events (if any), we rely on isPaid
     const isSubscriptionActive = subscription
       ? ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status)
-      : event.type === "checkout.session.completed" || event.type === "invoice.paid";
+      : isPaid;
+
+    console.log(`Final plan activation state: ${isSubscriptionActive} (Subscription status: ${subscription?.status}, isPaid: ${isPaid})`);
 
     const planStart = subscription?.current_period_start
       ? toIsoDate(subscription.current_period_start * 1000)

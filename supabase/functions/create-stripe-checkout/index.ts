@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.25.0";
+import Stripe from "https://esm.sh/stripe@14.25.0?target=deno&no-check";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,25 +13,42 @@ serve(async (req) => {
   }
 
   try {
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeSecretKey) {
+      console.error("Missing STRIPE_SECRET_KEY");
+      throw new Error("Configuração do servidor incompleta: STRIPE_SECRET_KEY não encontrada.");
+    }
+
     const { vehicleId, priceId, successUrl, cancelUrl } = await req.json();
 
-    const authHeader = req.headers.get('Authorization')!;
+    if (!vehicleId || !priceId) {
+      throw new Error("vehicleId and priceId are required");
+    }
+
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error("Missing Authorization header");
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
-    if (!user) {
-      throw new Error("Unauthorized");
+    if (userError || !user) {
+      console.error("Auth error:", userError);
+      throw new Error("Não autorizado");
     }
 
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2022-11-15',
       httpClient: Stripe.createFetchHttpClient(),
     });
+
+    console.log(`Creating checkout session for user ${user.email} and price ${priceId}`);
 
     // Check if customer already exists for this user email
     const customers = await stripe.customers.list({ email: user.email });
@@ -63,12 +80,18 @@ serve(async (req) => {
       }
     });
 
+    console.log("Checkout session created successfully:", session.id);
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Error creating checkout session:", error.message);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: error.stack
+    }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
