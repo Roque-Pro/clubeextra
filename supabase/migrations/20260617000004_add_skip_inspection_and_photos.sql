@@ -1,4 +1,4 @@
-﻿-- Adiciona coluna para desativar exigência de vistoria/fotos por cliente
+-- Adiciona coluna para desativar exigência de vistoria/fotos por cliente
 ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS skip_inspection boolean DEFAULT false;
 
 -- Adiciona colunas para as 4 fotos do veículo na tabela de veículos

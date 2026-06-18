@@ -1,84 +1,62 @@
-Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
-react-router-dom.js?v=7f07a2b9:4393 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
-warnOnce @ react-router-dom.js?v=7f07a2b9:4393
-logDeprecation @ react-router-dom.js?v=7f07a2b9:4396
-logV6DeprecationWarnings @ react-router-dom.js?v=7f07a2b9:4399
-(anonymous) @ react-router-dom.js?v=7f07a2b9:5271
-commitHookEffectListMount @ chunk-T2SWDQEL.js?v=7f07a2b9:16915
-commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18156
-commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=7f07a2b9:18129
-commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=7f07a2b9:18119
-commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:18109
-flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19490
-flushPassiveEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:19447
-performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18868
-flushSyncCallbacks @ chunk-T2SWDQEL.js?v=7f07a2b9:9119
-commitRootImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19432
-commitRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:19277
-finishConcurrentRender @ chunk-T2SWDQEL.js?v=7f07a2b9:18805
-performConcurrentWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18718
-workLoop @ chunk-T2SWDQEL.js?v=7f07a2b9:197
-flushWork @ chunk-T2SWDQEL.js?v=7f07a2b9:176
-performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:384
-postMessage
-schedulePerformWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:407
-requestHostCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:418
-unstable_scheduleCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:330
-scheduleCallback$1 @ chunk-T2SWDQEL.js?v=7f07a2b9:19826
-ensureRootIsScheduled @ chunk-T2SWDQEL.js?v=7f07a2b9:18652
-scheduleUpdateOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18562
-updateContainer @ chunk-T2SWDQEL.js?v=7f07a2b9:20776
-ReactDOMHydrationRoot.render.ReactDOMRoot.render @ chunk-T2SWDQEL.js?v=7f07a2b9:21116
-(anonymous) @ main.tsx:5Understand this warning
-react-router-dom.js?v=7f07a2b9:4393 ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
-warnOnce @ react-router-dom.js?v=7f07a2b9:4393
-logDeprecation @ react-router-dom.js?v=7f07a2b9:4396
-logV6DeprecationWarnings @ react-router-dom.js?v=7f07a2b9:4402
-(anonymous) @ react-router-dom.js?v=7f07a2b9:5271
-commitHookEffectListMount @ chunk-T2SWDQEL.js?v=7f07a2b9:16915
-commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18156
-commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=7f07a2b9:18129
-commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=7f07a2b9:18119
-commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:18109
-flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19490
-flushPassiveEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:19447
-performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18868
-flushSyncCallbacks @ chunk-T2SWDQEL.js?v=7f07a2b9:9119
-commitRootImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19432
-commitRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:19277
-finishConcurrentRender @ chunk-T2SWDQEL.js?v=7f07a2b9:18805
-performConcurrentWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18718
-workLoop @ chunk-T2SWDQEL.js?v=7f07a2b9:197
-flushWork @ chunk-T2SWDQEL.js?v=7f07a2b9:176
-performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:384
-postMessage
-schedulePerformWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:407
-requestHostCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:418
-unstable_scheduleCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:330
-scheduleCallback$1 @ chunk-T2SWDQEL.js?v=7f07a2b9:19826
-ensureRootIsScheduled @ chunk-T2SWDQEL.js?v=7f07a2b9:18652
-scheduleUpdateOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18562
-updateContainer @ chunk-T2SWDQEL.js?v=7f07a2b9:20776
-ReactDOMHydrationRoot.render.ReactDOMRoot.render @ chunk-T2SWDQEL.js?v=7f07a2b9:21116
-(anonymous) @ main.tsx:5Understand this warning
-@supabase_supabase-js.js?v=7f07a2b9:11298  GET https://cxtbixroqlexxmvqhqjp.supabase.co/rest/v1/profiles?select=id%2Cstatus%2Cemail&status=eq.pending 400 (Bad Request)
-(anonymous) @ @supabase_supabase-js.js?v=7f07a2b9:11298
-(anonymous) @ @supabase_supabase-js.js?v=7f07a2b9:11312
-await in (anonymous)
-then @ @supabase_supabase-js.js?v=7f07a2b9:274Understand this error
-VistoriaTab.tsx:120 Erro ao buscar dados de vistoria: {code: '42703', details: null, hint: null, message: 'column profiles.email does not exist'}
-(anonymous) @ VistoriaTab.tsx:120
-await in (anonymous)
-(anonymous) @ VistoriaTab.tsx:132
-commitHookEffectListMount @ chunk-T2SWDQEL.js?v=7f07a2b9:16915
-commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18156
-commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=7f07a2b9:18129
-commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=7f07a2b9:18119
-commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:18109
-flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19490
-flushPassiveEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:19447
-commitRootImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19416
-commitRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:19277
-performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18895
-flushSyncCallbacks @ chunk-T2SWDQEL.js?v=7f07a2b9:9119
-(anonymous) @ chunk-T2SWDQEL.js?v=7f07a2b9:18627Understand this error
+
+C:\Users\User\Desktop\jobs\ClubeDoVidro\clubeExtra>supabase login
+'supabase' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+
+C:\Users\User\Desktop\jobs\ClubeDoVidro\clubeExtra>npx supabase login
+Hello from Supabase! Press Enter to open browser and login automatically.
+|
+o
+|  npx supabase link --project-ref ljhjrwxpshttgzksosnu
+Here is your login link in case browser did not open https://supabase.com/dashboard/cli/login?session_id=ccfc3569-a507-46a5-87da-769636704477&token_name=cli_User@DESKTOP-P38BE3S_1781740840&public_key=04099773a4ef22a6899fde1dbc4d61ffc1881fe124d36c746deb1de256ba9735269d1f56955a54b0ad1147d203cc7dec650127fd48d2cc36c54f9d221111152a33
+
+|
+o  Enter your verification code:
+|  8446cad9
+Token cli_User@DESKTOP-P38BE3S_1781740840 created successfully.
+
+You are now logged in. Happy coding!
+
+C:\Users\User\Desktop\jobs\ClubeDoVidro\clubeExtra>npx supabase db push
+Initialising login role...
+Connecting to remote database...
+Do you want to push these migrations to the remote database?
+ • 20260223_create_clients_table.sql
+ • 20260304_add_user_id_to_clients.sql
+ • 20260330_create_client_vehicles_table.sql
+ • 20260617000000_consolidated_missing_tables.sql
+ • 20260617000001_add_salary_to_employees.sql
+ • 20260617000002_add_store_to_products.sql
+ • 20260617000003_add_video_to_appointments.sql
+ • 20260617000004_add_skip_inspection_and_photos.sql
+ • 20260617000005_add_status_to_vehicles.sql
+ • 20260617000006_add_detailed_photos_to_vehicles.sql
+ • 20260617000007_add_payment_to_vehicles.sql
+ • 20260617000008_add_rejection_reason_to_vehicles.sql
+ • 20260617000009_add_cooperative_fields_to_clients.sql
+
+ [Y/n] y
+Applying migration 20260223_create_clients_table.sql...
+Applying migration 20260304_add_user_id_to_clients.sql...
+Applying migration 20260330_create_client_vehicles_table.sql...
+NOTICE (00000): policy "Users can view their own vehicles" for relation "public.client_vehicles" does not exist, skipping
+NOTICE (00000): policy "Users can insert their own vehicles" for relation "public.client_vehicles" does not exist, skipping
+NOTICE (00000): policy "Users can update their own vehicles" for relation "public.client_vehicles" does not exist, skipping
+NOTICE (00000): policy "Users can delete their own vehicles" for relation "public.client_vehicles" does not exist, skipping
+NOTICE (00000): policy "Admins can manage all vehicles" for relation "public.client_vehicles" does not exist, skipping
+NOTICE (00000): trigger "update_client_vehicles_updated_at" for relation "public.client_vehicles" does not exist, skipping
+Applying migration 20260617000000_consolidated_missing_tables.sql...
+Applying migration 20260617000001_add_salary_to_employees.sql...
+Applying migration 20260617000002_add_store_to_products.sql...
+NOTICE (42701): column "store" of relation "products" already exists, skipping
+NOTICE (42701): column "cost_price" of relation "products" already exists, skipping
+Applying migration 20260617000003_add_video_to_appointments.sql...
+NOTICE (42701): column "appointment_video_url" of relation "appointments" already exists, skipping
+Applying migration 20260617000004_add_skip_inspection_and_photos.sql...
+ERROR: syntax error at or near "﻿" (SQLSTATE 42601)
+At statement: 0
+﻿-- Adiciona coluna para desativar exigência de vistoria/fotos por cliente
+^
+Try rerunning the command with --debug to troubleshoot the error.
+
+C:\Users\User\Desktop\jobs\ClubeDoVidro\clubeExtra>
