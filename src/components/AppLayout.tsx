@@ -44,7 +44,7 @@ const AppLayout = () => {
 
       {/* Sidebar - Fixed for both mobile and desktop */}
       <div
-        className={`fixed left-0 top-0 z-40 h-[100dvh] w-64 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-40 h-[100dvh] w-60 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -52,7 +52,7 @@ const AppLayout = () => {
       </div>
 
       {/* Sidebar Spacer - Only on desktop to push content */}
-      <div className="hidden md:block w-64 flex-shrink-0" />
+      <div className="hidden md:block w-60 flex-shrink-0" />
 
       {/* Main Content */}
       <main className="flex-1 min-h-screen w-full md:p-8 p-4 pt-20 md:pt-8 pb-8">
