@@ -1,0 +1,19 @@
+﻿Boa Noite, finalmente consegui aqui.
+
+No video eu testo:
+Cliente Cadastra
+Cliente envia carro pra vistoria
+Empresa autoriza
+Cliente faz pagamento
+Cliente Agenda Serviço
+
+
+Mostrei também como liberar para cooperativa jogar veiculos e não depender de vistoria.
+
+Ajustes visuais:
+Botões de acesso na página
+Botões do cadastro de clientes
+Painel de agendamento de serviços
+
+Vídeo no drive:
+https://drive.google.com/file/d/1_Zw7zuZ_FHDUVXOgbShgZ_CfNG0gYZd3/view?usp=sharing

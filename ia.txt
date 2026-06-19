@@ -1,84 +1,55 @@
-Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
-react-router-dom.js?v=7f07a2b9:4393 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
-warnOnce @ react-router-dom.js?v=7f07a2b9:4393
-logDeprecation @ react-router-dom.js?v=7f07a2b9:4396
-logV6DeprecationWarnings @ react-router-dom.js?v=7f07a2b9:4399
-(anonymous) @ react-router-dom.js?v=7f07a2b9:5271
-commitHookEffectListMount @ chunk-T2SWDQEL.js?v=7f07a2b9:16915
-commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18156
-commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=7f07a2b9:18129
-commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=7f07a2b9:18119
-commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:18109
-flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19490
-flushPassiveEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:19447
-performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18868
-flushSyncCallbacks @ chunk-T2SWDQEL.js?v=7f07a2b9:9119
-commitRootImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19432
-commitRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:19277
-finishConcurrentRender @ chunk-T2SWDQEL.js?v=7f07a2b9:18805
-performConcurrentWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18718
-workLoop @ chunk-T2SWDQEL.js?v=7f07a2b9:197
-flushWork @ chunk-T2SWDQEL.js?v=7f07a2b9:176
-performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:384
-postMessage
-schedulePerformWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:407
-requestHostCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:418
-unstable_scheduleCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:330
-scheduleCallback$1 @ chunk-T2SWDQEL.js?v=7f07a2b9:19826
-ensureRootIsScheduled @ chunk-T2SWDQEL.js?v=7f07a2b9:18652
-scheduleUpdateOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18562
-updateContainer @ chunk-T2SWDQEL.js?v=7f07a2b9:20776
-ReactDOMHydrationRoot.render.ReactDOMRoot.render @ chunk-T2SWDQEL.js?v=7f07a2b9:21116
-(anonymous) @ main.tsx:5Understand this warning
-react-router-dom.js?v=7f07a2b9:4393 ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
-warnOnce @ react-router-dom.js?v=7f07a2b9:4393
-logDeprecation @ react-router-dom.js?v=7f07a2b9:4396
-logV6DeprecationWarnings @ react-router-dom.js?v=7f07a2b9:4402
-(anonymous) @ react-router-dom.js?v=7f07a2b9:5271
-commitHookEffectListMount @ chunk-T2SWDQEL.js?v=7f07a2b9:16915
-commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18156
-commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=7f07a2b9:18129
-commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=7f07a2b9:18119
-commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:18109
-flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19490
-flushPassiveEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:19447
-performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18868
-flushSyncCallbacks @ chunk-T2SWDQEL.js?v=7f07a2b9:9119
-commitRootImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19432
-commitRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:19277
-finishConcurrentRender @ chunk-T2SWDQEL.js?v=7f07a2b9:18805
-performConcurrentWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18718
-workLoop @ chunk-T2SWDQEL.js?v=7f07a2b9:197
-flushWork @ chunk-T2SWDQEL.js?v=7f07a2b9:176
-performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:384
-postMessage
-schedulePerformWorkUntilDeadline @ chunk-T2SWDQEL.js?v=7f07a2b9:407
-requestHostCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:418
-unstable_scheduleCallback @ chunk-T2SWDQEL.js?v=7f07a2b9:330
-scheduleCallback$1 @ chunk-T2SWDQEL.js?v=7f07a2b9:19826
-ensureRootIsScheduled @ chunk-T2SWDQEL.js?v=7f07a2b9:18652
-scheduleUpdateOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18562
-updateContainer @ chunk-T2SWDQEL.js?v=7f07a2b9:20776
-ReactDOMHydrationRoot.render.ReactDOMRoot.render @ chunk-T2SWDQEL.js?v=7f07a2b9:21116
-(anonymous) @ main.tsx:5Understand this warning
-@supabase_supabase-js.js?v=7f07a2b9:11298  GET https://cxtbixroqlexxmvqhqjp.supabase.co/rest/v1/profiles?select=id%2Cstatus%2Cemail&status=eq.pending 400 (Bad Request)
-(anonymous) @ @supabase_supabase-js.js?v=7f07a2b9:11298
-(anonymous) @ @supabase_supabase-js.js?v=7f07a2b9:11312
-await in (anonymous)
-then @ @supabase_supabase-js.js?v=7f07a2b9:274Understand this error
-VistoriaTab.tsx:120 Erro ao buscar dados de vistoria: {code: '42703', details: null, hint: null, message: 'column profiles.email does not exist'}
-(anonymous) @ VistoriaTab.tsx:120
-await in (anonymous)
-(anonymous) @ VistoriaTab.tsx:132
-commitHookEffectListMount @ chunk-T2SWDQEL.js?v=7f07a2b9:16915
-commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=7f07a2b9:18156
-commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=7f07a2b9:18129
-commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=7f07a2b9:18119
-commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:18109
-flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19490
-flushPassiveEffects @ chunk-T2SWDQEL.js?v=7f07a2b9:19447
-commitRootImpl @ chunk-T2SWDQEL.js?v=7f07a2b9:19416
-commitRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:19277
-performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=7f07a2b9:18895
-flushSyncCallbacks @ chunk-T2SWDQEL.js?v=7f07a2b9:9119
-(anonymous) @ chunk-T2SWDQEL.js?v=7f07a2b9:18627Understand this error
+quando tento editar a senha >>
+
+7index-DNugRJHH.js:547 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-DNugRJHH.js:547
+index-DNugRJHH.js:735 Token obtido: eyJhbGciOiJFUzI1NiIsImtpZCI6ImIzMTZlNjg4LWIwODUtNDBmNC05MjFhLTQ1ZDkxYWFkNGU1MiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2N4dGJpeHJvcWxleHhtdnFocWpwLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NDY5NDJmYy1mNzM2LTQzMWEtYjQwZi0xNGE0NzQ4NjQyMjAiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzgxNjI1ODY3LCJpYXQiOjE3ODE2MjIyNjcsImVtYWlsIjoibWFzdGVyQGNsdWJlZG92aWRyby5jb20uYnIiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImZ1bGxfbmFtZSI6Ik1hc3RlciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzgxNjIyMjY3fV0sInNlc3Npb25faWQiOiI4MzllMmI5Zi00NzdiLTQ1YzktOTBjMC1lZWQ0NDUxNWM0NDAiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.lzWe3bXA2yuIborViWBUYN8TueS6FLg0Nrfe9wmXJx7FW1Xwlgu-5u5yjL7IEsU6D131jDD5ziMezEWJWhqC_g
+cxtbixroqlexxmvqhqjp.supabase.co/functions/v1/update-employee-password:1  Failed to load resource: the server responded with a status of 404 ()
+index-DNugRJHH.js:735 Response status: 404
+index-DNugRJHH.js:735 Response body: Object
+index-DNugRJHH.js:735 Erro ao atualizar senha: Usuário não encontrado
+ge @ index-DNugRJHH.js:735
+index-DNugRJHH.js:547 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-DNugRJHH.js:547
+index-DNugRJHH.js:735 Token obtido: eyJhbGciOiJFUzI1NiIsImtpZCI6ImIzMTZlNjg4LWIwODUtNDBmNC05MjFhLTQ1ZDkxYWFkNGU1MiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2N4dGJpeHJvcWxleHhtdnFocWpwLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NDY5NDJmYy1mNzM2LTQzMWEtYjQwZi0xNGE0NzQ4NjQyMjAiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzgxNjI1ODY3LCJpYXQiOjE3ODE2MjIyNjcsImVtYWlsIjoibWFzdGVyQGNsdWJlZG92aWRyby5jb20uYnIiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImZ1bGxfbmFtZSI6Ik1hc3RlciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzgxNjIyMjY3fV0sInNlc3Npb25faWQiOiI4MzllMmI5Zi00NzdiLTQ1YzktOTBjMC1lZWQ0NDUxNWM0NDAiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.lzWe3bXA2yuIborViWBUYN8TueS6FLg0Nrfe9wmXJx7FW1Xwlgu-5u5yjL7IEsU6D131jDD5ziMezEWJWhqC_g
+cxtbixroqlexxmvqhqjp.supabase.co/functions/v1/update-employee-password:1  Failed to load resource: the server responded with a status of 404 ()
+index-DNugRJHH.js:735 Response status: 404
+index-DNugRJHH.js:735 Response body: Object
+index-DNugRJHH.js:735 Erro ao atualizar senha: Usuário não encontrado
+ge @ index-DNugRJHH.js:735
+cxtbixroqlexxmvqhqjp.supabase.co/auth/v1/token?grant_type=password:1  Failed to load resource: the server responded with a status of 400 ()
+5index-DNugRJHH.js:547 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-DNugRJHH.js:547
+index-DNugRJHH.js:735 Token obtido: eyJhbGciOiJFUzI1NiIsImtpZCI6ImIzMTZlNjg4LWIwODUtNDBmNC05MjFhLTQ1ZDkxYWFkNGU1MiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2N4dGJpeHJvcWxleHhtdnFocWpwLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NDY5NDJmYy1mNzM2LTQzMWEtYjQwZi0xNGE0NzQ4NjQyMjAiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzgxNjI2MjU0LCJpYXQiOjE3ODE2MjI2NTQsImVtYWlsIjoibWFzdGVyQGNsdWJlZG92aWRyby5jb20uYnIiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImZ1bGxfbmFtZSI6Ik1hc3RlciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzgxNjIyNjU0fV0sInNlc3Npb25faWQiOiIzMjBmNTljYi02MTc5LTRjOTEtYWVjYy03ZWJjNzhkYmI1MTUiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.tr7nygDrq-U_qSnYh4gqqan5mADu-qhWe0Axah0b6Ak1cEc5lZUc1bWAIgvM6U7Hh7GAdjTGIBTB9P9knm3baA
+cxtbixroqlexxmvqhqjp.supabase.co/functions/v1/update-employee-password:1  Failed to load resource: the server responded with a status of 404 ()
+index-DNugRJHH.js:735 Response status: 404
+index-DNugRJHH.js:735 Response body: Object
+index-DNugRJHH.js:735 Erro ao atualizar senha: Usuário não encontrado
+ge @ index-DNugRJHH.js:735
+index-DNugRJHH.js:547 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-DNugRJHH.js:547
+index-DNugRJHH.js:735 Token obtido: eyJhbGciOiJFUzI1NiIsImtpZCI6ImIzMTZlNjg4LWIwODUtNDBmNC05MjFhLTQ1ZDkxYWFkNGU1MiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2N4dGJpeHJvcWxleHhtdnFocWpwLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NDY5NDJmYy1mNzM2LTQzMWEtYjQwZi0xNGE0NzQ4NjQyMjAiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzgxNjI2MjU0LCJpYXQiOjE3ODE2MjI2NTQsImVtYWlsIjoibWFzdGVyQGNsdWJlZG92aWRyby5jb20uYnIiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImZ1bGxfbmFtZSI6Ik1hc3RlciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzgxNjIyNjU0fV0sInNlc3Npb25faWQiOiIzMjBmNTljYi02MTc5LTRjOTEtYWVjYy03ZWJjNzhkYmI1MTUiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.tr7nygDrq-U_qSnYh4gqqan5mADu-qhWe0Axah0b6Ak1cEc5lZUc1bWAIgvM6U7Hh7GAdjTGIBTB9P9knm3baA
+cxtbixroqlexxmvqhqjp.supabase.co/functions/v1/update-employee-password:1  Failed to load resource: the server responded with a status of 404 ()
+index-DNugRJHH.js:735 Response status: 404
+index-DNugRJHH.js:735 Response body: Object
+index-DNugRJHH.js:735 Erro ao atualizar senha: Usuário não encontrado
+ge @ index-DNugRJHH.js:735
+2index-DNugRJHH.js:547 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-DNugRJHH.js:547
+index-DNugRJHH.js:735 Token obtido: eyJhbGciOiJFUzI1NiIsImtpZCI6ImIzMTZlNjg4LWIwODUtNDBmNC05MjFhLTQ1ZDkxYWFkNGU1MiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2N4dGJpeHJvcWxleHhtdnFocWpwLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NDY5NDJmYy1mNzM2LTQzMWEtYjQwZi0xNGE0NzQ4NjQyMjAiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzgxNjI2MjU0LCJpYXQiOjE3ODE2MjI2NTQsImVtYWlsIjoibWFzdGVyQGNsdWJlZG92aWRyby5jb20uYnIiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImZ1bGxfbmFtZSI6Ik1hc3RlciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzgxNjIyNjU0fV0sInNlc3Npb25faWQiOiIzMjBmNTljYi02MTc5LTRjOTEtYWVjYy03ZWJjNzhkYmI1MTUiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.tr7nygDrq-U_qSnYh4gqqan5mADu-qhWe0Axah0b6Ak1cEc5lZUc1bWAIgvM6U7Hh7GAdjTGIBTB9P9knm3baA
+cxtbixroqlexxmvqhqjp.supabase.co/functions/v1/update-employee-password:1  Failed to load resource: the server responded with a status of 404 ()
+index-DNugRJHH.js:735 Response status: 404
+index-DNugRJHH.js:735 Response body: Object
+index-DNugRJHH.js:735 Erro ao atualizar senha: Usuário não encontrado
+ge @ index-DNugRJHH.js:735
+2index-DNugRJHH.js:547 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-DNugRJHH.js:547
+index-DNugRJHH.js:735 Token obtido: eyJhbGciOiJFUzI1NiIsImtpZCI6ImIzMTZlNjg4LWIwODUtNDBmNC05MjFhLTQ1ZDkxYWFkNGU1MiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2N4dGJpeHJvcWxleHhtdnFocWpwLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NDY5NDJmYy1mNzM2LTQzMWEtYjQwZi0xNGE0NzQ4NjQyMjAiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzgxNjI2MjU0LCJpYXQiOjE3ODE2MjI2NTQsImVtYWlsIjoibWFzdGVyQGNsdWJlZG92aWRyby5jb20uYnIiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImZ1bGxfbmFtZSI6Ik1hc3RlciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzgxNjIyNjU0fV0sInNlc3Npb25faWQiOiIzMjBmNTljYi02MTc5LTRjOTEtYWVjYy03ZWJjNzhkYmI1MTUiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.tr7nygDrq-U_qSnYh4gqqan5mADu-qhWe0Axah0b6Ak1cEc5lZUc1bWAIgvM6U7Hh7GAdjTGIBTB9P9knm3baA
+cxtbixroqlexxmvqhqjp.supabase.co/functions/v1/update-employee-password:1  Failed to load resource: the server responded with a status of 404 ()
+index-DNugRJHH.js:735 Response status: 404
+index-DNugRJHH.js:735 Response body: Object
+index-DNugRJHH.js:735 Erro ao atualizar senha: Usuário não encontrado
+
+
+
+
+agora quando tento logar >> invalid credentials na front end e no console  Failed to load resource: the server responded with a status of 400 ()

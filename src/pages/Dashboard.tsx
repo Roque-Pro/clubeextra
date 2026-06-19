@@ -2,6 +2,7 @@ import { Calendar, TrendingUp, Users, CheckCircle, Clock, AlertCircle, Plus, Che
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ClientStatusBadge from "@/components/ClientStatusBadge";
+import ClientMiniModal from "@/components/ClientMiniModal";
 import { mockReplacements } from "@/data/mockData";
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
@@ -93,6 +94,8 @@ const Servicos = () => {
     const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>("");
     const [photoModalOpen, setPhotoModalOpen] = useState(false);
     const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string>("");
+    const [clientModalOpen, setClientModalOpen] = useState(false);
+    const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
     const { toast } = useToast();
 
     const [serviceForm, setServiceForm] = useState({
@@ -643,11 +646,18 @@ const Servicos = () => {
                                                      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
                                                          <div className="flex-1 space-y-2">
                                                               <div className="flex items-center gap-2">
-                                                                  <ClientStatusBadge 
-                                                                      clientName={apt.client_name} 
-                                                                      planStatus={apt.client_plan_status}
-                                                                      size="md"
-                                                                  />
+                                                                                                  <div className="flex items-center gap-2">
+                                                                                                      <button
+                                                                                                          onClick={() => { setSelectedClientId(apt.client_id); setClientModalOpen(true); }}
+                                                                                                          className="font-semibold text-foreground truncate underline underline-offset-2 decoration-dotted text-left"
+                                                                                                      >
+                                                                                                          {apt.client_name}
+                                                                                                      </button>
+                                                                                                      <ClientStatusBadge 
+                                                                                                          planStatus={apt.client_plan_status}
+                                                                                                          size="md"
+                                                                                                      />
+                                                                                                  </div>
                                                                   {apt.time_changed_at && (
                                                                     <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 animate-pulse">
                                                                         <Clock className="w-3 h-3" /> HORÁRIO ALTERADO
@@ -777,11 +787,18 @@ const Servicos = () => {
                                             <div key={apt.id} className="p-4 rounded-xl border border-green-100 bg-green-50/30 dark:border-green-900/30 dark:bg-green-950/10">
                                                  <div className="flex items-start justify-between gap-4">
                                                      <div className="flex-1 space-y-2">
-                                                          <ClientStatusBadge 
-                                                              clientName={apt.client_name} 
-                                                              planStatus={apt.client_plan_status}
-                                                              size="md"
-                                                          />
+                                                          <div className="flex items-center gap-2">
+                                                              <button
+                                                                  onClick={() => { setSelectedClientId(apt.client_id); setClientModalOpen(true); }}
+                                                                  className="font-semibold text-foreground truncate underline underline-offset-2 decoration-dotted text-left"
+                                                              >
+                                                                  {apt.client_name}
+                                                              </button>
+                                                              <ClientStatusBadge 
+                                                                  planStatus={apt.client_plan_status}
+                                                                  size="md"
+                                                              />
+                                                          </div>
                                                          <div className="text-sm font-medium text-foreground flex items-center gap-2">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
                                                             {apt.service_type}
@@ -1184,6 +1201,8 @@ const Servicos = () => {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <ClientMiniModal clientId={selectedClientId} open={clientModalOpen} onOpenChange={setClientModalOpen} />
         </div>
     );
 };
