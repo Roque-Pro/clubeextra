@@ -14,7 +14,7 @@ const Help = () => {
   const faqItems: FAQItem[] = [
     {
       question: "O que é o Clube do Vidro?",
-      answer: "O Clube do Vidro é um programa de proteção para seu veículo que oferece até 3 trocas de vidro por ano. Você paga uma mensalidade fixa de R$ 19,90 e tem acesso a vidros 100% originais, sem carência, com assistência 24/7 para emergências. É a solução completa para proteger seu carro contra acidentes com vidros.",
+      answer: "O Clube do Vidro é um programa de proteção para seu veículo que oferece até 3 trocas de vidro por ano. Você paga uma mensalidade fixa de R$ 19,90 e tem acesso a vidros 100% originais, sem carência, com assistência em horário comercial de Segunda a Sábado para emergências. É a solução completa para proteger seu carro contra acidentes com vidros.",
     },
     {
       question: "Como funciona o agendamento de serviço?",
@@ -26,7 +26,7 @@ const Help = () => {
     },
     {
       question: "O que fazer se esquecer minha senha?",
-      answer: "Sua segurança é nossa prioridade. Por isso, não temos opção de 'recuperar senha' automática. Para resetar sua senha, você deve entrar em contato com a Iguaçu Auto Vidros via WhatsApp (45) 99901-0000. Leve sua documentação (RG e CPF / CNPJ) para comprovar sua identidade. Nossa equipe irá verificar seus dados e enviar uma nova senha segura. Isso protege sua conta de acessos não autorizados.",
+      answer: "Sua segurança é nossa prioridade. Por isso, não temos opção de 'recuperar senha' automática. Para resetar sua senha, você deve entrar em contato com a Iguaçu Auto Vidros via WhatsApp (21) 96451-1051. Leve sua documentação (RG e CPF / CNPJ) para comprovar sua identidade. Nossa equipe irá verificar seus dados e enviar uma nova senha segura. Isso protege sua conta de acessos não autorizados.",
     },
     {
       question: "Posso agendar mais de um vidro na mesma data?",
@@ -34,12 +34,9 @@ const Help = () => {
     },
     {
       question: "O que incluído no meu plano?",
-      answer: "✓ 3 trocas de vidro por ano\n✓ Vidros 100% originais com garantia\n✓ Assistência 24/7 para emergências\n✓ Sem carência - pode usar no 1º mês\n✓ Sem taxa de agendamento\n✓ Acesso ao histórico completo de serviços\n✓ Suporte direto com a equipe",
+      answer: "✓ 3 trocas de vidro por ano\n✓ Vidros 100% originais com garantia\n✓ Assistência de Segunda à Sábado para emergências\n✓ Sem carência - pode usar no 1º mês\n✓ Sem taxa de agendamento\n✓ Acesso ao histórico completo de serviços\n✓ Suporte direto com a equipe",
     },
-    {
-      question: "Como cancelo ou altero um agendamento?",
-      answer: "Para cancelar ou alterar um agendamento pendente ou confirmado, entre em contato diretamente via WhatsApp (45) 99901-0000. Nossa equipe está disponível 24/7 para ajudá-lo. Tenha à mão o número do seu agendamento ou a data marcada para agilizar o processo.",
-    },
+    
     {
       question: "O vidro tem garantia?",
       answer: "Sim! Todos os vidros instalados possuem garantia de fábrica. Se detectarmos qualquer defeito no vidro dentro de 30 dias após a instalação, faremos a troca sem custo adicional. Essa garantia cobre defeitos de fabricação, não danos causados por acidentes subsequentes.",
@@ -260,8 +257,8 @@ const Help = () => {
                 <Phone className="w-5 h-5 text-primary flex-shrink-0" />
                 <div>
                   <p className="text-sm text-muted-foreground">Contato via WhatsApp:</p>
-                  <a href="https://wa.me/5545999010000" className="text-primary font-semibold hover:underline">
-                    (45) 99901-0000
+                  <a href="https://wa.me/5521964511051" className="text-primary font-semibold hover:underline">
+                    (21) 96451-1051
                   </a>
                 </div>
               </div>
@@ -330,9 +327,9 @@ const Help = () => {
               Ainda Tem Dúvidas?
             </h2>
             <p className="text-muted-foreground mb-6">
-              Nossa equipe está disponível 24/7 para ajudá-lo com qualquer dúvida ou suporte.
+              Nossa equipe está disponível em horário comercial de Segunda a Sábado, para ajudá-lo com qualquer dúvida ou suporte.
             </p>
-            <a href="https://wa.me/5545999010000">
+            <a href="https://wa.me/5521964511051">
               <Button className="gap-2">
                 <Phone className="w-4 h-4" />
                 Contate-nos via WhatsApp
