@@ -89,7 +89,7 @@ const Help = () => {
             Central de Ajuda
           </h1>
           <p className="text-xl text-muted-foreground">
-            Tudo que você precisa saber sobre o Clube do Vidro
+            Tudo que você precisa saber sobre o Clube do Vidro.
           </p>
         </motion.div>
 
