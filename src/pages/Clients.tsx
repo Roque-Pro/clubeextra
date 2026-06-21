@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, UserCheck, UserX, Repeat, Edit2, Eye, Upload, FileText, Car, Shield } from "lucide-react";
+import { Plus, Search, UserCheck, UserX, Repeat, Edit2, Eye, Upload, FileText, Car, Shield, Camera, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ClientStatusBadge from "@/components/ClientStatusBadge";
@@ -48,6 +48,12 @@ const Clients = () => {
      const [reportDialogOpen, setReportDialogOpen] = useState(false);
      const [reportPeriod, setReportPeriod] = useState<"week" | "month" | "quarter" | "all">("month");
      const [reportingClient, setReportingClient] = useState<Client | null>(null);
+     const [servicePhotosDialogOpen, setServicePhotosDialogOpen] = useState(false);
+     const [servicePhotos, setServicePhotos] = useState<(File | null)[]>([null, null, null, null, null]);
+     const [uploadingPhotos, setUploadingPhotos] = useState(false);
+    const [serviceGalleryOpen, setServiceGalleryOpen] = useState(false);
+    const [serviceGalleryImages, setServiceGalleryImages] = useState<{ url: string; ts?: string }[]>([]);
+    const [galleryClient, setGalleryClient] = useState<Client | null>(null);
      const { toast } = useToast();
 
      const handleGenerateReport = async () => {
@@ -334,9 +340,15 @@ const Clients = () => {
                     clientName: r.client_name,
                     item: r.item,
                     date: r.date,
+                        createdAt: r.created_at,
                     employeeId: r.employee_id,
                     employeeName: r.employee_name,
                     notes: r.notes,
+                    photo_url_1: r.photo_url_1,
+                    photo_url_2: r.photo_url_2,
+                    photo_url_3: r.photo_url_3,
+                    photo_url_4: r.photo_url_4,
+                    photo_url_5: r.photo_url_5,
                 }));
                 setReplacements(mappedReplacements);
             }
@@ -490,28 +502,34 @@ const Clients = () => {
     };
 
     const handleEditClient = async () => {
-         if (!editingClient || !form.name || !form.phone || !form.vehicle) {
-             toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
+         if (!editingClient) {
+             toast({ title: "Cliente não selecionado", variant: "destructive" });
              return;
          }
          setSubmitting(true);
          try {
-             const { error } = await supabase
-                 .from("clients")
-                 .update({
-                     name: form.name,
-                     phone: form.phone,
-                     email: form.email,
-                     cpf: form.cpf,
-                     vehicle: form.vehicle,
-                     plate: form.plate,
-                     max_replacements: form.maxReplacements,
-                     is_cooperative: form.is_cooperative,
-                     value_per_car: form.value_per_car
-                 })
-                 .eq("id", editingClient.id);
+             // Build update payload without empty fields to avoid unique constraint violations
+             const updatePayload: any = {};
+             if (form.name && form.name !== editingClient.name) updatePayload.name = form.name;
+             if (form.phone && form.phone !== editingClient.phone) updatePayload.phone = form.phone;
+             if (form.email && form.email.trim() !== "" && form.email !== editingClient.email) updatePayload.email = form.email;
+             if (form.cpf && form.cpf !== editingClient.cpf) updatePayload.cpf = form.cpf;
+             if (form.vehicle && form.vehicle !== editingClient.vehicle) updatePayload.vehicle = form.vehicle;
+             if (form.plate && form.plate !== editingClient.plate) updatePayload.plate = form.plate;
+             if (typeof form.maxReplacements === 'number') updatePayload.max_replacements = form.maxReplacements;
+             if (typeof form.is_cooperative === 'boolean') updatePayload.is_cooperative = form.is_cooperative;
+             if (typeof form.value_per_car === 'number') updatePayload.value_per_car = form.value_per_car;
 
-             if (error) throw error;
+             let error = null;
+             if (Object.keys(updatePayload).length > 0) {
+                 const res = await supabase
+                     .from("clients")
+                     .update(updatePayload)
+                     .eq("id", editingClient.id);
+                 // supabase returns { data, error }
+                 error = (res as any).error;
+                 if (error) throw error;
+             }
 
             if (form.password && form.password.length >= 6) {
                 try {
@@ -554,15 +572,15 @@ const Clients = () => {
                 c.id === editingClient.id
                     ? {
                         ...c,
-                        name: form.name,
-                        phone: form.phone,
-                        email: form.email,
-                        cpf: form.cpf,
-                        vehicle: form.vehicle,
-                        plate: form.plate,
-                        maxReplacements: form.maxReplacements,
-                        is_cooperative: form.is_cooperative,
-                        value_per_car: form.value_per_car
+                        name: updatePayload.name ?? c.name,
+                        phone: updatePayload.phone ?? c.phone,
+                        email: updatePayload.email ?? c.email,
+                        cpf: updatePayload.cpf ?? c.cpf,
+                        vehicle: updatePayload.vehicle ?? c.vehicle,
+                        plate: updatePayload.plate ?? c.plate,
+                        maxReplacements: updatePayload.max_replacements ?? c.maxReplacements,
+                        is_cooperative: updatePayload.is_cooperative ?? c.is_cooperative,
+                        value_per_car: updatePayload.value_per_car ?? c.value_per_car
                     }
                     : c
             );
@@ -723,6 +741,206 @@ const Clients = () => {
             });
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const uploadServicePhoto = async (file: File, clientId: string, index: number) => {
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${clientId}/services/${Date.now()}_photo_${index}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from("vehicle-photos")
+                .upload(fileName, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from("vehicle-photos")
+                .getPublicUrl(fileName);
+
+            return publicUrl;
+        } catch (error) {
+            console.error(`Erro ao fazer upload da foto ${index + 1}:`, error);
+            return null;
+        }
+    };
+
+    const handleAddServiceWithPhotos = async () => {
+        if (!selectedClient) {
+            toast({ title: "Selecione um cliente", variant: "destructive" });
+            return;
+        }
+        if (selectedClient.replacementsUsed >= selectedClient.maxReplacements) {
+            toast({ title: "Cliente atingiu o limite de trocas/serviços!", variant: "destructive" });
+            return;
+        }
+        
+        if (servicePhotos.some(photo => photo === null)) {
+            toast({ title: "Erro no envio das fotos", description: "Por favor, selecione as 5 fotos exigidas para o serviço.", variant: "destructive" });
+            return;
+        }
+
+        setSubmitting(true);
+        setUploadingPhotos(true);
+        try {
+            const uploadPromises = servicePhotos.map((file, idx) => 
+                uploadServicePhoto(file!, selectedClient.id, idx + 1)
+            );
+            const photoUrls = await Promise.all(uploadPromises);
+
+            if (photoUrls.some(url => url === null)) {
+                throw new Error("Falha ao fazer upload de uma ou mais fotos do serviço.");
+            }
+
+            // Ensure we have an employee; if none, create a temporary 'Teste' employee for quick testing
+            let emp = employees.find((e) => e.id === replForm.employeeId) || employees[0];
+            if (!emp) {
+                try {
+                    const resEmp = await supabase
+                        .from("employees")
+                        .insert({ name: "Teste" })
+                        .select();
+                    if ((resEmp as any).error) throw (resEmp as any).error;
+                    emp = (resEmp as any).data[0];
+                } catch (e) {
+                    toast({ title: "Erro ao registrar serviço", description: "Nenhum funcionário disponível e não foi possível criar um funcionário temporário.", variant: "destructive" });
+                    throw e;
+                }
+            }
+
+            const employeeIdToUse = emp.id;
+            const employeeNameToUse = emp.name;
+
+            // First insert into services (so photos are definitely saved in a table that has photo_url columns)
+            let serviceData: any = null;
+            try {
+                const svcRes = await supabase
+                    .from("services")
+                    .insert({
+                        client_id: selectedClient.id,
+                        client_name: selectedClient.name,
+                        service_type: replForm.item || 'Serviço',
+                        service_date: new Date().toISOString().split("T")[0],
+                        employee_id: employeeIdToUse,
+                        employee_name: employeeNameToUse,
+                        photo_url_1: photoUrls[0],
+                        photo_url_2: photoUrls[1],
+                        photo_url_3: photoUrls[2],
+                        photo_url_4: photoUrls[3],
+                        photo_url_5: photoUrls[4]
+                    })
+                    .select();
+                if ((svcRes as any).error) throw (svcRes as any).error;
+                serviceData = (svcRes as any).data;
+            } catch (svcErr) {
+                console.error("Erro ao inserir em services:", svcErr);
+                throw svcErr;
+            }
+
+            // Then create a replacement record (without photos) to track the replacement/service
+            let replacementData: any = null;
+            try {
+                const replRes = await supabase
+                    .from("replacements")
+                    .insert({
+                        client_id: selectedClient.id,
+                        client_name: selectedClient.name,
+                        item: replForm.item || 'Serviço',
+                        date: new Date().toISOString().split("T")[0],
+                        employee_id: employeeIdToUse,
+                        employee_name: employeeNameToUse
+                    })
+                    .select();
+                if ((replRes as any).error) throw (replRes as any).error;
+                replacementData = (replRes as any).data;
+                if (replacementData && replacementData[0]) {
+                    logAction("register", "replacements", replacementData[0].id, selectedClient.name, `Serviço com fotos registrado`);
+                }
+            } catch (replErr) {
+                console.error("Erro ao inserir em replacements:", replErr);
+                // note: photos are already saved in services; continue
+            }
+
+            // Atualiza contador de trocas/serviços do cliente (tanto no client local quanto no DB)
+            try {
+                const { error: updErr } = await supabase
+                    .from("clients")
+                    .update({ replacements_used: (selectedClient.replacementsUsed || 0) + 1 })
+                    .eq("id", selectedClient.id);
+                if (updErr) console.error("Erro ao atualizar replacements_used:", updErr);
+            } catch (e) {
+                console.error("Erro na atualização de replacements_used:", e);
+            }
+
+            await Promise.all([fetchReplacements(), fetchClients()]);
+
+            setServicePhotos([null, null, null, null, null]);
+            setServicePhotosDialogOpen(false);
+            // Open gallery immediately so user can see saved images (include timestamp)
+            const createdAtForPhotos = (serviceData && serviceData[0] && serviceData[0].created_at) || (replacementData && replacementData[0] && replacementData[0].created_at) || new Date().toISOString();
+            const savedImgs = (photoUrls.filter(Boolean) as string[]).map((u) => ({ url: u, ts: createdAtForPhotos }));
+            if (savedImgs.length > 0) {
+                setServiceGalleryImages(savedImgs);
+                setGalleryClient(selectedClient);
+                setServiceGalleryOpen(true);
+                toast({ title: `Serviço registrado com ${savedImgs.length} fotos!` });
+            } else {
+                toast({ title: "Serviço registrado com sucesso!" });
+            }
+            setSelectedClient(null);
+        } catch (error: any) {
+            toast({
+                title: "Erro ao registrar serviço",
+                description: error.message,
+                variant: "destructive"
+            });
+        } finally {
+            setSubmitting(false);
+            setUploadingPhotos(false);
+        }
+    };
+
+    const fetchServiceImagesForClient = async (clientId: string) => {
+        try {
+            const imgs: { url: string; ts?: string }[] = [];
+
+            // try replacements (include created_at and date)
+            const { data: replData, error: replErr } = await supabase
+                .from("replacements")
+                .select("photo_url_1,photo_url_2,photo_url_3,photo_url_4,photo_url_5,created_at,date")
+                .eq("client_id", clientId);
+            if (!replErr && replData) {
+                (replData as any[]).forEach(r => {
+                    const ts = r.created_at || r.date || undefined;
+                    [r.photo_url_1, r.photo_url_2, r.photo_url_3, r.photo_url_4, r.photo_url_5].forEach((u: any) => { if (u) imgs.push({ url: u, ts }); });
+                });
+            }
+
+            // try services as well (fallback) — include created_at and service_date
+            const { data: svcData, error: svcErr } = await supabase
+                .from("services")
+                .select("photo_url_1,photo_url_2,photo_url_3,photo_url_4,photo_url_5,created_at,service_date")
+                .eq("client_id", clientId);
+            if (!svcErr && svcData) {
+                (svcData as any[]).forEach(s => {
+                    const ts = s.created_at || s.service_date || undefined;
+                    [s.photo_url_1, s.photo_url_2, s.photo_url_3, s.photo_url_4, s.photo_url_5].forEach((u: any) => { if (u) imgs.push({ url: u, ts }); });
+                });
+            }
+
+            // unique by url and preserve order
+            const seen = new Set<string>();
+            const unique = imgs.filter(i => {
+                if (seen.has(i.url)) return false;
+                seen.add(i.url);
+                return true;
+            });
+
+            return unique;
+        } catch (e) {
+            console.error("Erro ao buscar imagens de serviços:", e);
+            return [];
         }
     };
 
@@ -946,6 +1164,25 @@ const Clients = () => {
                                          >
                                              <Repeat className="w-3.5 h-3.5" /> Troca
                                          </Button>
+
+                                         <div className="relative w-full md:w-auto">
+                                             <Button
+                                                 size="sm"
+                                                 className="gap-1.5 text-xs md:text-sm w-full md:w-auto font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all"
+                                                 disabled={client.replacementsUsed >= client.maxReplacements || isExpired || !client.planActive}
+                                                 onClick={() => { setSelectedClient(client); setServicePhotos([null, null, null, null, null]); setServicePhotosDialogOpen(true); }}
+                                             >
+                                                 <Plus className="w-3.5 h-3.5" /> +serviços
+                                             </Button>
+                                            <button
+                                                aria-label={`Ver imagens dos serviços de ${client.name}`}
+                                                title="Ver imagens dos serviços"
+                                                onClick={async (e) => { e.stopPropagation(); const imgs = await fetchServiceImagesForClient(client.id); setServiceGalleryImages(imgs); setGalleryClient(client); setServiceGalleryOpen(true); }}
+                                                className="absolute -top-2 -right-2 z-10 bg-indigo-600 text-white text-xs rounded-full px-2 py-0.5 border border-indigo-700 shadow-sm"
+                                            >
+                                                {client.replacementsUsed}/{client.maxReplacements}
+                                            </button>
+                                         </div>
                                          </div>
 
                                          {/* Cooperative Management Bar - Highlighted */}
@@ -1138,6 +1375,68 @@ const Clients = () => {
                                     </div>
                                 )}
                             </div>
+
+                            <div className="space-y-4 mt-6">
+                                <h3 className="font-bold text-lg border-b pb-2 flex items-center gap-2">
+                                    <Repeat className="w-5 h-5 text-indigo-600" /> Histórico de Trocas / Serviços
+                                </h3>
+                                {replacements.filter(r => r.clientId === viewedClient.id).length === 0 ? (
+                                    <p className="text-sm text-muted-foreground italic text-center py-4 bg-muted/10 rounded-lg border border-dashed font-display">Nenhuma troca ou serviço registrado.</p>
+                                ) : (
+                                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                                        {replacements.filter(r => r.clientId === viewedClient.id).map((r) => {
+                                            const servicePhotosList = [
+                                                r.photo_url_1,
+                                                r.photo_url_2,
+                                                r.photo_url_3,
+                                                r.photo_url_4,
+                                                r.photo_url_5
+                                            ].filter(Boolean);
+
+                                            return (
+                                                <div key={r.id} className="bg-muted/30 rounded-lg p-4 border border-border text-sm">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <p className="font-semibold text-foreground text-base">{r.item}</p>
+                                                            <p className="text-xs text-muted-foreground">Responsável: {r.employeeName}</p>
+                                                        </div>
+                                                        <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                                                            {new Date(r.createdAt || r.date).toLocaleString("pt-BR")}
+                                                        </span>
+                                                    </div>
+                                                    {r.notes && (
+                                                        <p className="text-xs text-muted-foreground bg-card p-2 rounded mb-2 border border-border">
+                                                            <strong>Observações:</strong> {r.notes}
+                                                        </p>
+                                                    )}
+                                                    {servicePhotosList.length > 0 && (
+                                                        <div className="space-y-2 mt-2">
+                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Fotos do Serviço:</p>
+                                                            <div className="grid grid-cols-5 gap-2">
+                                                                {servicePhotosList.map((url, idx) => (
+                                                                    <button
+                                                                        key={idx}
+                                                                        onClick={() => {
+                                                                            setSelectedPhotoUrl(url!);
+                                                                            setPhotoModalOpen(true);
+                                                                        }}
+                                                                        className="relative aspect-square bg-black/5 rounded-lg overflow-hidden group hover:ring-2 hover:ring-indigo-600 transition-all shadow-sm"
+                                                                    >
+                                                                        <img src={url!} className="w-full h-full object-cover" alt={`Foto Serviço ${idx + 1}`} />
+                                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                            <Eye className="w-4 h-4 text-white" />
+                                                                        </div>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </DialogContent>
@@ -1224,6 +1523,76 @@ const Clients = () => {
                 </DialogContent>
             </Dialog>
 
+            {/* Service with 5 Photos dialog */}
+            <Dialog open={servicePhotosDialogOpen} onOpenChange={setServicePhotosDialogOpen}>
+                <DialogContent className="bg-card border-border max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="font-display">Registrar Serviço (+fotos) — {selectedClient?.name}</DialogTitle>
+                    </DialogHeader>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label className="mb-2 block text-sm font-semibold text-foreground">Fotos do Serviço (Exige exatamente 5 fotos) *</Label>
+                                    <div className="grid grid-cols-5 gap-2">
+                                {[0, 1, 2, 3, 4].map((index) => {
+                                    const photo = servicePhotos[index];
+                                    const previewUrl = photo ? URL.createObjectURL(photo) : null;
+                                    return (
+                                        <div key={index} className="flex flex-col items-center">
+                                            <label className={`relative aspect-square w-full rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-muted/50 overflow-hidden ${photo ? 'border-primary' : 'border-border'}`}>
+                                                <input 
+                                                    type="file" 
+                                                    accept="image/*" 
+                                                    className="hidden" 
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const newPhotos = [...servicePhotos];
+                                                            newPhotos[index] = file;
+                                                            setServicePhotos(newPhotos);
+                                                        }
+                                                    }}
+                                                />
+                                                {previewUrl ? (
+                                                    <>
+                                                        <img src={previewUrl} className="w-full h-full object-cover" alt={`Foto ${index + 1}`} />
+                                                        <button
+                                                            type="button"
+                                                            className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 shadow-md hover:bg-destructive/90"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                const newPhotos = [...servicePhotos];
+                                                                newPhotos[index] = null;
+                                                                setServicePhotos(newPhotos);
+                                                            }}
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <div className="flex flex-col items-center text-center p-1">
+                                                        <Camera className="w-4 h-4 text-muted-foreground mb-1" />
+                                                        <span className="text-[9px] text-muted-foreground font-medium">Foto {index + 1}</span>
+                                                    </div>
+                                                )}
+                                            </label>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <Button 
+                            onClick={handleAddServiceWithPhotos} 
+                            disabled={submitting || uploadingPhotos} 
+                            className="w-full gradient-primary text-primary-foreground font-semibold"
+                        >
+                            {submitting || uploadingPhotos ? "Salvando imagens..." : "Salvar Imagens"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             {/* Modal para Visualizar Foto do Veículo */}
             <Dialog open={photoModalOpen} onOpenChange={setPhotoModalOpen}>
                 <DialogContent className="bg-card border-border max-w-2xl">
@@ -1236,6 +1605,40 @@ const Clients = () => {
                             alt="Veículo"
                             className="max-w-full max-h-96 rounded-lg object-contain"
                         />
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Service Gallery Dialog (previous services images) */}
+            <Dialog open={serviceGalleryOpen} onOpenChange={setServiceGalleryOpen}>
+                <DialogContent className="bg-card border-border max-w-3xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="font-display">Fotos de Serviços — {galleryClient?.name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-2">
+                        {serviceGalleryImages.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">Nenhuma foto de serviço encontrada.</p>
+                        ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                                {serviceGalleryImages.map((img, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => { setSelectedPhotoUrl(img.url); setPhotoModalOpen(true); }}
+                                        className="relative aspect-square bg-black/5 rounded-lg overflow-hidden group hover:ring-2 hover:ring-primary transition-all shadow-sm"
+                                    >
+                                        <img src={img.url} className="w-full h-full object-cover" alt={`Foto Serviço ${idx + 1}`} />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <Eye className="w-4 h-4 text-white" />
+                                        </div>
+                                        {img.ts && (
+                                            <div className="absolute left-1 bottom-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">
+                                                {new Date(img.ts).toLocaleString("pt-BR")}
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>

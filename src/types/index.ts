@@ -28,7 +28,14 @@ export interface Replacement {
   employeeId: string;
   employeeName: string;
   notes: string;
+  photo_url_1?: string;
+  photo_url_2?: string;
+  photo_url_3?: string;
+  photo_url_4?: string;
+  photo_url_5?: string;
+  createdAt?: string;
 }
+
 
 export interface Product {
   id: string;
